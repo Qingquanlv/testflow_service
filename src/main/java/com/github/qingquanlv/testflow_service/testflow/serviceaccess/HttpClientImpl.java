@@ -125,7 +125,7 @@ public class HttpClientImpl {
             // 创建默认的httpClient实例.
             httpClient = getHttpClient();
             // 配置请求信息
-            http.setConfig(requestConfig);
+            //http.setConfig(requestConfig);
             // 执行请求
             response = httpClient.execute(http);
             // 得到响应实例

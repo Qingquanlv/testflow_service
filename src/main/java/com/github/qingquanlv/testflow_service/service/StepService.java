@@ -2,6 +2,8 @@ package com.github.qingquanlv.testflow_service.service;
 
 import com.github.qingquanlv.testflow_service.entity.request.RequestRequest;
 import com.github.qingquanlv.testflow_service.entity.request.RequestResponce;
+import com.github.qingquanlv.testflow_service.entity.testflowrequest.TestFlowRequest;
+import com.github.qingquanlv.testflow_service.entity.testflowrequest.TestFlowResponce;
 
 public interface StepService {
 
@@ -11,4 +13,11 @@ public interface StepService {
      * @param request
      */
     RequestResponce request(RequestRequest request);
+
+    /**
+     * 执行TestFlow
+     *
+     * @param request
+     */
+    TestFlowResponce TestFlow(TestFlowRequest request);
 }

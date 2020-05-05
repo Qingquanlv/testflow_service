@@ -6,6 +6,8 @@ public class RequestResponce {
 
     private Status status;
 
+    private String content;
+
     public Status getStatus() {
         return status;
     }
@@ -13,4 +15,13 @@ public class RequestResponce {
     public void setStatus(Status status) {
         this.status = status;
     }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
 }
