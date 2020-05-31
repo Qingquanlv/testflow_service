@@ -1,11 +1,10 @@
-package com.github.qingquanlv.testflow_service.entity.request;
+package com.github.qingquanlv.testflow_service.entity.cases.request;
 
 import java.util.List;
 
-public class RequestRequest {
-
+public class RequestCases {
     //索引
-    private String index;
+    private Integer index;
     //请求Id
     private String requestId;
     //请求配置
@@ -22,11 +21,11 @@ public class RequestRequest {
     private String url;
 
 
-    public String getIndex() {
+    public Integer getIndex() {
         return index;
     }
 
-    public void setIndex(String index) {
+    public void setIndex(Integer index) {
         this.index = index;
     }
 
@@ -86,3 +85,4 @@ public class RequestRequest {
         this.url = url;
     }
 }
+

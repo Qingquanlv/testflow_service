@@ -1,4 +1,4 @@
-package com.github.qingquanlv.testflow_service.entity.database;
+package com.github.qingquanlv.testflow_service.entity.cases.database;
 
 public class StepBuffer {
 

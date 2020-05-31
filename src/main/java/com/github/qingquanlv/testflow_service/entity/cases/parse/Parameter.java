@@ -1,11 +1,10 @@
-package com.github.qingquanlv.testflow_service.entity.parse;
+package com.github.qingquanlv.testflow_service.entity.cases.parse;
 
 public class Parameter {
 
     private String key;
 
     private String type;
-
 
     public String getKey() {
         return key;

@@ -1,6 +1,6 @@
-package com.github.qingquanlv.testflow_service.entity.request;
+package com.github.qingquanlv.testflow_service.entity.cases.request;
 
-public class RequestHeader {
+public class RequestConfig {
 
     private String key;
 

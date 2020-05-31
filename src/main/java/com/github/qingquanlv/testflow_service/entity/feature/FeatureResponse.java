@@ -1,8 +1,8 @@
-package com.github.qingquanlv.testflow_service.entity.testflowrequest;
+package com.github.qingquanlv.testflow_service.entity.feature;
 
 import com.github.qingquanlv.testflow_service.entity.Status;
 
-public class TestFlowResponce {
+public class FeatureResponse {
 
     private Status status;
 

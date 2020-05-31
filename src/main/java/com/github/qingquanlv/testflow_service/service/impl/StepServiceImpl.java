@@ -1,16 +1,25 @@
 package com.github.qingquanlv.testflow_service.service.impl;
 
+import com.github.qingquanlv.testflow_service.common.Lang;
 import com.github.qingquanlv.testflow_service.entity.Status;
-import com.github.qingquanlv.testflow_service.entity.request.*;
-import com.github.qingquanlv.testflow_service.entity.testflowrequest.TestFlowRequest;
-import com.github.qingquanlv.testflow_service.entity.testflowrequest.TestFlowResponce;
+import com.github.qingquanlv.testflow_service.entity.cases.Cases;
+import com.github.qingquanlv.testflow_service.entity.cases.database.DataBaseCases;
+import com.github.qingquanlv.testflow_service.entity.cases.parse.ParseCases;
+import com.github.qingquanlv.testflow_service.entity.cases.verification.VerificationCases;
+import com.github.qingquanlv.testflow_service.entity.feature.FeatureRequest;
+import com.github.qingquanlv.testflow_service.entity.feature.FeatureResponse;
+import com.github.qingquanlv.testflow_service.entity.cases.request.*;
 import com.github.qingquanlv.testflow_service.service.StepService;
 import com.github.qingquanlv.testflow_service.testflow.TestFlowManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StepServiceImpl implements StepService {
@@ -19,84 +28,96 @@ public class StepServiceImpl implements StepService {
     private TestFlowManager testFlowManager;
 
     /**
-     * 发送请求并且保存到返回到redis
-     *
-     * @param request 更新的step实体
-     * @return UpdateFeatureInfoResponce 返回response
-     */
-    @Override
-    public RequestResponce request(RequestRequest request) {
-        RequestResponce responce = new RequestResponce();
-        Status status = new Status();
-        String errorMsg = "";
-        String responceStr = "";
-        try {
-            //如果headers不为空
-            HashMap<String, String> headerMap = new HashMap<>();
-            for (RequestHeader header : request.getHeaders()) {
-                if (headerMap.containsKey(header.getKey())) {
-                    headerMap.put(header.getKey(), header.getValue());
-                }
-            }
-            //responceStr = TestFlowManager.runner().sendRequest(request.get, request.getBody(), headerMap, request.getRequestType(), request.getContentType(), request.getUrl(), request.getKey());
-            //缓存到redis
-            //BufferManager.addBufferByKey(responce, responceStr);
-        }
-        catch (Exception ex) {
-            TestFlowManager.runner().deposed();
-            errorMsg = String.format("send Request failed: %s", ex);
-        }
-        if (StringUtils.isEmpty(errorMsg)) {
-            status.setSuccess(true);
-        }
-        else {
-            status.setSuccess(false);
-            status.setErrorCode(001);
-            status.setMessage(errorMsg);
-        }
-        responce.setStatus(status);
-        responce.setContent(responceStr);
-        return responce;
-    }
-
-    /**
      *
      * @param request
      * @return
      */
     @Override
-    public TestFlowResponce TestFlow(TestFlowRequest request) {
-        TestFlowResponce responce = new TestFlowResponce();
+    public FeatureResponse executeFeature(FeatureRequest request) {
+        FeatureResponse FeatureRsp = new FeatureResponse();
         Status status = new Status();
-        String errorMsg = "";
-        String responceStr = "";
+
         try {
-            RequestRequest requestItem = request.getRequestRequest().get(0);
-            if ("Request".equals(request.getRequestRequest().get(0))) {
-                //配置map
-                HashMap<String, String> configMap = new HashMap<>();
-                for (RequestConfig config : requestItem.getConfigs()) {
-                    configMap.put(config.getKey(), config.getValue());
+            //校验报文入参
+            status = assertion(request);
+            //如果request报文入参没有问题
+            if (status.getSuccess()) {
+                Cases cases = request.getCases();
+                //获取执行顺序index
+                List<Integer> indexList = getIndexSort(cases);
+                Collections.sort(indexList);
+                //开始执行case
+                for (int i = 0; i < indexList.size(); i++) {
+                    if (!CollectionUtils.isEmpty(cases.getRequestCases())
+                            && null != cases.getRequestCases().stream().filter(item -> item.getIndex() == indexList.get(1)).findFirst().orElse(null)) {
+
+                    } else if (!CollectionUtils.isEmpty(cases.getParserCases())
+                            && null != cases.getParserCases().stream().filter(item -> item.getIndex() == indexList.get(1)).findFirst().orElse(null)) {
+
+                    } else if (!CollectionUtils.isEmpty(cases.getDataBaseCases())
+                            && null != cases.getDataBaseCases().stream().filter(item -> item.getIndex() == indexList.get(1)).findFirst().orElse(null)) {
+
+                    } else if (!CollectionUtils.isEmpty(cases.getVerificationCases())
+                            && null != cases.getVerificationCases().stream().filter(item -> item.getIndex() == indexList.get(1)).findFirst().orElse(null)) {
+
+                    }
                 }
-                //请求头map
-                HashMap<String, String> headerMap = new HashMap<>();
-                for (RequestHeader header : requestItem.getHeaders()) {
-                    headerMap.put(header.getKey(), header.getValue());
-                }
-                //request方法
-                TestFlowManager.runner().sendRequest(requestItem.getRequestId(),
-                        requestItem.getRequestBody(),
-                        configMap, headerMap, requestItem.getRequestType(),
-                        requestItem.getContentType(), requestItem.getUrl());
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            status.setSuccess(false);
+            status.setErrorCode(110);
+            status.setMessage(Lang.getErrorCode(110));
         }
         finally {
             TestFlowManager.runner().deposed();
         }
-        return responce;
+        FeatureRsp.setStatus(status);
+        return FeatureRsp;
+    }
+
+    /**
+     * 根据Cases获取Index List
+     *
+     * @param cases
+     * @return
+     */
+    private List<Integer> getIndexSort(Cases cases) {
+        //拼装requestCases的index
+        List<RequestCases> requestCases = cases.getRequestCases();
+        List<Integer> indexSort = requestCases.stream().map(RequestCases::getIndex).collect(Collectors.toList());
+        //拼装ParseCases的index
+        List<ParseCases> parserCases = cases.getParserCases();
+        indexSort.addAll(parserCases.stream().map(ParseCases::getIndex).collect(Collectors.toList()));
+        //拼装requestCases的index
+        List<DataBaseCases> dataBaseCases = cases.getDataBaseCases();
+        indexSort.addAll(dataBaseCases.stream().map(DataBaseCases::getIndex).collect(Collectors.toList()));
+        //拼装requestCases的index
+        List<VerificationCases> verificationCases = cases.getVerificationCases();
+        indexSort.addAll(verificationCases.stream().map(VerificationCases::getIndex).collect(Collectors.toList()));
+        return indexSort;
+    }
+
+    /**
+     * 校验报文入参
+     *
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    private Status assertion(FeatureRequest request) throws Exception {
+        Status status = new Status();
+        Cases cases = request.getCases();
+        //获取执行顺序index
+        List<Integer> indexList =  getIndexSort(cases);
+        HashSet<Integer> set = new HashSet<>(indexList);
+        if (indexList.size() == set.size()) {
+            status.setSuccess(false);
+            status.setErrorCode(110);
+            status.setMessage(Lang.getErrorCode(110));
+        }
+        return status;
     }
 
 }
