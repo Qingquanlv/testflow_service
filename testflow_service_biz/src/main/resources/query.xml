@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qingquanlv.orderservice.query">
+    <insert id="insertOrder" useGeneratedKeys="true" parameterType="com.qingquanlv.orderservice.entity.submitorder.SubmitOrderRequest">
+        insert into sys.Order (shopid, itemid, amount, sales)
+        values (#{shopId},#{itemId},#{amount},#{sales})
+    </insert>
+
+    <select id="queryOrder" parameterType="long" resultType="com.qingquanlv.orderservice.entity.searchorder.Items">
+        SELECT itemid, sum(sales) as sales FROM sys.Order
+        WHERE datachange_lasetime > DATE_FORMAT(CURDATE(),'%Y-%m-%d %H:%i:%s') and shopid = #{id}
+        GROUP BY itemid
+        ORDER BY SUM(sales) DESC LIMIT 0,5;
+    </select>
+
+    <select id="querySalse" parameterType="long" resultType="double">
+        select sum(sales) as sales from sys.Order WHERE datachange_lasetime > DATE_FORMAT(CURDATE(),'%Y-%m-%d %H:%i:%s') and shopid  = #{id}
+    </select>
+
+    <select id="queryItemsByItemId" parameterType="long" resultType="com.qingquanlv.orderservice.entity.database.OrderItems">
+        SELECT * FROM sys.Item where itemid = #{id}
+    </select>
+
+    <select id="queryItemsByShopId" parameterType="long" resultType="com.qingquanlv.orderservice.entity.database.OrderItems">
+        SELECT * FROM sys.Item where shopid = #{id}
+    </select>
+
+    <select id="select" parameterType="java.lang.String" resultType="java.util.LinkedHashMap">
+        ${value}
+    </select>
+
+    <insert id="insert" parameterType="java.lang.String">
+        ${value}
+    </insert>
+
+    <update id="update" parameterType="java.lang.String">
+        ${value}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.String">
+        ${value}
+    </delete>
+
+</mapper>
