@@ -1,11 +1,11 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.parse;
 
+import com.github.qingquanlv.testflow_service_api.entity.cases.BaseCase;
+
 import java.util.List;
 
-public class ParseCases {
+public class ParseCases extends BaseCase {
 
-    //索引
-    private Integer index;
     //name
     private String name;
     //method name
@@ -16,14 +16,6 @@ public class ParseCases {
     private String returnType;
     //parameters
     private List<String> parameters;
-
-    public Integer getIndex() {
-        return index;
-    }
-
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
 
     public List<String> getParameters() {
         return parameters;

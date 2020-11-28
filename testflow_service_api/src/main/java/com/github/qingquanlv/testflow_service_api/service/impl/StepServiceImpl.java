@@ -10,14 +10,23 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.verification.Veri
 import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.cases.request.*;
+import com.github.qingquanlv.testflow_service_api.entity.savefeature.OperationEnum;
 import com.github.qingquanlv.testflow_service_api.entity.savefeature.SaveFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.savefeature.SaveFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.service.StepService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.Transaction;
+import org.apache.ibatis.transaction.TransactionFactory;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +37,19 @@ import java.util.stream.Collectors;
 public class StepServiceImpl implements StepService {
 
     @Autowired
-    private StepBufferDao stepBufferDao;
+    private FeatureDao featureDao;
+
+    @Autowired
+    private DatabaseCaseDao databaseCaseDao;
+
+    @Autowired
+    private MethodCaseDao methodCaseDao;
+
+    @Autowired
+    private PaserCaseDao paserCaseDao;
+
+    @Autowired
+    private RequestCasesDao requestCasesDao;
 
     /**
      *
@@ -133,7 +154,23 @@ public class StepServiceImpl implements StepService {
     @Override
     public SaveFeatureResponse saveFeature(SaveFeatureRequest request) {
         SaveFeatureResponse response = new SaveFeatureResponse();
+        if (OperationEnum.ADD.equals(request.getOperation())) {
+            featureDao.addTestFeatures();
+            requestCasesDao.addRequestCases(request.getCases().getDataBaseCases());
+        }
+        else if (OperationEnum.UPDATE.equals(request.getOperation())) {
+            featureDao.addTestFeatures();
+        }
+        else if (OperationEnum.DELETE.equals(request.getOperation())) {
+            featureDao.addTestFeatures();
+        }
         return response;
+    }
+
+    private SqlSession getSession() {
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+        return sqlSessionFactory.openSession();
     }
 
     /**
@@ -179,4 +216,18 @@ public class StepServiceImpl implements StepService {
         return status;
     }
 
+    public void doxxxxx(){
+        TransactionFactory transactionFactory = new JdbcTransactionFactory();
+        FeatureDao userDao=getSession().getMapper(FeatureDao.class);
+        Transaction newTransaction=transactionFactory.newTransaction(getSession().getConnection());
+        try {
+            userDao.insert(xxx);
+            userDao.update(xxx);
+        } catch (Exception e) {
+            newTransaction.rollback();
+            e.printStackTrace();
+        } finally {
+            newTransaction.close();
+        }
+    }
 }

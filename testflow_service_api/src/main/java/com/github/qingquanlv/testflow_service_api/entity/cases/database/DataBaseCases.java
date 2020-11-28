@@ -1,32 +1,13 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.database;
 
-public class DataBaseCases {
+import com.github.qingquanlv.testflow_service_api.entity.cases.BaseCase;
 
-    //索引
-    private Integer index;
+public class DataBaseCases extends BaseCase {
+
     //name
     private String name;
-    //请求Id
-    private String requestId;
     //请求sql
     private String sql;
-
-
-    public Integer getIndex() {
-        return index;
-    }
-
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
 
     public String getSql() {
         return sql;

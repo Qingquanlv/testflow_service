@@ -2,14 +2,14 @@ package com.github.qingquanlv.testflow_service_api.entity.cases;
 
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.DataBaseCases;
 import com.github.qingquanlv.testflow_service_api.entity.cases.parse.ParseCases;
-import com.github.qingquanlv.testflow_service_api.entity.cases.request.RequestCases;
+import com.github.qingquanlv.testflow_service_api.entity.cases.request.RequestCasesRequest;
 import com.github.qingquanlv.testflow_service_api.entity.cases.verification.VerificationCases;
 
 import java.util.List;
 
 public class Cases {
 
-    private List<RequestCases> requestCases;
+    private List<RequestCasesRequest> requestCases;
 
     private List<ParseCases> parserCases;
 
@@ -18,11 +18,11 @@ public class Cases {
     private List<VerificationCases> verificationCases;
 
 
-    public List<RequestCases> getRequestCases() {
+    public List<RequestCasesRequest> getRequestCases() {
         return requestCases;
     }
 
-    public void setRequestCases(List<RequestCases> requestCases) {
+    public void setRequestCases(List<RequestCasesRequest> requestCases) {
         this.requestCases = requestCases;
     }
 
