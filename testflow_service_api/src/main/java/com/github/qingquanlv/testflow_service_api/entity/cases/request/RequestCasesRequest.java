@@ -6,10 +6,6 @@ import java.util.List;
 
 public class RequestCasesRequest extends BaseCase {
 
-        /**
-         * 用例名字
-         */
-        private String name;
         //请求配置
         private List<RequestConfig> configs;
         //请求头
@@ -72,12 +68,5 @@ public class RequestCasesRequest extends BaseCase {
                 this.url = url;
         }
 
-        public String getName() {
-                return name;
-        }
-
-        public void setName(String name) {
-                this.name = name;
-        }
 }
 

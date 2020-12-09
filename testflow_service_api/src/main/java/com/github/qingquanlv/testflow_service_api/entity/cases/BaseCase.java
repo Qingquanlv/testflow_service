@@ -2,25 +2,30 @@ package com.github.qingquanlv.testflow_service_api.entity.cases;
 
 import java.util.List;
 
+/**
+ * @Author Qingquan Lv
+ * @Date 2020/11/29 10:57
+ * @Version 1.0
+ */
 public abstract class BaseCase {
 
-        private String key;
-        private List<String> nextKeys;
+        private CaseKey key;
 
+        private List<CaseKey> nextKeys;
 
-        public String getKey() {
+        public CaseKey getKey() {
                 return key;
         }
 
-        public void setKey(String key) {
+        public void setKey(CaseKey key) {
                 this.key = key;
         }
 
-        public List<String> getNextKeys() {
+        public List<CaseKey> getNextKeys() {
                 return nextKeys;
         }
 
-        public void setNextKeys(List<String> nextKeys) {
+        public void setNextKeys(List<CaseKey> nextKeys) {
                 this.nextKeys = nextKeys;
         }
 }

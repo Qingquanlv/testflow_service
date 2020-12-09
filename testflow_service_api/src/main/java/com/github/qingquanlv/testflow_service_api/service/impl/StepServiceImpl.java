@@ -155,8 +155,7 @@ public class StepServiceImpl implements StepService {
     public SaveFeatureResponse saveFeature(SaveFeatureRequest request) {
         SaveFeatureResponse response = new SaveFeatureResponse();
         if (OperationEnum.ADD.equals(request.getOperation())) {
-            featureDao.addTestFeatures();
-            requestCasesDao.addRequestCases(request.getCases().getDataBaseCases());
+            addFeature(request);
         }
         else if (OperationEnum.UPDATE.equals(request.getOperation())) {
             featureDao.addTestFeatures();
@@ -165,6 +164,18 @@ public class StepServiceImpl implements StepService {
             featureDao.addTestFeatures();
         }
         return response;
+    }
+
+    /**
+     *
+     * @param request
+     */
+    private void addFeature(SaveFeatureRequest request) {
+        if (!CollectionUtils.isEmpty(request.getCases().getRequestCases())) {
+            requestCasesDao.addRequestCases(request.getCases().getRequestCases());
+        }
+
+
     }
 
     private SqlSession getSession() {
