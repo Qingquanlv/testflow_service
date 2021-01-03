@@ -1,22 +1,19 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.parse;
 
 import com.github.qingquanlv.testflow_service_api.entity.cases.BaseCase;
-
 import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/9 7:50
+ * @Date 2021/1/2 15:21
  * @Version 1.0
  */
 public class ParseCases extends BaseCase {
 
-    //name
-    private String name;
     //method source
     private String cvtMethodSource;
     //return value type
-    private List<String> returnType;
+    private String returnType;
     //parameters
     private List<Parameter> parameters;
 
@@ -28,10 +25,6 @@ public class ParseCases extends BaseCase {
         this.parameters = parameters;
     }
 
-    public String getName() { return name; }
-
-    public void setName(String name) { this.name = name; }
-
     public String getCvtMethodSource() {
         return cvtMethodSource;
     }
@@ -40,11 +33,13 @@ public class ParseCases extends BaseCase {
         this.cvtMethodSource = cvtMethodSource;
     }
 
-    public List<String> getReturnType() {
+    public String getReturnType() {
         return returnType;
     }
 
-    public void setReturnType(List<String> returnType) {
+    public void setReturnType(String returnType) {
         this.returnType = returnType;
     }
 }
+
+

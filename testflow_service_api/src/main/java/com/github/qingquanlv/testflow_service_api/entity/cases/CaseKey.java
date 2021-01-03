@@ -10,27 +10,11 @@ import com.github.qingquanlv.testflow_service_api.entity.CaseTypeEnum;
 public class CaseKey {
 
     //case id
-    private Integer caseId;
+    private String caseName;
     //case type
-    private CaseTypeEnum caseType;
+    private String caseType;
     //featureId
     private Integer featureId;
-
-    public Integer getCaseId() {
-        return caseId;
-    }
-
-    public void setCaseId(Integer caseId) {
-        this.caseId = caseId;
-    }
-
-    public CaseTypeEnum getCaseEnum() {
-        return caseType;
-    }
-
-    public void setCaseEnum(CaseTypeEnum caseEnum) {
-        this.caseType = caseEnum;
-    }
 
     public Integer getFeatureId() {
         return featureId;
@@ -38,5 +22,21 @@ public class CaseKey {
 
     public void setFeatureId(Integer featureId) {
         this.featureId = featureId;
+    }
+
+    public String getCaseName() {
+        return caseName;
+    }
+
+    public void setCaseName(String caseName) {
+        this.caseName = caseName;
+    }
+
+    public String getCaseType() {
+        return caseType;
+    }
+
+    public void setCaseType(String caseType) {
+        this.caseType = caseType;
     }
 }

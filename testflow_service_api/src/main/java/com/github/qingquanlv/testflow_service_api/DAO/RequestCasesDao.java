@@ -22,8 +22,6 @@ import java.util.Map;
 public class RequestCasesDao {
 
         public final String resource = "mybatis-config.xml";
-        List<SaveFeatureRequest> selectUserByTime(@Param(value="dateVO")DateVO dateVO);
-
 
         /**
          *  查询Features

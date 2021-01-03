@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.FeatureCaseMapper">
+    <resultMap id="FeatureCase" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCase">
+        <result column="id" jdbcType="BIGINT" property="id" />
+        <result column="feature_id" jdbcType="BIGINT" property="feature_id" />
+        <result column="case_id" jdbcType="BIGINT" property="case_id" />
+        <result column="case_type" jdbcType="VARCHAR" property="case_name" />
+        <result column="next_case" jdbcType="VARCHAR" property="next_case_type" />
+        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
+    </resultMap>
+
+    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCase">
+        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    </select>
+
+    <delete id="Del" >
+        DELETE FROM testflow_service.database_case where case_id = #{id}
+    </delete>
+
+    <insert id="Insert" parameterType="java.util.List" useGeneratedKeys="false">
+        insert into feature_case
+            (feature_id,case_id,case_type,next_case)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.feature_id},
+            #{item.case_id},
+            #{item.case_type},
+            #{item.next_case}
+            )
+        </foreach>
+    </insert>
+
+    <update id="Update" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCase">
+        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    </update>
+</mapper>

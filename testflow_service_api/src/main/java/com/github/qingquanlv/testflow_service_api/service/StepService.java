@@ -4,6 +4,7 @@ import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.savefeature.SaveFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.savefeature.SaveFeatureResponse;
+import org.springframework.stereotype.Service;
 
 public interface StepService {
 

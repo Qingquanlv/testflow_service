@@ -8,5 +8,6 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.request.RequestCa
  * @Version 1.0
  */
 public interface RequestCases {
+
     int inserRequestCases(RequestCasesRequest user);
 }

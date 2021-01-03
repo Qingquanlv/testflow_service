@@ -2,7 +2,7 @@ package com.github.qingquanlv.testflow_service_api.entity.cases.parse;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/9 7:50
+ * @Date 2021/1/2 15:22
  * @Version 1.0
  */
 public class Parameter {

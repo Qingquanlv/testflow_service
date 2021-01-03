@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.DataBaseCaseMapper">
+    <resultMap id="DatabaseCase" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        <result column="case_id" jdbcType="BIGINT" property="case_id" />
+        <result column="case_name" jdbcType="VARCHAR" property="case_name" />
+        <result column="sql_str" jdbcType="VARCHAR" property="sql" />
+        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
+    </resultMap>
+
+    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        SELECT * FROM database_case where case_name = #{name}
+    </select>
+
+    <delete id="Del" >
+        DELETE FROM testflow_service.database_case where case_id = #{id}
+    </delete>
+
+    <insert id="Insert" parameterType="java.util.List" useGeneratedKeys="false">
+        insert into database_case
+            (case_name,sql_str)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+                #{item.case_name},
+                #{item.sql}
+            )
+        </foreach>
+    </insert>
+
+    <update id="Update" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    </update>
+
+</mapper>

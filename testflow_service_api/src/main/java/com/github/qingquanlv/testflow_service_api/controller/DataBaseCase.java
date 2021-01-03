@@ -7,32 +7,31 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.database.deleteda
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseResponse;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseRequest;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.FeatureResponse;
-import com.github.qingquanlv.testflow_service_api.service.StepService;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase;
 import com.github.qingquanlv.testflow_service_api.service.impl.CaseServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/24 22:36
+ * @Date 2020/12/31 22:07
  * @Version 1.0
  */
-public class Case {
+@RestController
+@RequestMapping("case/database")
+public class DataBaseCase {
 
-    @Autowired
+    //@Autowired
     private CaseServiceImpl caseServiceImpl;
 
-    @PostMapping(path = "database/create")
+    @PostMapping(path = "/create")
     public CreateDataBaseCaseResponse createCase(@RequestBody CreateDataBaseCaseRequest request) {
         CreateDataBaseCaseResponse rsp =  caseServiceImpl.createCase(request);
         String rspStr = JSONObject.toJSONString(rsp);
         return rsp;
     }
 
-    @PostMapping(path = "database/update")
+    @PostMapping(path = "/update")
     public UpdateDataBaseCaseResponse updateCase(@RequestBody UpdateDataBaseCaseRequest request) {
         UpdateDataBaseCaseResponse rsp = new UpdateDataBaseCaseResponse();
         rsp = caseServiceImpl.updateCase(request);
@@ -40,7 +39,7 @@ public class Case {
         return rsp;
     }
 
-    @PostMapping(path = "database/delete")
+    @PostMapping(path = "/delete")
     public DeleteDataBaseCaseResponse deleteCase(@RequestBody DeleteDataBaseCaseRequest request) {
         DeleteDataBaseCaseResponse rsp = new DeleteDataBaseCaseResponse();
         rsp = caseServiceImpl.deleteCase(request);
@@ -48,4 +47,11 @@ public class Case {
         return rsp;
     }
 
+    @RequestMapping("getCase/{id}")
+    public DeleteDataBaseCaseResponse queryCase(@PathVariable Long id){
+        DeleteDataBaseCaseResponse rsp = new DeleteDataBaseCaseResponse();
+        String rspStr = JSONObject.toJSONString(rsp);
+        return rsp;
+    }
 }
+

@@ -1,11 +1,11 @@
-package com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase;
+package com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/24 23:09
+ * @Date 2020/12/31 22:55
  * @Version 1.0
  */
-public class DeleteDataBaseCaseRequest {
+public class QueryDataBaseCaseRequest {
 
     //case_id
     private Long case_id;
@@ -17,4 +17,5 @@ public class DeleteDataBaseCaseRequest {
     public void setCase_id(Long case_id) {
         this.case_id = case_id;
     }
+
 }

@@ -10,8 +10,7 @@ import java.util.List;
  * @Version 1.0
  */
 public class VerificationCases extends BaseCase {
-    //name
-    private String name;
+
     //verify type
     private String verifyType;
     //verify Parameter
@@ -31,13 +30,5 @@ public class VerificationCases extends BaseCase {
 
     public void setParameters(List<String> parameters) {
         this.parameters = parameters;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }
