@@ -3,6 +3,7 @@ package com.github.qingquanlv.testflow_service_biz.utilities;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Node;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -55,8 +56,8 @@ public class JAXBUtil {
         if (xml != null && !"".equals(xml)) {
             try {
                 Document doc = DocumentHelper.parseText(xml);
-                List<Element> list = doc.selectNodes("/ListRoot/*");
-                for (Element item : list) {
+                List<Node> list = doc.selectNodes("/ListRoot/*");
+                for (Node item : list) {
                     objList.add(formXML(clazz, item.asXML()));
                 }
 

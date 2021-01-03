@@ -7,6 +7,7 @@ import com.zf.zson.result.ZsonResult;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -283,9 +284,9 @@ public class ParamUtil {
         List<Object> objlist = new ArrayList<>();
         try {
             Document doc = DocumentHelper.parseText(xmlStr);
-            List<Element> list = doc.selectNodes(mapKey);
+            List<Node> list = doc.selectNodes(mapKey);
 
-            for (Element ele : list) {
+            for (Node ele : list) {
                 objlist.add(ele.getText());
             }
         } catch (Exception e) {
