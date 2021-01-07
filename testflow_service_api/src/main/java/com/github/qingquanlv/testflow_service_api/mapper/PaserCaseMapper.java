@@ -16,6 +16,8 @@ public interface PaserCaseMapper {
 
     List<PaserCase> Sel(String name);
 
+    PaserCase SelOne(String name);
+
     Long Del(Long case_id);
 
     Long Insert(List<PaserCase> database_case);

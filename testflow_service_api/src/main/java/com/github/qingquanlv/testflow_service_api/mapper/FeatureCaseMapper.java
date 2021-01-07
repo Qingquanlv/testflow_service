@@ -14,9 +14,11 @@ import java.util.List;
 @Repository
 public interface FeatureCaseMapper {
 
-    List<FeatureCase> Sel(String name);
+    List<FeatureCase> Seleclt(Long id);
 
-    Long Del(Long case_id);
+    List<FeatureCase> SelecltByFeatureId(Long featureId);
+
+    Long Delelte(Long case_id);
 
     Long Insert(List<FeatureCase> database_case);
 

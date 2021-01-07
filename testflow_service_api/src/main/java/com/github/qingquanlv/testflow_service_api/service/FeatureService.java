@@ -4,6 +4,7 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.database.deleteda
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
 import org.springframework.stereotype.Service;
 
 
@@ -14,12 +15,20 @@ import org.springframework.stereotype.Service;
  */
 public interface FeatureService {
     /**
-     * 删除dataBaseCase
+     * 创建feature
      *
      * @param request
      * @return
      */
     CreateFeatureResponse createFeature(CreateFeatureRequest request);
+
+    /**
+     * 执行feature
+     *
+     * @param id
+     * @return
+     */
+    ExecFeatureResponse execFeature(Long id);
 
 
 

@@ -1,13 +1,16 @@
 package com.github.qingquanlv.testflow_service_biz.utilities;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONLibDataFormatSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,15 +43,18 @@ public class FastJsonUtil {
         return JSON.parseArray(text,clazz);
     }
 
+    public static String toJson(Object beanCalss) {
+        return JSON.toJSONString(beanCalss);
+    }
 
+    public static HashMap<String, String> toMap(String text) {
+        JSONObject json = JSONObject.parseObject(text);
+        return JSONObject.parseObject(json.toString(), HashMap.class);
+    }
 
     public static Object jsonToBean(String jsonString, Object beanCalss) {
         Object newObj = JSON.parseObject(jsonString, Object.class);
         return newObj;
-    }
-
-    public static String toJson(Object beanCalss) {
-        return JSON.toJSONString(beanCalss);
     }
 
     /**

@@ -46,7 +46,7 @@ public class TestFlowManager {
      * @param url : 请求url
      *
      */
-    public String sendRequest(String requestId, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) throws Exception  {
+    public String sendRequest(String requestId, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) {
         Request request = new Request();
         String responceStr;
         LogHelper.stepExecLog("sendRequest", requestStr, url, requestId);
@@ -61,27 +61,27 @@ public class TestFlowManager {
      *
      * @param convertMethodSource
      * @param convertMethodName
-     * @param destObjType
+     * @param returnType
      * @param paramList
      * @return
      */
-    public String sourceParse(String convertMethodSource, String convertMethodName, String destObjType, List<String> paramList) {
+    public String sourceParse(String convertMethodSource, String convertMethodName, String returnType, List<String> paramList) {
         Parser parser = new Parser();
         String str = "";
-        LogHelper.stepExecLog("sourceParse", convertMethodSource, convertMethodName, destObjType, paramList.toString());
+        LogHelper.stepExecLog("sourceParse", convertMethodSource, convertMethodName, returnType, paramList.toString());
         try {
             //覆盖一个参数到四个参数的场景
             if (2 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, destObjType, paramList.get(0), paramList.get(1));
+                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1));
             }
             if (2 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, destObjType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3));
+                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3));
             }
             if (3 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, destObjType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5));
+                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5));
             }
             if (4 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, destObjType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5), paramList.get(6), paramList.get(7));
+                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5), paramList.get(6), paramList.get(7));
             }
         }
         catch (Exception ex) {

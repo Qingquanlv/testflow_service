@@ -14,7 +14,7 @@ public class FeatureCase {
     //feature_id
     private Long feature_id;
     //case_id
-    private Long case_id;
+    private String case_name;
     //case_type
     private String case_type;
     //next_case
@@ -28,22 +28,6 @@ public class FeatureCase {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getFeature_id() {
-        return feature_id;
-    }
-
-    public void setFeature_id(Long feature_id) {
-        this.feature_id = feature_id;
-    }
-
-    public Long getCase_id() {
-        return case_id;
-    }
-
-    public void setCase_id(Long case_id) {
-        this.case_id = case_id;
     }
 
     public Timestamp getDatachanged_lasttime() {
@@ -68,6 +52,22 @@ public class FeatureCase {
 
     public void setCase_type(String case_type) {
         this.case_type = case_type;
+    }
+
+    public String getCase_name() {
+        return case_name;
+    }
+
+    public void setCase_name(String case_name) {
+        this.case_name = case_name;
+    }
+
+    public Long getFeature_id() {
+        return feature_id;
+    }
+
+    public void setFeature_id(Long feature_id) {
+        this.feature_id = feature_id;
     }
 }
 

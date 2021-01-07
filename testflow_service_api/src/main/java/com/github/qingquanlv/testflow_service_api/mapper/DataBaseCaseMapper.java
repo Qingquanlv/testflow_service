@@ -15,6 +15,8 @@ public interface DataBaseCaseMapper {
 
     List<DatabaseCase> Sel(String name);
 
+    DatabaseCase SelOne(String name);
+
     Long Del(Long case_id);
 
     Long Insert(List<DatabaseCase> database_case);

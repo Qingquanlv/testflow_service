@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface FeatureMapper {
 
-    List<Feature> Sel(String name);
+    Feature Sel(String name);
 
     Long Del(Long case_id);
 

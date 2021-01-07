@@ -10,6 +10,8 @@ import com.github.qingquanlv.testflow_service_api.entity.CaseTypeEnum;
 public class CaseKey {
 
     //case id
+    private Integer caseId;
+    //case name
     private String caseName;
     //case type
     private String caseType;
@@ -38,5 +40,13 @@ public class CaseKey {
 
     public void setCaseType(String caseType) {
         this.caseType = caseType;
+    }
+
+    public Integer getCaseId() {
+        return caseId;
+    }
+
+    public void setCaseId(Integer caseId) {
+        this.caseId = caseId;
     }
 }

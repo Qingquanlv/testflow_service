@@ -17,6 +17,8 @@ public interface RequestCaseMapper {
 
     List<RequestCase> Sel(String name);
 
+    RequestCase SelOne(String name);
+
     Long Del(Long case_id);
 
     Long Insert(List<RequestCase> database_case);

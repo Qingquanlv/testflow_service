@@ -1,6 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.github.qingquanlv.testflow_service_api.common.Lang;
+import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.cases.CaseKey;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.DataBaseCases;
@@ -9,14 +10,16 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.request.RequestCa
 import com.github.qingquanlv.testflow_service_api.entity.cases.verification.VerificationCases;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
 import com.github.qingquanlv.testflow_service_api.mapper.*;
 import com.github.qingquanlv.testflow_service_api.service.FeatureService;
+import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,7 +49,7 @@ public class FeatureServiceImpl implements FeatureService {
     RequestCaseMapper requestCaseMapper;
 
     /**
-     * 删除dataBaseCase
+     * 创建feature
      *
      * @param request
      * @return
@@ -148,6 +151,136 @@ public class FeatureServiceImpl implements FeatureService {
         return response;
     }
 
+
+    /**
+     * 执行feature
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public ExecFeatureResponse execFeature(Long id) {
+        ExecFeatureResponse rsp = new ExecFeatureResponse();
+        List<FeatureCase> featureCaseList = featureCaseMapper.SelecltByFeatureId(id);
+        execFeature(featureCaseList);
+        return rsp;
+    }
+
+    private void execFeature(List<FeatureCase> featureCaseList) {
+
+        Map<Long, Integer> inDegreeMap = new HashMap<>();//储存入度
+        initMap(featureCaseList, inDegreeMap);
+
+        //主要流程
+        Queue<Long> s1 = new ArrayDeque<>();
+        Set<Long> idSet = featureCaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        //获取入度为0的case, 并且插入队列
+        idSet.removeAll(inDegreeMap.keySet());
+        for(Long item : idSet) {
+            s1.offer(item);
+        }
+        //遍历执行入度为0的case
+        while(!s1.isEmpty())
+        {
+            Long n = s1.poll();//抛出队头，并且执行
+            FeatureCase featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
+            execCase(featureCase);
+
+            List<CaseKey> caseKeys = FastJsonUtil.toListBean(featureCase.getNext_case(), CaseKey.class);
+            for (CaseKey caseKey : caseKeys) {
+                //入度减一
+                FeatureCase caseItem = featureCaseList.stream().filter(
+                        item->item.getNext_case().equals(caseKey.getCaseType())
+                                && item.getCase_name().equals(caseKey.getCaseName())).findFirst().orElse(null);
+                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId() - 1));
+                //如果入度为0
+                if(inDegreeMap.get(caseItem.getId()) == 0){
+                    s1.offer(caseItem.getId());
+                }
+            }
+        }
+    }
+
+    private void initMap(List<FeatureCase> featureCaseList, Map<Long, Integer> inDegreeMap) {
+        for (FeatureCase featureCase : featureCaseList) {
+            List<CaseKey> caseKeys = FastJsonUtil.toListBean(featureCase.getNext_case(), CaseKey.class);
+            for (CaseKey caseKey : caseKeys) {
+                FeatureCase caseItem = featureCaseList.stream().filter(
+                        item->item.getNext_case().equals(caseKey.getCaseType())
+                                && item.getCase_name().equals(caseKey.getCaseName())).findFirst().orElse(null);
+                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId() + 1));
+            }
+        }
+    }
+
+    /**
+     * 执行测试用例方法
+     *
+     * @param featureCase
+     */
+    private void execCase(FeatureCase featureCase) {
+        TestFlowManager testFlowManager = new TestFlowManager();
+        //buffer 公共key
+        Long publicKey = System.currentTimeMillis();
+        switch (featureCase.getCase_type()) {
+            case "DATABASE": {
+                DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(featureCase.getCase_name());
+                testFlowManager.addBuffer(
+                        publicKey + Utils.hashKeyForDisk("DATABASE" + databaseCase.getCase_name()),
+                        testFlowManager.queryDataBase(databaseCase.getSql())
+                );
+                break;
+            }
+            case "PARSE": {
+                PaserCase parseCases = paserCaseMapper.SelOne(featureCase.getCase_name());
+                testFlowManager.addBuffer(
+                        publicKey + Utils.hashKeyForDisk("PARSE" + parseCases.getCase_name()),
+                        testFlowManager.sourceParse(parseCases.getCase_name(),
+                                parseCases.getCvt_method_source(),
+                                parseCases.getReturn_type(),
+                                parseCases.getParameters()
+                        )
+                );
+                break;
+            }
+            case "REQUEST": {
+                RequestCase requestCase = requestCaseMapper.SelOne(featureCase.getCase_name());
+                testFlowManager.addBuffer(
+                        publicKey + Utils.hashKeyForDisk("REQUEST" + requestCase.getCase_name()),
+                        testFlowManager.sendRequest(requestCase.getCase_name(),
+                                requestCase.getRequest_body(),
+                                FastJsonUtil.toMap(requestCase.getRequest_configs()),
+                                FastJsonUtil.toMap(requestCase.getRequest_headers()),
+                                requestCase.getRequest_type(),
+                                requestCase.getContent_type(),
+                                requestCase.getUrl()
+                        )
+                );
+                break;
+            }
+            case "VERIFICATION": {
+                VerificationCase verificationCase = verificationCaseMapper.SelOne(featureCase.getCase_name());
+                if ("COMPARE".equals(verificationCase.getVerification_type())) {
+                    testFlowManager.verify(verificationCase.getParameters(),verificationCase.getParameters());
+                }
+                else if ("XPATHCOMPARE".equals(verificationCase.getVerification_type())) {
+                    testFlowManager.verify(verificationCase.getParameters(), verificationCase.getParameters(),verificationCase.getParameters());
+                }
+                else if ("OBJCOMPARE".equals(verificationCase.getVerification_type())) {
+                    testFlowManager.verify(verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters())
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * assertion
+     *
+     * @param request
+     * @return
+     * @throws Exception
+     */
     private Status assertion(CreateFeatureRequest request) throws Exception {
         Status status = new Status();
         status.setSuccess(true);
@@ -159,7 +292,7 @@ public class FeatureServiceImpl implements FeatureService {
             status.setSuccess(false);
             status.setErrorCode(101);
             status.setMessage(Lang.getErrorCode(101));
-        } else if (!featureMapper.Sel(request.getFeatureName().trim()).isEmpty()) {
+        } else if (null != featureMapper.Sel(request.getFeatureName().trim())) {
             status.setSuccess(false);
             status.setErrorCode(102);
             status.setMessage(Lang.getErrorCode(102));

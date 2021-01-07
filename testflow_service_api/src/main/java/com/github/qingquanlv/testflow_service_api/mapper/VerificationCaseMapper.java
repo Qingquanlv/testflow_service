@@ -17,6 +17,8 @@ public interface VerificationCaseMapper {
 
     List<VerificationCase> Sel(String name);
 
+    VerificationCase SelOne(String name);
+
     Long Del(Long case_id);
 
     Long Insert(List<VerificationCase> database_case);
