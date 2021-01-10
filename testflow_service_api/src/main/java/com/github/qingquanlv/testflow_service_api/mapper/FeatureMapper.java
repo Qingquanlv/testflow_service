@@ -17,9 +17,9 @@ public interface FeatureMapper {
 
     Long Del(Long case_id);
 
-    Long Insert(Feature feature);
+    void Ins(Feature feature);
 
-    Feature Update(Feature feature);
+    Feature Upd(Feature feature);
 
 }
 

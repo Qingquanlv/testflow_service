@@ -15,12 +15,12 @@ public interface DataBaseCaseMapper {
 
     List<DatabaseCase> Sel(String name);
 
-    DatabaseCase SelOne(String name);
+    DatabaseCase SelOne(Long Id);
 
     Long Del(Long case_id);
 
-    Long Insert(List<DatabaseCase> database_case);
+    Long Ins(List<DatabaseCase> database_case);
 
-    DatabaseCase Update(DatabaseCase database_case);
+    DatabaseCase Upd(DatabaseCase database_case);
 
 }

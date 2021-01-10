@@ -48,11 +48,11 @@ public class TestFlowManager {
      */
     public String sendRequest(String requestId, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) {
         Request request = new Request();
-        String responceStr;
+        String responceStr="";
         LogHelper.stepExecLog("sendRequest", requestStr, url, requestId);
-        responceStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
+        //responceStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
         //BufferManager.addBufferByKey(requestId, responceStr);
-        LogHelper.stepAfterLog(requestId, responceStr);
+        //LogHelper.stepAfterLog(requestId, responceStr);
         return responceStr;
     }
 

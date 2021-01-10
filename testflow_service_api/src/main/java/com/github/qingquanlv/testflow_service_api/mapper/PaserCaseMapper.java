@@ -16,13 +16,13 @@ public interface PaserCaseMapper {
 
     List<PaserCase> Sel(String name);
 
-    PaserCase SelOne(String name);
+    PaserCase SelOne(Long Id);
 
     Long Del(Long case_id);
 
-    Long Insert(List<PaserCase> database_case);
+    Long Ins(List<PaserCase> database_case);
 
-    PaserCase Update(PaserCase database_case);
+    PaserCase Upd(PaserCase database_case);
 
 }
 

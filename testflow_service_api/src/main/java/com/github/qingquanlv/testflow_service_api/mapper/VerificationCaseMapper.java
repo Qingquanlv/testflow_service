@@ -17,13 +17,13 @@ public interface VerificationCaseMapper {
 
     List<VerificationCase> Sel(String name);
 
-    VerificationCase SelOne(String name);
+    VerificationCase SelOne(Long name);
 
     Long Del(Long case_id);
 
-    Long Insert(List<VerificationCase> database_case);
+    Long Ins(List<VerificationCase> database_case);
 
-    Feature Update(VerificationCase database_case);
+    Feature Upd(VerificationCase database_case);
 
 }
 

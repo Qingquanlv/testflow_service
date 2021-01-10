@@ -1,6 +1,5 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCase;
 import org.springframework.stereotype.Repository;
 
@@ -14,15 +13,19 @@ import java.util.List;
 @Repository
 public interface FeatureCaseMapper {
 
-    List<FeatureCase> Seleclt(Long id);
+    List<FeatureCase> Sel(Long id);
 
-    List<FeatureCase> SelecltByFeatureId(Long featureId);
+    List<FeatureCase> SelByFId(Long id);
 
-    Long Delelte(Long case_id);
+    FeatureCase SelOne(Long featureId);
 
-    Long Insert(List<FeatureCase> database_case);
+    Long Del(Long case_id);
 
-    Feature Update(FeatureCase database_case);
+    Long Ins(List<FeatureCase> feature_cases);
+
+    Long InsOne(FeatureCase feature_case);
+
+    FeatureCase Upd(FeatureCase feature_case);
 
 }
 

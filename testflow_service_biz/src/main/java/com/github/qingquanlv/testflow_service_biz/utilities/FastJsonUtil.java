@@ -2,6 +2,7 @@ package com.github.qingquanlv.testflow_service_biz.utilities;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.serializer.JSONLibDataFormatSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -50,6 +51,10 @@ public class FastJsonUtil {
     public static HashMap<String, String> toMap(String text) {
         JSONObject json = JSONObject.parseObject(text);
         return JSONObject.parseObject(json.toString(), HashMap.class);
+    }
+
+    public static ArrayList<String> toList(String text) {
+        return JSON.parseObject(text, new TypeReference<ArrayList<String>>(){});
     }
 
     public static Object jsonToBean(String jsonString, Object beanCalss) {

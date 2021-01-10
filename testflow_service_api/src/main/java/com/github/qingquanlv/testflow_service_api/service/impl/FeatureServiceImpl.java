@@ -37,6 +37,9 @@ public class FeatureServiceImpl implements FeatureService {
     FeatureCaseMapper featureCaseMapper;
 
     @Autowired
+    FeatureCaseNextCaseMapper featureCaseNextCaseMapper;
+
+    @Autowired
     DataBaseCaseMapper dataBaseCaseMapper;
 
     @Autowired
@@ -58,13 +61,12 @@ public class FeatureServiceImpl implements FeatureService {
     public CreateFeatureResponse createFeature(CreateFeatureRequest request) {
         CreateFeatureResponse response = new CreateFeatureResponse();
         Status status = new Status();
-        status.setSuccess(true);
 
         try {
             status = assertion(request);
             //如果request报文入参没有问题
             if (status.getSuccess()) {
-                List<FeatureCase> featureCaseList = new ArrayList<>();
+                List<FeatureCaseNextCase> featureCaseNextCaseList = new ArrayList<>();
                 List<RequestCase> requestCaseList = new ArrayList<>();
                 List<DatabaseCase> databaseCaseList = new ArrayList<>();
                 List<PaserCase> paserCaseList = new ArrayList<>();
@@ -73,6 +75,7 @@ public class FeatureServiceImpl implements FeatureService {
                 //插入feature
                 Feature feature = new Feature();
                 feature.setFeature_name(request.getFeatureName());
+                featureMapper.Ins(feature);
                 //插入request case
                 if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
                     for (RequestCases item : request.getRequestCasesList()) {
@@ -85,11 +88,9 @@ public class FeatureServiceImpl implements FeatureService {
                         requstCase.setRequest_configs(FastJsonUtil.toJson(item.getConfigs()));
                         requstCase.setRequest_headers(FastJsonUtil.toJson(item.getHeaders()));
                         requestCaseList.add(requstCase);
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setCase_type("request");
-                        featureCase.setNext_case(FastJsonUtil.toJson(item.getNextKeys()));
-                        featureCaseList.add(featureCase);
                     }
+                    //插入request list
+                    requestCaseMapper.Ins(requestCaseList);
                 }
                 //database case
                 if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
@@ -98,11 +99,9 @@ public class FeatureServiceImpl implements FeatureService {
                         databaseCase.setCase_name(item.getKey().getCaseName());
                         databaseCase.setSql(item.getSql());
                         databaseCaseList.add(databaseCase);
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setCase_type("database");
-                        featureCase.setNext_case(FastJsonUtil.toJson(item.getNextKeys()));
-                        featureCaseList.add(featureCase);
                     }
+                    //插入database list
+                    dataBaseCaseMapper.Ins(databaseCaseList);
                 }
                 //parse case
                 if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
@@ -113,11 +112,9 @@ public class FeatureServiceImpl implements FeatureService {
                         paserCase.setParameters(FastJsonUtil.toJson(item.getParameters()));
                         paserCase.setReturn_type(item.getReturnType());
                         paserCaseList.add(paserCase);
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setCase_type("parse");
-                        featureCase.setNext_case(FastJsonUtil.toJson(item.getNextKeys()));
-                        featureCaseList.add(featureCase);
                     }
+                    //插入Parse list
+                    paserCaseMapper.Ins(paserCaseList);
                 }
                 //verification case
                 if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
@@ -127,18 +124,74 @@ public class FeatureServiceImpl implements FeatureService {
                         verificationCase.setVerification_type(item.getVerifyType());
                         verificationCase.setParameters(FastJsonUtil.toJson(item.getParameters()));
                         verificationCaseList.add(verificationCase);
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setCase_type("verificaiton");
-                        featureCase.setNext_case(FastJsonUtil.toJson(item.getNextKeys()));
-                        featureCaseList.add(featureCase);
+                    }
+                    //插入verification list
+                    verificationCaseMapper.Ins(verificationCaseList);
+                }
+                //feature-case
+                for (RequestCases item : request.getRequestCasesList()) {
+                    FeatureCase featureCase = new FeatureCase();
+                    featureCase.setFeature_id(feature.getFeature_id());
+                    RequestCase cs = requestCaseList.stream().filter(i->item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
+                    featureCase.setCase_id(cs.getCase_id());
+                    featureCase.setCase_type("request");
+                    featureCaseMapper.InsOne(featureCase);
+                    for (CaseKey caseKey : item.getNextKeys()) {
+                        FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
+                        featureCaseNextCase.setFeature_case_id(featureCase.getId());
+                        featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList,  verificationCaseList));
+                        featureCaseNextCase.setCase_type(caseKey.getCaseType());
+                        featureCaseNextCaseList.add(featureCaseNextCase);
+                    }
+
+                }
+                for (DataBaseCases item : request.getDataBaseCasesList()) {
+                    FeatureCase featureCase = new FeatureCase();
+                    featureCase.setFeature_id(feature.getFeature_id());
+                    DatabaseCase cs = databaseCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
+                    featureCase.setCase_id(cs.getCase_id());
+                    featureCase.setCase_type("database");
+                    featureCaseMapper.InsOne(featureCase);
+                    for (CaseKey caseKey : item.getNextKeys()) {
+                        FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
+                        featureCaseNextCase.setFeature_case_id(featureCase.getId());
+                        featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList,  verificationCaseList));
+                        featureCaseNextCase.setCase_type(caseKey.getCaseType());
+                        featureCaseNextCaseList.add(featureCaseNextCase);
                     }
                 }
-                featureMapper.Insert(feature);
-                featureCaseMapper.Insert(featureCaseList);
-                dataBaseCaseMapper.Insert(databaseCaseList);
-                verificationCaseMapper.Insert(verificationCaseList);
-                paserCaseMapper.Insert(paserCaseList);
-                requestCaseMapper.Insert(requestCaseList);
+                for (ParseCases item : request.getPaserCasesList()) {
+                    FeatureCase featureCase = new FeatureCase();
+                    featureCase.setFeature_id(feature.getFeature_id());
+                    PaserCase cs = paserCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
+                    featureCase.setCase_id(cs.getCase_id());
+                    featureCase.setCase_type("parse");
+                    featureCaseMapper.InsOne(featureCase);
+                    for (CaseKey caseKey : item.getNextKeys()) {
+                        FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
+                        featureCaseNextCase.setFeature_case_id(featureCase.getId());
+                        featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList,  verificationCaseList));
+                        featureCaseNextCase.setCase_type(caseKey.getCaseType());
+                        featureCaseNextCaseList.add(featureCaseNextCase);
+                    }
+                }
+                for (VerificationCases item : request.getVerificationCasesList()) {
+                    FeatureCase featureCase = new FeatureCase();
+                    featureCase.setFeature_id(feature.getFeature_id());
+                    VerificationCase cs = verificationCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
+                    featureCase.setCase_id(cs.getCase_id());
+                    featureCase.setCase_type("verification");
+                    featureCaseMapper.InsOne(featureCase);
+                    for (CaseKey caseKey : item.getNextKeys()) {
+                        FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
+                        featureCaseNextCase.setFeature_case_id(featureCase.getId());
+                        featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList,  verificationCaseList));
+                        featureCaseNextCase.setCase_type(caseKey.getCaseType());
+                        featureCaseNextCaseList.add(featureCaseNextCase);
+                    }
+                }
+                //插入next feature case关联关系
+                featureCaseNextCaseMapper.Ins(featureCaseNextCaseList);
             }
         } catch(Exception ex) {
             ex.printStackTrace();
@@ -146,11 +199,32 @@ public class FeatureServiceImpl implements FeatureService {
             status.setErrorCode(109);
             status.setMessage(Lang.getErrorCode(109));
         }
-
         response.setStatus(status);
         return response;
     }
 
+    private Long getCaseId(String caseType, String caseName, List<RequestCase> requestCaseList, List<DatabaseCase> databaseCaseList, List<PaserCase> paserCaseList, List<VerificationCase> verificationCaseList) {
+
+        try {
+            if ("request".equals(caseType.toLowerCase())) {
+                RequestCase rcs = requestCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
+                return rcs.getCase_id();
+            } else if ("database".equals(caseType.toLowerCase())) {
+                DatabaseCase dcs = databaseCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
+                return dcs.getCase_id();
+            } else if ("parse".equals(caseType.toLowerCase())) {
+                PaserCase pcs = paserCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
+                return pcs.getCase_id();
+            } else if ("verification".equals(caseType.toLowerCase())) {
+                VerificationCase vcs = verificationCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
+                return vcs.getCase_id();
+            }
+        }
+        catch (Exception ex) {
+            return null;
+        }
+        return null;
+    }
 
     /**
      * 执行feature
@@ -161,7 +235,7 @@ public class FeatureServiceImpl implements FeatureService {
     @Override
     public ExecFeatureResponse execFeature(Long id) {
         ExecFeatureResponse rsp = new ExecFeatureResponse();
-        List<FeatureCase> featureCaseList = featureCaseMapper.SelecltByFeatureId(id);
+        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(id);
         execFeature(featureCaseList);
         return rsp;
     }
@@ -186,13 +260,12 @@ public class FeatureServiceImpl implements FeatureService {
             FeatureCase featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
             execCase(featureCase);
 
-            List<CaseKey> caseKeys = FastJsonUtil.toListBean(featureCase.getNext_case(), CaseKey.class);
-            for (CaseKey caseKey : caseKeys) {
+            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+            for (FeatureCaseNextCase caseKey : nextCaseKeys) {
                 //入度减一
                 FeatureCase caseItem = featureCaseList.stream().filter(
-                        item->item.getNext_case().equals(caseKey.getCaseType())
-                                && item.getCase_name().equals(caseKey.getCaseName())).findFirst().orElse(null);
-                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId() - 1));
+                        item->item.getId().equals(caseKey.getFeature_case_id())).findFirst().orElse(null);
+                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId()) - 1);
                 //如果入度为0
                 if(inDegreeMap.get(caseItem.getId()) == 0){
                     s1.offer(caseItem.getId());
@@ -203,12 +276,11 @@ public class FeatureServiceImpl implements FeatureService {
 
     private void initMap(List<FeatureCase> featureCaseList, Map<Long, Integer> inDegreeMap) {
         for (FeatureCase featureCase : featureCaseList) {
-            List<CaseKey> caseKeys = FastJsonUtil.toListBean(featureCase.getNext_case(), CaseKey.class);
-            for (CaseKey caseKey : caseKeys) {
+            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+            for (FeatureCaseNextCase caseKey : nextCaseKeys) {
                 FeatureCase caseItem = featureCaseList.stream().filter(
-                        item->item.getNext_case().equals(caseKey.getCaseType())
-                                && item.getCase_name().equals(caseKey.getCaseName())).findFirst().orElse(null);
-                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId() + 1));
+                        item->item.getId().equals(caseKey.getFeature_case_id())).findFirst().orElse(null);
+                inDegreeMap.put(caseItem.getId(), inDegreeMap.get(caseItem.getId()) + 1);
             }
         }
     }
@@ -224,7 +296,7 @@ public class FeatureServiceImpl implements FeatureService {
         Long publicKey = System.currentTimeMillis();
         switch (featureCase.getCase_type()) {
             case "DATABASE": {
-                DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(featureCase.getCase_name());
+                DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(featureCase.getCase_id());
                 testFlowManager.addBuffer(
                         publicKey + Utils.hashKeyForDisk("DATABASE" + databaseCase.getCase_name()),
                         testFlowManager.queryDataBase(databaseCase.getSql())
@@ -232,19 +304,19 @@ public class FeatureServiceImpl implements FeatureService {
                 break;
             }
             case "PARSE": {
-                PaserCase parseCases = paserCaseMapper.SelOne(featureCase.getCase_name());
+                PaserCase parseCases = paserCaseMapper.SelOne(featureCase.getCase_id());
                 testFlowManager.addBuffer(
                         publicKey + Utils.hashKeyForDisk("PARSE" + parseCases.getCase_name()),
                         testFlowManager.sourceParse(parseCases.getCase_name(),
                                 parseCases.getCvt_method_source(),
                                 parseCases.getReturn_type(),
-                                parseCases.getParameters()
+                                FastJsonUtil.toList(parseCases.getParameters())
                         )
                 );
                 break;
             }
             case "REQUEST": {
-                RequestCase requestCase = requestCaseMapper.SelOne(featureCase.getCase_name());
+                RequestCase requestCase = requestCaseMapper.SelOne(featureCase.getCase_id());
                 testFlowManager.addBuffer(
                         publicKey + Utils.hashKeyForDisk("REQUEST" + requestCase.getCase_name()),
                         testFlowManager.sendRequest(requestCase.getCase_name(),
@@ -259,15 +331,17 @@ public class FeatureServiceImpl implements FeatureService {
                 break;
             }
             case "VERIFICATION": {
-                VerificationCase verificationCase = verificationCaseMapper.SelOne(featureCase.getCase_name());
+                VerificationCase verificationCase = verificationCaseMapper.SelOne(featureCase.getCase_id());
+                List<String> parameters = FastJsonUtil.toList(verificationCase.getParameters());
                 if ("COMPARE".equals(verificationCase.getVerification_type())) {
-                    testFlowManager.verify(verificationCase.getParameters(),verificationCase.getParameters());
+                    FastJsonUtil.toList(verificationCase.getParameters());
+                    testFlowManager.verify(parameters.get(0), parameters.get(1));
                 }
                 else if ("XPATHCOMPARE".equals(verificationCase.getVerification_type())) {
-                    testFlowManager.verify(verificationCase.getParameters(), verificationCase.getParameters(),verificationCase.getParameters());
+                    testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2));
                 }
                 else if ("OBJCOMPARE".equals(verificationCase.getVerification_type())) {
-                    testFlowManager.verify(verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters(), verificationCase.getParameters())
+                    testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3), parameters.get(4));
                 }
                 break;
             }
@@ -284,6 +358,7 @@ public class FeatureServiceImpl implements FeatureService {
     private Status assertion(CreateFeatureRequest request) throws Exception {
         Status status = new Status();
         status.setSuccess(true);
+        status.setMessage("Create Success");
         if (null == request) {
             status.setSuccess(false);
             status.setErrorCode(110);
@@ -296,229 +371,264 @@ public class FeatureServiceImpl implements FeatureService {
             status.setSuccess(false);
             status.setErrorCode(102);
             status.setMessage(Lang.getErrorCode(102));
-        }
-        //判断request case name 和 type是否为空
-        if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            List<CaseKey> caseKeyList = request.getRequestCasesList().stream().map(RequestCases::getKey).collect(Collectors.toList());
-            for (CaseKey caseKey : caseKeyList) {
-                if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                    emptyErrorName.add(caseKey.getCaseName());
-                }
-                else {
-                    if(!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                        existErrorName.add(caseKey.getCaseName());
+        } else if (status.getSuccess().equals(true)) {
+            //case name 集合
+            List<String> caseNameList = new ArrayList<>();
+            //判断request case name 和 type是否为空
+            if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<CaseKey> caseKeyList = request.getRequestCasesList().stream().map(RequestCases::getKey).collect(Collectors.toList());
+                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
+                for (CaseKey caseKey : caseKeyList) {
+                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                        emptyErrorName.add(caseKey.getCaseName());
+                    } else {
+                        if (!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                            existErrorName.add(caseKey.getCaseName());
+                        }
                     }
                 }
-            }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断request next case name 和 type是否为空
-        if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            for (RequestCases requestCases : request.getRequestCasesList()) {
-                if (null == requestCases.getNextKeys() || null == requestCases.getNextKeys()) {
-                    emptyErrorName.add(requestCases.getKey().getCaseName());
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
                 }
-                else {
-                    for (CaseKey caseKey : requestCases.getNextKeys()) {
-                        if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                            emptyErrorName.add(requestCases.getKey().getCaseName());
+            }
+            //判断database case name 和 type是否为空
+            if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<CaseKey> caseKeyList = request.getDataBaseCasesList().stream().map(DataBaseCases::getKey).collect(Collectors.toList());
+                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
+                for (CaseKey caseKey : caseKeyList) {
+                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                        emptyErrorName.add(caseKey.getCaseName());
+                    } else {
+                        if (!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                            existErrorName.add(caseKey.getCaseName());
                         }
-                        else {
-                            if(!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                existErrorName.add(caseKey.getCaseName());
+                    }
+                }
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                }
+            }
+
+            //判断parse case name 和 type是否为空
+            if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<CaseKey> caseKeyList = request.getPaserCasesList().stream().map(ParseCases::getKey).collect(Collectors.toList());
+                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
+                for (CaseKey caseKey : caseKeyList) {
+                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                        emptyErrorName.add(caseKey.getCaseName());
+                    } else {
+                        if (!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                            existErrorName.add(caseKey.getCaseName());
+                        }
+                    }
+                }
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                }
+            }
+
+            //判断verification case name 和 type是否为空
+            if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<CaseKey> caseKeyList = request.getVerificationCasesList().stream().map(VerificationCases::getKey).collect(Collectors.toList());
+                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
+                for (CaseKey caseKey : caseKeyList) {
+                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                        emptyErrorName.add(caseKey.getCaseName());
+                    } else {
+                        if (!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                            existErrorName.add(caseKey.getCaseName());
+                        }
+                    }
+                }
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                }
+            }
+
+            //判断request next case name 和 type是否为空
+            if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<String> notExistErrorName = new ArrayList<>();
+                for (RequestCases requestCases : request.getRequestCasesList()) {
+                    if (null == requestCases.getNextKeys() || null == requestCases.getNextKeys()) {
+                        emptyErrorName.add(requestCases.getKey().getCaseName());
+                    } else {
+                        for (CaseKey caseKey : requestCases.getNextKeys()) {
+                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                                emptyErrorName.add(requestCases.getKey().getCaseName());
+                            } else {
+                                if (!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                                    existErrorName.add(caseKey.getCaseName());
+                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
+                                    notExistErrorName.add(caseKey.getCaseName());
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断database case name 和 type是否为空
-        if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            List<CaseKey> caseKeyList = request.getDataBaseCasesList().stream().map(DataBaseCases::getKey).collect(Collectors.toList());
-            for (CaseKey caseKey : caseKeyList) {
-                if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                    emptyErrorName.add(caseKey.getCaseName());
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                } else if (!notExistErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(105);
+                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
                 }
-                else {
-                    if(!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                        existErrorName.add(caseKey.getCaseName());
-                    }
-                }
+
             }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断database next case name 和 type是否为空
-        if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            for (DataBaseCases dataBaseCase : request.getDataBaseCasesList()) {
-                if (null == dataBaseCase.getNextKeys() || null == dataBaseCase.getNextKeys()) {
-                    emptyErrorName.add(dataBaseCase.getKey().getCaseName());
-                }
-                else {
-                    for (CaseKey caseKey : dataBaseCase.getNextKeys()) {
-                        if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                            emptyErrorName.add(dataBaseCase.getKey().getCaseName());
-                        }
-                        else {
-                            if(!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                existErrorName.add(caseKey.getCaseName());
+
+            //判断database next case name 和 type是否为空
+            if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<String> notExistErrorName = new ArrayList<>();
+                for (DataBaseCases dataBaseCase : request.getDataBaseCasesList()) {
+                    if (null == dataBaseCase.getNextKeys() || null == dataBaseCase.getNextKeys()) {
+                        emptyErrorName.add(dataBaseCase.getKey().getCaseName());
+                    } else {
+                        for (CaseKey caseKey : dataBaseCase.getNextKeys()) {
+                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                                emptyErrorName.add(dataBaseCase.getKey().getCaseName());
+                            } else {
+                                if (!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                                    existErrorName.add(caseKey.getCaseName());
+                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
+                                    notExistErrorName.add(caseKey.getCaseName());
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断parse case name 和 type是否为空
-        if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            List<CaseKey> caseKeyList = request.getPaserCasesList().stream().map(ParseCases::getKey).collect(Collectors.toList());
-            for (CaseKey caseKey : caseKeyList) {
-                if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                    emptyErrorName.add(caseKey.getCaseName());
+
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                } else if (!notExistErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(105);
+                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
                 }
-                else {
-                    if(!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                        existErrorName.add(caseKey.getCaseName());
-                    }
-                }
+
             }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断parse next case name 和 type是否为空
-        if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            for (ParseCases parseCases : request.getPaserCasesList()) {
-                if (null == parseCases.getNextKeys() || null == parseCases.getNextKeys()) {
-                    emptyErrorName.add(parseCases.getKey().getCaseName());
-                }
-                else {
-                    for (CaseKey caseKey : parseCases.getNextKeys()) {
-                        if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                            emptyErrorName.add(parseCases.getKey().getCaseName());
-                        }
-                        else {
-                            if(!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                existErrorName.add(caseKey.getCaseName());
+
+
+            //判断parse next case name 和 type是否为空
+            if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<String> notExistErrorName = new ArrayList<>();
+                for (ParseCases parseCases : request.getPaserCasesList()) {
+                    if (null == parseCases.getNextKeys() || null == parseCases.getNextKeys()) {
+                        emptyErrorName.add(parseCases.getKey().getCaseName());
+                    } else {
+                        for (CaseKey caseKey : parseCases.getNextKeys()) {
+                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                                emptyErrorName.add(parseCases.getKey().getCaseName());
+                            } else {
+                                if (!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                                    existErrorName.add(caseKey.getCaseName());
+                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
+                                    notExistErrorName.add(caseKey.getCaseName());
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断verification case name 和 type是否为空
-        if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            List<CaseKey> caseKeyList = request.getVerificationCasesList().stream().map(VerificationCases::getKey).collect(Collectors.toList());
-            for (CaseKey caseKey : caseKeyList) {
-                if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                    emptyErrorName.add(caseKey.getCaseName());
-                }
-                else {
-                    if(!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                        existErrorName.add(caseKey.getCaseName());
-                    }
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                } else if (!notExistErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(105);
+                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
                 }
             }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
-            }
-        }
-        //判断verification next case name 和 type是否为空
-        if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-            List<String> emptyErrorName = new ArrayList<>();
-            List<String> existErrorName = new ArrayList<>();
-            for (VerificationCases verificationCases : request.getVerificationCasesList()) {
-                if (null == verificationCases.getNextKeys() || null == verificationCases.getNextKeys()) {
-                    emptyErrorName.add(verificationCases.getKey().getCaseName());
-                }
-                else {
-                    for (CaseKey caseKey : verificationCases.getNextKeys()) {
-                        if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                            emptyErrorName.add(verificationCases.getKey().getCaseName());
-                        }
-                        else {
-                            if(!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                existErrorName.add(caseKey.getCaseName());
+
+
+            //判断verification next case name 和 type是否为空
+            if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
+                List<String> emptyErrorName = new ArrayList<>();
+                List<String> existErrorName = new ArrayList<>();
+                List<String> notExistErrorName = new ArrayList<>();
+                for (VerificationCases verificationCases : request.getVerificationCasesList()) {
+                    if (null == verificationCases.getNextKeys() || null == verificationCases.getNextKeys()) {
+                        emptyErrorName.add(verificationCases.getKey().getCaseName());
+                    } else {
+                        for (CaseKey caseKey : verificationCases.getNextKeys()) {
+                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
+                                emptyErrorName.add(verificationCases.getKey().getCaseName());
+                            } else {
+                                if (!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
+                                    existErrorName.add(caseKey.getCaseName());
+                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
+                                    notExistErrorName.add(caseKey.getCaseName());
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (!emptyErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(103);
-                status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-            } else if (!existErrorName.isEmpty()) {
-                status.setSuccess(false);
-                status.setErrorCode(104);
-                status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                if (!emptyErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(103);
+                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
+                } else if (!existErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(104);
+                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
+                } else if (!notExistErrorName.isEmpty()) {
+                    status.setSuccess(false);
+                    status.setErrorCode(105);
+                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
+                }
+
             }
         }
         return status;

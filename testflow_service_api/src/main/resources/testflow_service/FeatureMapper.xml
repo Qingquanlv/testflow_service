@@ -15,7 +15,7 @@
         DELETE FROM testflow_service.database_case where case_id = #{id}
     </delete>
 
-    <insert id="Insert" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature" >
+    <insert id="Ins" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature" useGeneratedKeys="true" keyColumn="feature_id" keyProperty="feature_id">
         INSERT INTO
         feature
         (feature_name)
@@ -23,7 +23,7 @@
         (#{feature_name})
     </insert>
 
-    <update id="Update" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
+    <update id="Upd" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
         SELECT * FROM testflow_service.database_case where case_id = #{id}
     </update>
 

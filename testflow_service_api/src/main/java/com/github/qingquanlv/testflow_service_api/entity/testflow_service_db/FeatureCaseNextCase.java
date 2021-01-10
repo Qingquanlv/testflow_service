@@ -4,14 +4,14 @@ import java.sql.Timestamp;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/1/2 11:13
+ * @Date 2021/1/7 22:37
  * @Version 1.0
  */
-public class FeatureCase {
+public class FeatureCaseNextCase {
     //id
     private Long id;
     //feature_id
-    private Long feature_id;
+    private Long feature_case_id;
     //case_id
     private Long case_id;
     //case_type
@@ -43,14 +43,6 @@ public class FeatureCase {
         this.case_type = case_type;
     }
 
-    public Long getFeature_id() {
-        return feature_id;
-    }
-
-    public void setFeature_id(Long feature_id) {
-        this.feature_id = feature_id;
-    }
-
     public Long getCase_id() {
         return case_id;
     }
@@ -58,5 +50,12 @@ public class FeatureCase {
     public void setCase_id(Long case_id) {
         this.case_id = case_id;
     }
-}
 
+    public Long getFeature_case_id() {
+        return feature_case_id;
+    }
+
+    public void setFeature_case_id(Long feature_case_id) {
+        this.feature_case_id = feature_case_id;
+    }
+}

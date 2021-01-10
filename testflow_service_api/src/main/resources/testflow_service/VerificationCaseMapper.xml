@@ -17,7 +17,7 @@
         DELETE FROM testflow_service.database_case where case_id = #{id}
     </delete>
 
-    <insert id="Insert" parameterType="java.util.List" useGeneratedKeys="false">
+    <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="case_id" keyProperty="case_id">
         insert into verification_case
         ( case_name,verification_type,parameters)
         values
@@ -30,7 +30,7 @@
         </foreach>
     </insert>
 
-    <update id="Update" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.VerificationCase">
+    <update id="Upd" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.VerificationCase">
         SELECT * FROM testflow_service.database_case where case_id = #{id}
     </update>
 

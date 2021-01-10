@@ -17,13 +17,13 @@ public interface RequestCaseMapper {
 
     List<RequestCase> Sel(String name);
 
-    RequestCase SelOne(String name);
+    RequestCase SelOne(Long name);
 
     Long Del(Long case_id);
 
-    Long Insert(List<RequestCase> database_case);
+    Long Ins(List<RequestCase> database_case);
 
-    Feature Update(RequestCase database_case);
+    Feature Upd(RequestCase database_case);
 
 }
 

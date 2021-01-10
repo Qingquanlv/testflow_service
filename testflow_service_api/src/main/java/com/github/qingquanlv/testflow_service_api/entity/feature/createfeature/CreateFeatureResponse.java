@@ -1,9 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.feature.createfeature;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.cases.Cases;
 
-import java.util.List;
 
 /**
  * @Author Qingquan Lv
