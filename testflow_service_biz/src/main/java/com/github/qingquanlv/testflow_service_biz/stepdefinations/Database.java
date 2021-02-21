@@ -30,8 +30,7 @@ public class Database {
         SqlSession session = sqlSessionFactory.openSession();
         List<LinkedHashMap<String, Object>> value = session.selectList("select", sql);
         session.close();
-        String str = FastJsonUtil.toJson(value);
-        return str;
+        return FastJsonUtil.toJson(value);
     }
 
     /**

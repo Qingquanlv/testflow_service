@@ -4,6 +4,7 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Fea
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -19,7 +20,9 @@ public interface FeatureCaseMapper {
 
     FeatureCase SelOne(Long featureId);
 
-    Long Del(Long case_id);
+    Long Del(Long Id);
+
+    Long DelByFId(Set<Long> Id);
 
     Long Ins(List<FeatureCase> feature_cases);
 

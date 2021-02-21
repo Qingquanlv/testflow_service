@@ -13,10 +13,15 @@ import java.util.List;
  * @Version 1.0
  */
 public class CreateFeatureRequest {
+
     /**
      * 请求唯一标识
      */
     private String requestId;
+    /**
+     * feature Id
+     */
+    private Long featureId;
     /**
      * feature Name
      */
@@ -97,6 +102,14 @@ public class CreateFeatureRequest {
 
     public void setPaserCasesList(List<ParseCases> paserCasesList) {
         this.paserCasesList = paserCasesList;
+    }
+
+    public Long getFeatureId() {
+        return featureId;
+    }
+
+    public void setFeatureId(Long featureId) {
+        this.featureId = featureId;
     }
 }
 

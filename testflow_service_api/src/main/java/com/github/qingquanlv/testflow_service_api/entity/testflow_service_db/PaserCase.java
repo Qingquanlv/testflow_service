@@ -17,8 +17,6 @@ public class PaserCase {
     private String parameters;
     //cvt_method_source
     private String cvt_method_source;
-    //return_type
-    private String return_type;
     //时间戳
     private Timestamp datachanged_lasttime;
 
@@ -52,14 +50,6 @@ public class PaserCase {
 
     public void setCvt_method_source(String cvt_method_source) {
         this.cvt_method_source = cvt_method_source;
-    }
-
-    public String getReturn_type() {
-        return return_type;
-    }
-
-    public void setReturn_type(String return_type) {
-        this.return_type = return_type;
     }
 
     public Timestamp getDatachanged_lasttime() {

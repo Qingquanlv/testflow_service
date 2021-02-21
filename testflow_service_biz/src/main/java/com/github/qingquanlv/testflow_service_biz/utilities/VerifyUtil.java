@@ -1,5 +1,9 @@
 package com.github.qingquanlv.testflow_service_biz.utilities;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.github.qingquanlv.testflow_service_biz.common.Constants;
 import com.github.qingquanlv.testflow_service_biz.serviceaccess.ServiceAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,173 +19,155 @@ public class VerifyUtil {
     private Stack<String> index = new Stack<>();
 
     /**
-     * 获取对比错误信息
      *
-     * @return 返回 ErrorMsg
+     * @param exp 预期实体
+     * @param atl 实际实体
+     * @param pkMap list主键
+     * @param noCompareItemMap list不对比key
      */
-    public String getErrorMsg() {
+    public String compareObj(String exp, String atl, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap) {
+        try {
+            Object expObj = JSON.parse(exp);
+            Object atlObj = JSON.parse(atl);
+            if (expObj instanceof JSONObject && atlObj instanceof JSONObject) {
+                compareObj(Constants.ENTITY_ROOT, expObj, atlObj, pkMap, noCompareItemMap);
+            } else if (expObj instanceof JSONArray && atlObj instanceof JSONArray) {
+                compareObj(Constants.ENTITY_ROOT, expObj, atlObj, pkMap, noCompareItemMap);
+            } else {
+                compareObj(Constants.ENTITY_ROOT, expObj, atlObj, pkMap, noCompareItemMap);
+            }
+        } catch (Exception ex) {
+            compareObj(Constants.ENTITY_ROOT, exp, atl, pkMap, noCompareItemMap);
+        }
         return errorMsg.toString();
     }
 
     /**
-     * 对比两个实体，实体中不含有List，并且不含无需对比item
      *
-     * @param expObj 预期实体
-     * @param atlObj 实际实体
-     * @return 返回 ErrorMsg
+     * @param key 对比主键key
+     * @param exp 预期实体
+     * @param atl 实际实体
+     * @param pkMap list主键
+     * @param noCompareItemMap list不对比key
      */
-    public void compareEntity(Object expObj, Object atlObj)
-    {
-        Map<String, List<String>> pkMap = new HashMap<>();
-        Map<String, List<String>> noCompareItemMap = new HashMap<>();
-        compareEntity(expObj,atlObj, pkMap, noCompareItemMap);
-    }
-
-    /**
-     * 对比两个实体，实体中含有List，主键只能为值类型
-     *
-     * @param expObj 预期实体
-     * @param atlObj 实际实体
-     * @param atlObj 实体中List的主键List
-     * @return 返回 ErrorMsg
-     */
-    public void compareEntity(Object expObj, Object atlObj, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap)
-    {
-        if (isList(expObj) && isList(atlObj))
-        {
-            List<Object> expObjList = new ArrayList<>();
-            List<Object> atlObjList = new ArrayList<>();
-            try {
-                expObjList = (ArrayList) expObj;
-                atlObjList = (ArrayList) atlObj;
+    private void compareObj(String key, Object exp, Object atl, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap) {
+        //判断JSONObject和JSONArray
+        if (exp instanceof JSONArray && atl instanceof JSONArray) {
+            compareJSONList(key, (JSONArray) exp, (JSONArray) atl, pkMap,noCompareItemMap);
+        } else if (exp instanceof JSONObject && atl instanceof JSONObject ) {
+            compareJSONObj(key, (JSONObject) exp, (JSONObject) atl, pkMap,noCompareItemMap);
+        } else {
+            index.push(key);
+            if(!compareVal(exp, atl, pkMap,noCompareItemMap)) {
+                errorMsg.append(String.format("Index: %s expected: \"%s\" not equals with actual: \"%s\".\n", index, exp, atl));
             }
-            catch (Exception ex)
-            {
-                errorMsg.append(String.format("Parse data \"%s\", \"%s\" to list failed.\n", expObj.toString(), atlObj.toString()) + ex);
-            }
-            compareList(expObjList, atlObjList, pkMap, noCompareItemMap);
+            index.pop();
         }
-        else
-        {
-            //取出bean里的不对比的属性
-            List<String> noCompareItemList = noCompareItemMap.get(expObj.getClass().getSimpleName());
-            //取出bean里的所有方法和属性
-            Field[] fields = ServiceAccess.reflectDeclaredFields(atlObj);
-            for (Field f : fields) {
-                //根据属性名判断，有关属性不进行匹配
-                if (noCompareItemList !=null && noCompareItemList.contains(f.getName())){
-                    continue;
-                }
-                Object cAtlObj = ServiceAccess.reflectField(atlObj, f);
-                Object cExpObj = ServiceAccess.reflectField(expObj, f);
-                if (null != cAtlObj && cAtlObj.getClass().getSimpleName().toLowerCase().equals("recordschema")) {
-                    continue;
-                }
-                index.push(f.getName());
-                if(!equals(cExpObj, cAtlObj, pkMap, noCompareItemMap)) {
-                    errorMsg.append(String.format("Index: %s expected: \"%s\" not equals with actual: \"%s\".\n", index, cExpObj, cAtlObj));
-                }
-                else {
-                    //logger.info(String.format("Index: %s expected: \"%s\" not equals with actual: \"%s\".", index, cExpObj, cAtlObj));
-                }
-                index.pop();
-            }
-        }
-
     }
 
     /**
      * 根据主键对比两个DB List
      *
+     * @param expObj 预期实体
+     * @param atlObj 预期实体
+     * @param pkMap 主键键值对
+     */
+    private boolean compareJSONObj(String key, JSONObject expObj, JSONObject atlObj, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap) {
+        boolean ret = true;
+        //取出bean里的不对比的val
+        List<String> noCompareItemList = noCompareItemMap.get(key);
+        //对比Obj里面的所有val
+        for (String keyItem : atlObj.keySet()) {
+            //根据val判断，有关val不进行匹配
+            if (noCompareItemList !=null && noCompareItemList.contains(keyItem)){
+                continue;
+            }
+            compareObj(keyItem, expObj.get(keyItem), atlObj.get(keyItem), pkMap, noCompareItemMap);
+        }
+        return ret;
+    }
+
+    /**
+     * 根据主键对比两个List
+     *
+     * @param key 主键key
      * @param expObjList 预期实体List
      * @param atlObjList 预期实体List
      * @param pkMap 主键键值对
      */
-    private void compareList(List<Object> expObjList, List<Object> atlObjList, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap)
+    private void compareJSONList(String key, JSONArray expObjList, JSONArray atlObjList, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap)
     {
-        //对比过的List实体
-        List<Object> objListCompared = new ArrayList<>();
         //如果两个List长度不相等，返回error message
         if (expObjList.size() != atlObjList.size()) {
             errorMsg.append(String.format("List %s length not mathched. Expected: \"%d\", Actual \"%d\" Expected List: \"%s\", Actual List \"%s\".\n", index, expObjList.size(), atlObjList.size(), expObjList, atlObjList));
         }
+        List<String> pkList = pkMap.get(key);
         //循环遍历exp List
         for (Object expObjItem : expObjList) {
-            int i = 0;
-            int j = atlObjList.size();
-            //循环遍历atl List
-            List<String> pkList = pkMap.get(expObjItem.getClass().getSimpleName());
-            List<String> noCompareItemList = noCompareItemMap.get(expObjItem.getClass().getSimpleName());
-            for (Object atlObjItem : atlObjList) {
-                List<Object> primaryFields = ServiceAccess.getPrimaryFields(expObjItem, pkList);
-                if (primaryFields.size() > 0) {
+            //对比list<String> 类型
+            if (expObjItem instanceof String || expObjItem instanceof Integer || expObjItem instanceof Long) {
+                index.push(key);
+                if (!atlObjList.contains(expObjItem)) {
+                    errorMsg.append(String.format("Actual entity List with index key: \"%s\" expect value \"%s\" not found.\n", index, expObjItem));
+                } else {
+                    atlObjList.remove(expObjItem);
+                }
+                index.pop();
+            } else if (null == pkList || pkList.size() == 0) {
+                atlObjList.clear();
+                errorMsg.append(String.format("Current entity \"%s\" primary key: \"%s\" no found, please check if the primary keys are correct.\n", expObjItem, pkMap));
+                break;
+            } else {
+                int i = 0;
+                int j = atlObjList.size();
+                index.push(key + pkList + getPKVal(expObjItem, pkList));
+                //循环遍历atl List
+                for (Object atlObjItem : atlObjList) {
                     //根据实体主键对比实体，如果不相等则continue
-                    if (!compareObjWithSpecificCol(expObjItem, atlObjItem, pkList)) {
+                    if (!compareObjWithSpyKey(expObjItem, atlObjItem, pkList)) {
                         i++;
                         continue;
                     }
-                    index.push(expObjItem.getClass().getSimpleName() + pkList + primaryFields);
-                    //获取当前对比实体的所有属性
-                    Field[] fs = ServiceAccess.reflectDeclaredFields(atlObjItem);
-                    for (Field f : fs) {
-                        //根据属性名判断，有关属性不进行匹配
-                        if (noCompareItemList != null && noCompareItemList.contains(f.getName())){
-                            continue;
-                        }
-                        Object atlObj = ServiceAccess.reflectField(atlObjItem, f);
-                        Object expObj = ServiceAccess.reflectField(expObjItem, f);
-                        if (null != atlObj && atlObj.getClass().getSimpleName().toLowerCase().equals("recordschema")) {
-                            continue;
-                        }
-                        index.push(f.getName());
-                        if(!equals(expObj, atlObj, pkMap, noCompareItemMap)) {
-                            errorMsg.append(String.format("Index: %s expected: \"%s\" not equals with actual: \"%s\".\n", index, expObj, atlObj));
-                        }
-                        else
-                        {
-                            //logger.info(String.format("Index: %s expected obj: \"%s\" equals with actual obj \"%s\".", index, expObj, atlObj));
-                        }
-                        index.pop();
-                    }
-                    index.pop();
+                    compareObj(key, expObjItem, atlObjItem, pkMap, noCompareItemMap);
                     //对比过的实体从list中删除
                     atlObjList.remove(atlObjItem);
                     break;
                 }
-                else
-                {
-                    errorMsg.append(String.format("Current entity \"%s\" primary key: \"%s\" no found, please check if the primary keys are correct.\n", expObjItem, ServiceAccess.getPrimaryFieldsStrViaList(pkList)));
+                //如果预期值在实际值的objList中不存在
+                if (j == i) {
+                    errorMsg.append(String.format("Actual entity List with index key: \"%s\" expect value \"%s\" not found.\n", index, expObjItem));
                 }
-            }
-            //如果预期值在实际值的objList中不存在
-            if (j == i)
-            {
-                errorMsg.append(String.format("Entity: \"%s\" with primary key: \"%s\" value \"%s\" actual value not found.\n", expObjItem, ServiceAccess.getPrimaryFieldsStrViaList(pkList), ServiceAccess.getPrimaryFields(expObjItem, pkList)));
+                index.pop();
             }
         }
 
-        for(Object leftObj : atlObjList)
-        {
-            //获取主键List
-            List<String> pkList = pkMap.get(leftObj.getClass().getSimpleName());
-            errorMsg.append(String.format("Entity: \"%s\" with primary key: \"%s\" value \"%s\" expect value not found.\n", leftObj, ServiceAccess.getPrimaryFieldsStrViaList(pkList), ServiceAccess.getPrimaryFields(leftObj, pkList)));
+        for(Object leftObj : atlObjList) {
+            if (leftObj instanceof String || leftObj instanceof Integer || leftObj instanceof Long) {
+                index.push(key);
+                errorMsg.append(String.format("Expect entity List with index key: \"%s\" actual value \"%s\" not found.\n", index, leftObj));
+                index.pop();
+            } else {
+                index.push(key + pkList + getPKVal(leftObj, pkList));
+                errorMsg.append(String.format("Expect entity List with index key: \"%s\" actual value \"%s\" not found.\n", index, leftObj));
+                index.pop();
+            }
         }
     }
 
     /**
      * 判断两个实体对应的属性List是否相等
      *
-     * @param obj1 对比的第一个实体
-     * @param obj2 对比的第二个实体
-     * @param fieldPaths 需要对比的属性List
+     * @param expObj 对比的第一个实体
+     * @param atlObj 对比的第二个实体
+     * @param keys 需要对比的属性List
      * @return boolean 是否相等
      */
-    public boolean compareObjWithSpecificCol(Object obj1, Object obj2, List<String> fieldPaths)
+    private boolean compareObjWithSpyKey(Object expObj, Object atlObj, List<String> keys)
     {
         boolean ret = true;
-        for (String field : fieldPaths)
+        for (String key : keys)
         {
-            if(!DataValEquals(ServiceAccess.reflectField(obj1, field), ServiceAccess.reflectField(obj2, field)))
+            if(!DataValEquals(((JSONObject)expObj).get(key), ((JSONObject)atlObj).get(key)))
             {
                 ret = false;
             }
@@ -189,76 +175,13 @@ public class VerifyUtil {
         return ret;
     }
 
-    /**
-     * 判断实体是否为List
-     *compareList
-     * @param bean 反射类名
-     * @return Class<?> 返回类Class
-     */
-    private boolean isList(Object bean)
+    private List<Object> getPKVal(Object expObj, List<String> pkList)
     {
-        boolean ret = false;
-        if(bean != null && bean.getClass() != null && bean.getClass().getSimpleName().equals("ArrayList")) {
-            ret = true;
+        List<Object> list = new ArrayList<>();
+        for (String key : pkList) {
+            list.add(((JSONObject) expObj).get(key));
         }
-        return ret;
-    }
-
-    /**
-     * 判断是否存在某属性的 get方法
-     *
-     * @param field : 需要获取方法对应的属性
-     * @param obj ： 需要获取方法对应的实例
-     * @return Method 返回get方法字节码
-     */
-    private Method getValueViaGetMet(Field field, Object obj) {
-        String fieldSetName = parGetName(field.getName());
-        Method[] methods = ServiceAccess.reflectDeclaredMethod(obj);
-        Method fieldSetMet = getGetMet(methods, fieldSetName);
-        if (fieldSetMet == null) {
-            logger.warn(String.format("%s: Get field \"%s\" get method from object \"%s\" failed, please check if field name or method is exist.", new Date(), field, obj, field));
-        }
-        return fieldSetMet;
-    }
-
-    /**
-     * 获取某属性的 get方法
-     *
-     * @param methods
-     * @param fieldGetMet
-     * @return boolean
-     */
-    private Method getGetMet(Method[] methods, String fieldGetMet) {
-        Method tarMet = null;
-        for (Method met : methods) {
-            if (fieldGetMet.equals(met.getName())) {
-                tarMet = met;
-            }
-        }
-        if (tarMet == null)
-        {
-            //logger.info(String.format("Get method \"%s\" fieldGetMet failed, please check if method \"%s\" is exist.", fieldGetMet, fieldGetMet));
-        }
-        return tarMet;
-    }
-
-    /**
-     * 拼接属性的 get方法
-     *
-     * @param fieldName
-     * @return String
-     */
-    private String parGetName(String fieldName) {
-        if (null == fieldName || "".equals(fieldName)) {
-            return null;
-        }
-        int startIndex = 0;
-        if (fieldName.charAt(0) == '_') {
-            startIndex = 1;
-        }
-        return "get"
-                + fieldName.substring(startIndex, startIndex + 1).toUpperCase()
-                + fieldName.substring(startIndex + 1);
+        return list;
     }
 
     /**
@@ -268,7 +191,7 @@ public class VerifyUtil {
      * @param obj2 对比实体2
      * @return boolean 是否相等
      */
-    private boolean equals(Object obj1, Object obj2, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap) {
+    private boolean compareVal(Object obj1, Object obj2, Map<String, List<String>> pkMap, Map<String, List<String>> noCompareItemMap) {
         logger.info(String.format("%s: Start to compare object %s, Expected: \"%s\", Actual \"%s\".", new Date(), index, obj1, obj2));
         if (obj1 == null && "".equals(obj2)) {
             return true;
@@ -325,18 +248,13 @@ public class VerifyUtil {
             Date value2 = (Date) obj1;
             return value1.toString().equals(value2.toString());
         }
-        else if (obj1 != null && obj1.getClass() != null && obj1.getClass().getName() != null && obj1.getClass().getName().toLowerCase().contains("enum")) {
-            String value1 = obj1.toString();
-            String value2 = obj2.toString();
-            return value1.equals(value2);
-        }
         else {
-            compareEntity(obj1, obj2, pkMap, noCompareItemMap);
+            compareObj("", obj1, obj2, pkMap, noCompareItemMap);
             return true;
         }
     }
 
-    public static boolean DataValEquals(Object obj1, Object obj2) {
+    private static boolean DataValEquals(Object obj1, Object obj2) {
         if (obj1 == null && "".equals(obj2)) {
             return true;
         }

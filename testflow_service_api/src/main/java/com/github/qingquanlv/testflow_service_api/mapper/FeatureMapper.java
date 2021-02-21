@@ -13,7 +13,9 @@ import java.util.List;
 @Repository
 public interface FeatureMapper {
 
-    Feature Sel(String name);
+    Feature SelByName(String name);
+
+    Feature Sel(Long Id);
 
     Long Del(Long case_id);
 

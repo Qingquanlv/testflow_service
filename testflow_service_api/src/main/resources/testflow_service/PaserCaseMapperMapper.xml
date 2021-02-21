@@ -6,34 +6,62 @@
         <result column="case_name" jdbcType="VARCHAR" property="case_name" />
         <result column="parameters" jdbcType="VARCHAR" property="parameters" />
         <result column="cvt_method_source" jdbcType="VARCHAR" property="cvt_method_source" />
-        <result column="return_type" jdbcType="VARCHAR" property="return_type" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
-    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.PaserCase">
+    <select id="Sel" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.PaserCase">
         SELECT * FROM paser_case where case_name = #{name}
     </select>
 
+    <select id="SelList"  resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.PaserCase">
+        SELECT * FROM paser_case
+        where case_id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="SelOne" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.PaserCase">
+        SELECT * FROM paser_case where case_id = #{id}
+    </select>
+
     <delete id="Del" >
-        DELETE FROM testflow_service.database_case where case_id = #{id}
+        DELETE FROM database_case
+        where case_id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="case_id" keyProperty="case_id">
         insert into paser_case
-        ( case_name,parameters,cvt_method_source,return_type)
+        ( case_name,parameters,cvt_method_source)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
             #{item.case_name},
             #{item.parameters},
-            #{item.cvt_method_source},
-            #{item.return_type}
+            #{item.cvt_method_source}
             )
         </foreach>
     </insert>
 
-    <update id="Upd" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.PaserCase">
-        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    <update id="Upd" parameterType="java.util.List" >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update paser_case
+            <set >
+                <if test="item.case_name != null" >
+                    case_name = #{item.case_name,jdbcType=VARCHAR},
+                </if>
+                <if test="item.parameters != null" >
+                    url = #{item.parameters,jdbcType=VARCHAR},
+                </if>
+                <if test="item.cvt_method_source != null" >
+                    url = #{item.cvt_method_source,jdbcType=VARCHAR},
+                </if>
+            </set>
+            where case_id = #{item.case_id,jdbcType=BIGINT}
+        </foreach>
     </update>
 
 </mapper>

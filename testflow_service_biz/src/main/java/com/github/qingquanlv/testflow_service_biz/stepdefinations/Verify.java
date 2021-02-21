@@ -1,6 +1,10 @@
 package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
+import com.github.qingquanlv.testflow_service_biz.common.Constants;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.VerifyUtil;
 
@@ -45,16 +49,15 @@ public class Verify {
      * 对比实体
      *
      */
-    public String verify(String paramType, String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr) throws Exception {
-        Object expObj = ParamUtil.getParameType(expStr, paramType);
-        Object atlObj = ParamUtil.getParameType(atlStr, paramType);
+    public String verify(String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr) throws Exception {
+        String exp = BufferManager.getBufferByKey(expStr);
+        String atl = BufferManager.getBufferByKey(atlStr);
         //primary key map
-        Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(pkMapStr);
+        Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(BufferManager.getBufferByKey(pkMapStr));
         //no compare map
-        Map<String, List<String>> noCompareItemMap = ParamUtil.parseVerifyParam(noCompareItemMapStr);
+        Map<String, List<String>> noCompareItemMap = ParamUtil.parseVerifyParam(BufferManager.getBufferByKey(noCompareItemMapStr));
         VerifyUtil compareUtil = new VerifyUtil();
-        compareUtil.compareEntity(expObj, atlObj, pkMap, noCompareItemMap);
-        return compareUtil.getErrorMsg();
+        return compareUtil.compareObj(exp, atl, pkMap, noCompareItemMap);
     }
 }
 

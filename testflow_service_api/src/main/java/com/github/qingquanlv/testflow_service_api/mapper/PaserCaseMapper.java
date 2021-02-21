@@ -5,6 +5,7 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Pas
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -16,13 +17,15 @@ public interface PaserCaseMapper {
 
     List<PaserCase> Sel(String name);
 
+    List<PaserCase> SelList(Set<Long> Ids);
+
     PaserCase SelOne(Long Id);
 
-    Long Del(Long case_id);
+    Long Del(Set<Long> case_id);
 
-    Long Ins(List<PaserCase> database_case);
+    Long Ins(List<PaserCase> paser_case);
 
-    PaserCase Upd(PaserCase database_case);
+    void Upd(List<PaserCase> paser_cases);
 
 }
 

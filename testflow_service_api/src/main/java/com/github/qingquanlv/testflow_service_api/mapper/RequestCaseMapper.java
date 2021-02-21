@@ -6,6 +6,7 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Req
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -17,13 +18,15 @@ public interface RequestCaseMapper {
 
     List<RequestCase> Sel(String name);
 
+    List<RequestCase> SelList(Set<Long> Ids);
+
     RequestCase SelOne(Long name);
 
-    Long Del(Long case_id);
+    Long Del(Set<Long> Ids);
 
     Long Ins(List<RequestCase> database_case);
 
-    Feature Upd(RequestCase database_case);
+    void Upd(List<RequestCase> database_case);
 
 }
 

@@ -4,16 +4,33 @@
     <resultMap id="DatabaseCase" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
         <result column="case_id" jdbcType="BIGINT" property="case_id" />
         <result column="case_name" jdbcType="VARCHAR" property="case_name" />
-        <result column="sql_str" jdbcType="VARCHAR" property="sql" />
+        <result column="sql_str" jdbcType="VARCHAR" property="sql_str" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
-    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+    <select id="Sel" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
         SELECT * FROM database_case where case_name = #{name}
     </select>
 
+    <select id="SelList"  resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        SELECT * FROM database_case
+        where case_id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="SelOne" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        SELECT * FROM testflow_service.database_case where case_id = #{id} Limit 1
+    </select>
+
+
     <delete id="Del" >
-        DELETE FROM testflow_service.database_case where case_id = #{id}
+        DELETE FROM database_case
+        where case_id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="case_id" keyProperty="case_id">
@@ -28,8 +45,19 @@
         </foreach>
     </insert>
 
-    <update id="Upd" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
-        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    <update id="Upd" parameterType="java.util.List" >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update database_case
+            <set >
+                <if test="item.case_name != null" >
+                    case_name = #{item.case_name,jdbcType=VARCHAR},
+                </if>
+                <if test="item.sql != null" >
+                    url = #{item.sql,jdbcType=VARCHAR},
+                </if>
+            </set>
+            where case_id = #{item.case_id,jdbcType=BIGINT}
+        </foreach>
     </update>
 
 </mapper>

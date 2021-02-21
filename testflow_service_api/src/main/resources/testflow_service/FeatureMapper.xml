@@ -4,15 +4,20 @@
     <resultMap id="Feature" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
         <result column="feature_id" jdbcType="BIGINT" property="case_id" />
         <result column="feature_name" jdbcType="VARCHAR" property="case_name" />
+        <result column="parameter_name" jdbcType="VARCHAR" property="parameter_name" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
-    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
+    <select id="SelByName" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
         SELECT * FROM feature where feature_name = #{name}
     </select>
 
-    <delete id="Del" >
-        DELETE FROM testflow_service.database_case where case_id = #{id}
+    <select id="Sel" parameterType="java.lang.Long" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
+        SELECT * FROM feature where feature_id = #{Id}
+    </select>
+
+    <delete id="Del" parameterType="java.lang.Long">
+        DELETE FROM feature WHERE feature_id = #{id}
     </delete>
 
     <insert id="Ins" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature" useGeneratedKeys="true" keyColumn="feature_id" keyProperty="feature_id">
@@ -24,7 +29,7 @@
     </insert>
 
     <update id="Upd" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
-        SELECT * FROM testflow_service.database_case where case_id = #{id}
+        SELECT * FROM feature where feature_id = #{id}
     </update>
 
 </mapper>

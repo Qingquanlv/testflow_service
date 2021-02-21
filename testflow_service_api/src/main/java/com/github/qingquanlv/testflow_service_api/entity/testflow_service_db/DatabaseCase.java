@@ -14,16 +14,16 @@ public class DatabaseCase {
     //name
     private String case_name;
     //请求sql
-    private String sql;
+    private String sql_str;
     //时间戳
     private Timestamp datachanged_lasttime;
 
     public String getSql() {
-        return sql;
+        return sql_str;
     }
 
-    public void setSql(String sql) {
-        this.sql = sql;
+    public void setSql(String sql_str) {
+        this.sql_str = sql_str;
     }
 
     public String getCase_name() {

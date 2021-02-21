@@ -12,18 +12,8 @@ public class ParseCases extends BaseCase {
 
     //method source
     private String cvtMethodSource;
-    //return value type
-    private String returnType;
     //parameters
-    private List<Parameter> parameters;
-
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
-    }
+    private List<String> parameters;
 
     public String getCvtMethodSource() {
         return cvtMethodSource;
@@ -33,12 +23,12 @@ public class ParseCases extends BaseCase {
         this.cvtMethodSource = cvtMethodSource;
     }
 
-    public String getReturnType() {
-        return returnType;
+    public List<String> getParameters() {
+        return parameters;
     }
 
-    public void setReturnType(String returnType) {
-        this.returnType = returnType;
+    public void setParameters(List<String> parameters) {
+        this.parameters = parameters;
     }
 }
 

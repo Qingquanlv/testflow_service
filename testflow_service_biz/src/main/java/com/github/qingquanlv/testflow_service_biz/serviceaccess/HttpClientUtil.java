@@ -313,42 +313,39 @@ public class HttpClientUtil {
      *
      */
     private static void buildRequestConfig(HashMap<String, String> configMap) {
-        RequestConfig.Builder config = RequestConfig.copy(HttpClientImpl.getRequestConfig());
-        // 根据默认超时限制初始化requestConfig
-        int socketTimeout = 20000;
-        int connectTimeout = 20000;
-        int connectionRequestTimeout = 20000;
-        if (null != configMap.get(SOCKETTIMEOUT)) {
-            config.setSocketTimeout(Integer.parseInt(configMap.get(SOCKETTIMEOUT)));
+        if (configMap != null) {
+            RequestConfig.Builder config = RequestConfig.copy(HttpClientImpl.getRequestConfig());
+            // 根据默认超时限制初始化requestConfig
+            int socketTimeout = 20000;
+            int connectTimeout = 20000;
+            int connectionRequestTimeout = 20000;
+            if (null != configMap.get(SOCKETTIMEOUT)) {
+                config.setSocketTimeout(Integer.parseInt(configMap.get(SOCKETTIMEOUT)));
+            } else {
+                config.setSocketTimeout(socketTimeout);
+            }
+            if (null != configMap.get(CONNECTTIMEOUT)) {
+                config.setConnectTimeout(Integer.parseInt(configMap.get(CONNECTTIMEOUT)));
+            } else {
+                config.setConnectTimeout(connectTimeout);
+            }
+            if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
+                config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
+            } else {
+                config.setConnectionRequestTimeout(connectionRequestTimeout);
+            }
+            if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
+                config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
+            } else {
+                config.setConnectionRequestTimeout(connectionRequestTimeout);
+            }
+            if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
+                config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
+            } else {
+                config.setConnectionRequestTimeout(connectionRequestTimeout).build();
+            }
+            HttpClientImpl.requestConfig = config.build();
         }
-        else {
-            config.setSocketTimeout(socketTimeout);
-        }
-        if (null != configMap.get(CONNECTTIMEOUT)) {
-            config.setConnectTimeout(Integer.parseInt(configMap.get(CONNECTTIMEOUT)));
-        }
-        else {
-            config.setConnectTimeout(connectTimeout);
-        }
-        if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
-            config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
-        }
-        else {
-            config.setConnectionRequestTimeout(connectionRequestTimeout);
-        }
-        if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
-            config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
-        }
-        else {
-            config.setConnectionRequestTimeout(connectionRequestTimeout);
-        }
-        if (null != configMap.get(CONNECTIONREQUESTTIMEOUT)) {
-            config.setConnectionRequestTimeout(Integer.parseInt(configMap.get(CONNECTIONREQUESTTIMEOUT)));
-        }
-        else {
-            config.setConnectionRequestTimeout(connectionRequestTimeout).build();
-        }
-        HttpClientImpl.requestConfig = config.build();
     }
 
     /**

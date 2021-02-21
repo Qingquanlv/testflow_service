@@ -13,8 +13,20 @@
         SELECT * FROM testflow_service.database_case where case_id = #{id}
     </select>
 
-    <delete id="Del" >
-        DELETE FROM testflow_service.database_case where case_id = #{id}
+    <select id="SelByFId" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCase">
+        SELECT * FROM testflow_service.feature_case where feature_id = #{id}
+    </select>
+
+    <delete id="Del"  parameterType="java.lang.Long">
+        DELETE FROM feature_case where feature_id = #{id}
+    </delete>
+
+    <delete id="DelByFId" >
+        DELETE FROM feature_case
+        where id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">

@@ -3,6 +3,7 @@ package com.github.qingquanlv.testflow_service_biz;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.common.LogHelper;
 import com.github.qingquanlv.testflow_service_biz.stepdefinations.*;
+import com.github.qingquanlv.testflow_service_biz.utilities.JedisUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,13 +15,22 @@ import java.util.List;
  */
 public class TestFlowManager {
 
+    private String pattern;
 
     /**
      * 私有化构造方法
      */
     public TestFlowManager(){
-
         BufferManager.initBufferMap();
+        LogHelper.initLog();
+    }
+
+    /**
+     * 私有化构造方法
+     */
+    public TestFlowManager(String pattern){
+        this.pattern = String.format("%s:", pattern);
+        BufferManager.initBufferMap(pattern);
         LogHelper.initLog();
     }
 
@@ -28,15 +38,14 @@ public class TestFlowManager {
      * 销毁缓存
      *
      */
-    public TestFlowManager deposed(){
-        BufferManager.deposeBufferMap();
+    public void deposed(){
+        BufferManager.deposeBufferMap(pattern);
         LogHelper.deposeLog();
-        return this;
     }
 
     /**
      * 发送请求
-     * @param requestId : 请求报文Id
+     * @param caseName : 请求caseName
      * @param requestStr : 请求报文
      * @param contentType : 保存response的key
      * @param config : 请求配置
@@ -46,89 +55,63 @@ public class TestFlowManager {
      * @param url : 请求url
      *
      */
-    public String sendRequest(String requestId, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) {
+    public String sendRequest(String caseName, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) {
         Request request = new Request();
-        String responceStr="";
-        LogHelper.stepExecLog("sendRequest", requestStr, url, requestId);
-        //responceStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
-        //BufferManager.addBufferByKey(requestId, responceStr);
-        //LogHelper.stepAfterLog(requestId, responceStr);
-        return responceStr;
+        String responseStr;
+        try {
+            LogHelper.stepExecLog("sendRequest", requestStr, url, caseName);
+            responseStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
+        }
+        catch (Exception ex) {
+            throw new AssertionError(String.format("send Request failed: %s", ex));
+        }
+        LogHelper.stepAfterLog(caseName, responseStr);
+        return responseStr;
     }
 
     /**
      *  使用String格式字符串
      *
      * @param convertMethodSource
-     * @param convertMethodName
-     * @param returnType
      * @param paramList
      * @return
      */
-    public String sourceParse(String convertMethodSource, String convertMethodName, String returnType, List<String> paramList) {
+    public String sourceParse(String caseName, String convertMethodSource,  List<String> paramList) {
         Parser parser = new Parser();
         String str = "";
-        LogHelper.stepExecLog("sourceParse", convertMethodSource, convertMethodName, returnType, paramList.toString());
         try {
+            LogHelper.stepExecLog("sourceParse", convertMethodSource, paramList.toString());
             //覆盖一个参数到四个参数的场景
-            if (2 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1));
-            }
-            if (2 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3));
-            }
-            if (3 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5));
-            }
-            if (4 == paramList.size()) {
-                str = parser.parseValueVidStr(convertMethodSource, convertMethodName, returnType, paramList.get(0), paramList.get(1), paramList.get(2), paramList.get(3), paramList.get(4), paramList.get(5), paramList.get(6), paramList.get(7));
-            }
+            str = parser.parseValueVidStr(convertMethodSource, paramList);
         }
         catch (Exception ex) {
             deposed();
             throw new AssertionError(String.format("Init object failed"));
         }
+        LogHelper.stepAfterLog(caseName, str);
         return str;
     }
 
-
     /**
-     * 添加缓存
+     * 通过原生SQL语句查询DB
      *
-     * @param bufferKey
-     * @param bufferVal
+     * @param caseName
+     * @param sql 查询sql
      * @return
      */
-    public TestFlowManager addBuffer(String bufferKey, String bufferVal) {
-        Buffer buffer = new Buffer();
-        LogHelper.stepExecLog("addBuffer", bufferKey, bufferVal);
+    public String queryDataBase(String caseName, String sql) {
+        Database database= new Database();
+        String str;
         try {
-            buffer.addStepBuffer(bufferKey, bufferVal);
+            LogHelper.stepExecLog("queryDataBase", caseName, sql);
+            str = database.queryDataBase(sql);
         }
         catch (Exception ex) {
             deposed();
-            throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
+            throw new AssertionError(String.format("Query datebase failed: " + ex));
         }
-        return this;
-    }
-
-    /**
-     * 获取缓存中的数据
-     *
-     * @param bufferKey
-     * @return
-     */
-    public TestFlowManager getBuffer(String bufferKey) {
-        Buffer buffer = new Buffer();
-        LogHelper.stepExecLog("addBuffer", bufferKey);
-        try {
-            buffer.queryStepBuffer(bufferKey);
-        }
-        catch (Exception ex) {
-            deposed();
-            throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey));
-        }
-        return this;
+        LogHelper.stepAfterLog(caseName, str);
+        return str;
     }
 
     /**
@@ -143,10 +126,7 @@ public class TestFlowManager {
         LogHelper.stepExecLog("verify", expObj, atlObj);
         try {
             errorMsg = verify.verify(expObj, expObj);
-            if (!"".equals(errorMsg)) {
-                deposed();
-                throw new AssertionError(String.format("\n" + errorMsg));
-            }
+            deposed();
         }
         catch (Exception ex) {
             throw new AssertionError(String.format("Verify object failed: " + ex));
@@ -156,23 +136,19 @@ public class TestFlowManager {
 
     /**
      * 对比两个相同类型的实体
-     * @param paramType : 实体类型
      * @param expObj : 预期结果值缓存Key
      * @param expObj : 实际结果值缓存Key
      * @param expObj : 对比实体List主键
      * @param atlObj : 实体中不对比的字段
      *
      */
-    public String verify(String paramType, String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
+    public String verify(String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
         Verify verify = new Verify();
         String errorMsg = "";
-        LogHelper.stepExecLog("verify", paramType, expObj, atlObj, pkMapStr, noCompareItemMapStr);
+        LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
         try {
-            errorMsg = verify.verify(paramType, expObj, atlObj, pkMapStr, noCompareItemMapStr);
-            if (!"".equals(errorMsg)) {
-                deposed();
-                throw new AssertionError(String.format("\n" + errorMsg));
-            }
+            errorMsg = verify.verify(expObj, atlObj, pkMapStr, noCompareItemMapStr);
+            deposed();
         }
         catch (Exception ex) {
             deposed();
@@ -194,10 +170,7 @@ public class TestFlowManager {
         LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
         try {
             errorMsg = verify.verify(atlObj, JsonFilter, expValue);
-            if (!"".equals(errorMsg)) {
-                deposed();
-                throw new AssertionError(String.format("\n" + errorMsg));
-            }
+            deposed();
         }
         catch (Exception ex) {
             deposed();
@@ -206,26 +179,42 @@ public class TestFlowManager {
         return errorMsg;
     }
 
+
     /**
-     * 通过原生SQL语句查询DB
+     * 添加缓存
      *
-     * @param sql sql map 参数
+     * @param bufferKey
+     * @param bufferVal
      * @return
      */
-    public String queryDataBase(String sql) {
-        Database database= new Database();
-        String str;
-        //LogHelper.stepExecLog("queryDataBase", bufferKey, sql);
+    public TestFlowManager addBuffer(String bufferKey, String bufferVal) {
+        LogHelper.stepExecLog("addBuffer", bufferKey, bufferVal);
         try {
-            str = database.queryDataBase(sql);
-            //BufferManager.addBufferByKey(bufferKey, str);
+            BufferManager.addBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
             deposed();
-            throw new AssertionError(String.format("Query datebase failed: " + ex));
+            throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
         }
-        //LogHelper.stepAfterLog(bufferKey, str);
-        return str;
+        return this;
+    }
+
+    /**
+     * 获取缓存中的数据
+     *
+     * @param bufferKey
+     * @return
+     */
+    public TestFlowManager getBuffer(String bufferKey) {
+        LogHelper.stepExecLog("addBuffer", bufferKey);
+        try {
+            BufferManager.getBufferByKey(bufferKey);
+        }
+        catch (Exception ex) {
+            deposed();
+            throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey));
+        }
+        return this;
     }
 }
 

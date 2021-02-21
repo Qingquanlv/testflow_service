@@ -8,6 +8,8 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydat
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase.QueryDataBaseCaseResponse;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseRequest;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseResponse;
+import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseRequest;
+import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseResponse;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,33 +20,10 @@ import org.springframework.stereotype.Service;
 public interface CaseService {
 
     /**
-     * 删除dataBaseCase
+     * 执行Case
      *
-     * @param request
+     * @param id
      * @return
      */
-    DeleteDataBaseCaseResponse deleteCase(DeleteDataBaseCaseRequest request);
-
-    /**
-     * 查询dataBaseCase
-     *
-     * @param request
-     * @return
-     */
-    QueryDataBaseCaseResponse queryCase(QueryDataBaseCaseRequest request);
-    /**
-     * 创建dataBaseCase
-     *
-     * @param request
-     */
-    CreateDataBaseCaseResponse createCase(CreateDataBaseCaseRequest request);
-
-    /**
-     * 更新dataBaseCase
-     *
-     * @param request
-     * @return
-     */
-    UpdateDataBaseCaseResponse updateCase(UpdateDataBaseCaseRequest request);
-
+    ExecCaseResponse execCase(ExecCaseRequest id);
 }

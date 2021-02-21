@@ -5,6 +5,7 @@ package com.github.qingquanlv.testflow_service_api.mapper;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCaseNextCase;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -13,11 +14,11 @@ import java.util.List;
  */
 public interface FeatureCaseNextCaseMapper {
 
-    List<FeatureCaseNextCase> SelByFCId(Long id);
+    List<FeatureCaseNextCase> SelListByFCId(Set<Long> feature_case_ids);
 
-    List<FeatureCaseNextCase> SelecltByFeatureId(Long featureId);
+    List<FeatureCaseNextCase> SelByFCId(Long feature_case_id);
 
-    Long Del(Long case_id);
+    Long Del(Set<Long> id);
 
     Long Ins(List<FeatureCaseNextCase> database_next_cases);
 

@@ -4,6 +4,7 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Dat
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -15,12 +16,13 @@ public interface DataBaseCaseMapper {
 
     List<DatabaseCase> Sel(String name);
 
+    List<DatabaseCase> SelList(Set<Long> Ids);
+
     DatabaseCase SelOne(Long Id);
 
-    Long Del(Long case_id);
+    Long Del(Set<Long> case_id);
 
     Long Ins(List<DatabaseCase> database_case);
 
-    DatabaseCase Upd(DatabaseCase database_case);
-
+    DatabaseCase Upd(List<DatabaseCase> database_case);
 }

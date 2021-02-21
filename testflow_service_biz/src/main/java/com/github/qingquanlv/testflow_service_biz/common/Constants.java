@@ -2,28 +2,40 @@ package com.github.qingquanlv.testflow_service_biz.common;
 
 public class Constants {
     //Static value
+    public static final String ENTITY_ROOT= "ROOT_NODE";
+
     public static final String MAPKEY= "key";
     public static final String MAPVALUE = "value";
     public static final String COLON = ":";
 
-    public static final String SERVICES_CLASS_PATH = "com.testflow.apitest.servicesaccess.ParseValueFileName";
+    public static final String SERVICES_CLASS_PATH = "com.github.qingquanlv.testflow_service_biz.stepdefinations.ParseValueFileName";
     public static final String PARSE_VALUE_FILE_NAME = "ParseValueFileName.java";
-    public static final String PARSE_VALUE_FILE_SOURCE = "package com.testflow.apitest.servicesaccess;" +
+    public static final String METHOD_NAME = "parseValueVidStr";
+    public static final String PARSE_VALUE_FILE_SOURCE = "package com.github.qingquanlv.testflow_service_biz.stepdefinations;" +
             "" +
             "import java.util.ArrayList;" +
             "import java.util.List;" +
             "import java.util.stream.Collectors;" +
-            "import paramType1;" +
-            "import paramType2;" +
+            "import com.alibaba.fastjson.JSON;" +
+            "import com.alibaba.fastjson.JSONArray;" +
+            "import com.alibaba.fastjson.JSONObject;" +
+            "import com.github.qingquanlv.testflow_service_biz.common.BufferManager;" +
             "\n" +
             "public class ParseValueFileName " +
             "{    \n" +
-            "    method" +
+            "    public String parseValueVidStr(List<String> sourceData) throws Exception{\n        " +
+            "        parameter" +
+            "        method\n" +
+            "    }" +
             "}" ;
-    public static final String PARAMTYPE1 = "paramType1";
-    public static final String PARAMTYPE2 = "paramType2";
+    public static final String PARAMETER = "parameter";
     public static final String METHOD = "method";
 
+    public static final String JSON_OBJECT_TYPE = "JSONObject";
+    public static final String JSON_ARRAY_TYPE = "JSONArray";
+    public static final String INDEX = "index";
+    public static final String PARAMETER_TYPE = "parameterType";
+    public static final String PARAMETER_NAME = "parameterName";
 
     public static final String QUETY_DB_FILE_NAME = "queryDB.xml";
     public static final String PQUETY_DB_FILE_SOURCE =

@@ -51,7 +51,7 @@ public class Request {
     public String sendRequest(String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) throws Exception {
         String requestObject;
 
-        requestStr = ParamUtil.parseParam(requestStr);
+        requestStr = null == requestStr ? "" : ParamUtil.parseParam(requestStr);
         logger.info(String.format("%s Send request: %s", new Date(), requestStr));
         url = ParamUtil.parseParam(url);
         logger.info(String.format("%s Url: %s", new Date(), url));

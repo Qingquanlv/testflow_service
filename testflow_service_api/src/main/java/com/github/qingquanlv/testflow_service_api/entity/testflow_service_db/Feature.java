@@ -13,6 +13,8 @@ public class Feature {
     private Long feature_id;
     //name
     private String feature_name;
+    //parameter_name
+    private String parameter_name;
     //时间戳
     private Timestamp datachanged_lasttime;
 
@@ -39,5 +41,13 @@ public class Feature {
 
     public void setDatachanged_lasttime(Timestamp datachanged_lasttime) {
         this.datachanged_lasttime = datachanged_lasttime;
+    }
+
+    public String getParameter_name() {
+        return parameter_name;
+    }
+
+    public void setParameter_name(String parameter_name) {
+        this.parameter_name = parameter_name;
     }
 }

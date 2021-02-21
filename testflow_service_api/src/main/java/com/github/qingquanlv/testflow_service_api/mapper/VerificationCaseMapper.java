@@ -1,11 +1,11 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.RequestCase;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.VerificationCase;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @Author Qingquan Lv
@@ -17,13 +17,15 @@ public interface VerificationCaseMapper {
 
     List<VerificationCase> Sel(String name);
 
-    VerificationCase SelOne(Long name);
+    List<VerificationCase> SelList(Set<Long> Ids);
 
-    Long Del(Long case_id);
+    VerificationCase SelOne(Long Id);
 
-    Long Ins(List<VerificationCase> database_case);
+    Long Del(Set<Long> case_id);
 
-    Feature Upd(VerificationCase database_case);
+    Long Ins(List<VerificationCase> verification_case);
+
+    void Upd(List<VerificationCase> verification_cases);
 
 }
 

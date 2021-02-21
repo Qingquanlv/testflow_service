@@ -10,15 +10,23 @@
     </resultMap>
 
     <select id="SelByFCId" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCaseNextCase">
-        SELECT * FROM testflow_service.feature_case_next_case where case_id = #{id}
+        SELECT * FROM testflow_service.feature_case_next_case where feature_case_id = #{id}
     </select>
 
-    <select id="SelecltByFeatureId" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCaseNextCase">
-        SELECT * FROM testflow_service.feature_case_next_case where case_id = #{id}
+    <select id="SelListByFCId" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureCaseNextCase">
+        SELECT * FROM testflow_service.feature_case_next_case
+        where feature_case_id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </select>
 
     <delete id="Del" >
-        DELETE FROM testflow_service.feature_case_next_case where case_id = #{id}
+        DELETE FROM testflow_service.feature_case_next_case
+        where feature_case_id in
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
