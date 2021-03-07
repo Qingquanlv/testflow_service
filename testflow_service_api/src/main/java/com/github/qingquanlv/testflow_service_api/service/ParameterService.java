@@ -3,6 +3,7 @@ package com.github.qingquanlv.testflow_service_api.service;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.deleteparameter.DeleteParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter.QueryParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterResponse;
@@ -36,6 +37,14 @@ public interface ParameterService {
      * @return
      */
     UpdateParameterResponse updateParameter(UpdateParameterRequest request);
+
+
+    /**
+     * 获取ParameteAll
+     *
+     * @return
+     */
+    QueryAllParameterResponse getParameterAll();
 
     /**
      * 删除Paramete

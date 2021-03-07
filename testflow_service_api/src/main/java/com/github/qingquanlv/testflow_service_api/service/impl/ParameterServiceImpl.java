@@ -4,6 +4,8 @@ import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.deleteparameter.DeleteParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryParameter;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter.QueryParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterResponse;
@@ -52,7 +54,42 @@ public class ParameterServiceImpl implements ParameterService {
     }
 
     /**
-     * 执行Paramete
+     * 获取所有Paramete
+     *
+     * @return
+     */
+    @Override
+    public QueryAllParameterResponse getParameterAll() {
+        QueryAllParameterResponse rsp = new QueryAllParameterResponse();
+        List<QueryParameter> queryParametersRsp = new ArrayList<>();
+        List<ParameterCase> parameterCases = parameterMapper.SelAll();
+        for (ParameterCase parameterCase : parameterCases) {
+            if (null == queryParametersRsp.stream().filter(i->i.getParameter_name().equals(parameterCase.getParameter_name())).findFirst().orElse(null)) {
+                QueryParameter queryParameterRsp = new QueryParameter();
+                queryParameterRsp.setParameter_name(parameterCase.getParameter_name());
+                List<Parameter> parametersRsp = new ArrayList<>();
+                Parameter parameter = new Parameter();
+                parameter.setParameter_key(parameterCase.getParameter_key());
+                parameter.setParameter_value(parameterCase.getParameter_value());
+                parametersRsp.add(parameter);
+                queryParameterRsp.setParameters(parametersRsp);
+                queryParametersRsp.add(queryParameterRsp);
+            }
+            else {
+                QueryParameter queryParameterRsp = queryParametersRsp.stream().filter(i->i.getParameter_name().equals(parameterCase.getParameter_name())).findFirst().orElse(null);
+                List<Parameter> parametersRsp = queryParameterRsp.getParameters();
+                Parameter parameter = new Parameter();
+                parameter.setParameter_key(parameterCase.getParameter_key());
+                parameter.setParameter_value(parameterCase.getParameter_value());
+                parametersRsp.add(parameter);
+            }
+        }
+        rsp.setParameters(queryParametersRsp);
+        return rsp;
+    }
+
+    /**
+     * 获取Paramete
      *
      * @param name
      * @return

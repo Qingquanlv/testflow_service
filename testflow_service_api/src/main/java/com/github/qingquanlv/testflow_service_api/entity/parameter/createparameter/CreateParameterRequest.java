@@ -1,7 +1,13 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter;
 
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
+import org.springframework.validation.annotation.Validated;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -14,16 +20,19 @@ public class CreateParameterRequest {
     /**
      * 请求唯一标识
      */
+    @NotBlank(message = "requestId不能为null")
     private String requestId;
 
     /**
      * parameter_name
      */
+    @NotBlank(message = "parameter name不能为null")
     private String parameter_name;
 
     /**
      * parameters
      */
+    @Valid
     private List<Parameter> parameters;
 
     public String getRequestId() {

@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryParameter;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +14,8 @@ import java.util.Set;
  */
 @Repository
 public interface ParameterMapper {
+
+    List<ParameterCase> SelAll();
 
     List<ParameterCase> Sel(String name);
 

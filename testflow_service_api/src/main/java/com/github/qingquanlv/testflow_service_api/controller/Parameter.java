@@ -3,11 +3,13 @@ package com.github.qingquanlv.testflow_service_api.controller;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.deleteparameter.DeleteParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter.QueryParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.service.impl.ParameterServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -23,8 +25,14 @@ public class Parameter {
     private ParameterServiceImpl parameterService;
 
     @PostMapping(path = "/create")
-    public CreateParameterResponse createParameter(@RequestBody CreateParameterRequest request) {
+    public CreateParameterResponse createParameter(@RequestBody @Validated CreateParameterRequest request) {
         CreateParameterResponse rsp =  parameterService.createParameter(request);
+        return rsp;
+    }
+
+    @RequestMapping("/queryall")
+    public QueryAllParameterResponse getParameterAll(){
+        QueryAllParameterResponse rsp =  parameterService.getParameterAll();
         return rsp;
     }
 

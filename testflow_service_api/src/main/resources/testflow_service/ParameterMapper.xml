@@ -9,6 +9,10 @@
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
+    <select id="SelAll" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
+        SELECT * FROM testflow_service.parameter
+    </select>
+
     <select id="Sel" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
         SELECT * FROM parameter where parameter_name = #{name}
     </select>
