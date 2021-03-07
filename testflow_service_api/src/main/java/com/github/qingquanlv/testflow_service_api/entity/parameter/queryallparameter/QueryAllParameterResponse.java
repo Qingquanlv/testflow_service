@@ -1,5 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter;
 
+import com.github.qingquanlv.testflow_service_api.entity.Status;
+
 import java.util.List;
 
 /**
@@ -9,6 +11,10 @@ import java.util.List;
  */
 public class QueryAllParameterResponse {
 
+    /**
+     * status
+     */
+    private Status status;
     /**
      * parameter_name
      */
@@ -20,5 +26,13 @@ public class QueryAllParameterResponse {
 
     public void setParameters(List<QueryParameter> parameters) {
         this.parameters = parameters;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 }

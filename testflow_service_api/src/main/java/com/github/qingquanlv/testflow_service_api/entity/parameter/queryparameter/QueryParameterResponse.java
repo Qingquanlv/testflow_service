@@ -22,8 +22,9 @@ public class QueryParameterResponse {
      */
     private List<Parameter> parameters;
 
-
-    //status
+    /**
+     * status
+     */
     private Status status;
 
     public Status getStatus() {

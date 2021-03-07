@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
+import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
@@ -39,6 +40,9 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public CreateParameterResponse createParameter(CreateParameterRequest request) {
         CreateParameterResponse rsp = new CreateParameterResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         List<ParameterCase> parameterCaseList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(request.getParameters())) {
             for (Parameter parameter : request.getParameters()) {
@@ -61,6 +65,9 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public QueryAllParameterResponse getParameterAll() {
         QueryAllParameterResponse rsp = new QueryAllParameterResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         List<QueryParameter> queryParametersRsp = new ArrayList<>();
         List<ParameterCase> parameterCases = parameterMapper.SelAll();
         for (ParameterCase parameterCase : parameterCases) {
@@ -97,6 +104,9 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public QueryParameterResponse getParameter(String name) {
         QueryParameterResponse rsp = new QueryParameterResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         List<Parameter> parameters = new ArrayList<>();
         List<ParameterCase> list = parameterMapper.Sel(name);
         if (!CollectionUtils.isEmpty(list)) {
@@ -121,6 +131,9 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public UpdateParameterResponse updateParameter(UpdateParameterRequest request) {
         UpdateParameterResponse rsp = new UpdateParameterResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         List<ParameterCase> parameterCaseList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(request.getParameters())) {
             for (Parameter parameter : request.getParameters()) {
@@ -145,6 +158,9 @@ public class ParameterServiceImpl implements ParameterService {
     @Override
     public DeleteParameterResponse deleteParameter(String name) {
         DeleteParameterResponse rsp = new DeleteParameterResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         parameterMapper.Del(name);
         return rsp;
     }
