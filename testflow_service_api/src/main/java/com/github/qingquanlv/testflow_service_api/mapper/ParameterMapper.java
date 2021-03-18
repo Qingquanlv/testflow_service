@@ -19,6 +19,8 @@ public interface ParameterMapper {
 
     List<ParameterCase> Sel(String name);
 
+    List<ParameterCase> SelByNames(List<String> names);
+
     Long Del(String id);
 
     Long Ins(List<ParameterCase> parameter_cases);

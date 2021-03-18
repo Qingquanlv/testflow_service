@@ -5,8 +5,13 @@
         <result column="feature_id" jdbcType="BIGINT" property="case_id" />
         <result column="feature_name" jdbcType="VARCHAR" property="case_name" />
         <result column="parameter_name" jdbcType="VARCHAR" property="parameter_name" />
+        <result column="desctription" jdbcType="VARCHAR" property="desctription" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
+
+    <select id="SelAll" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
+        SELECT * FROM feature
+    </select>
 
     <select id="SelByName" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature">
         SELECT * FROM feature where feature_name = #{name}

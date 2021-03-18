@@ -1,5 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.execcase;
 
+import java.util.List;
+
 /**
  * @Author Qingquan Lv
  * @Date 2021/2/3 7:47
@@ -12,9 +14,9 @@ public class ExecCaseRequest {
      */
     private String requestId;
     /**
-     * parameter id
+     * parameters
      */
-    private String parameter_name;
+    private List<String> parameter_names;
     /**
      * case type
      */
@@ -49,11 +51,13 @@ public class ExecCaseRequest {
         this.case_id = case_id;
     }
 
-    public String getParameter_name() {
-        return parameter_name;
+
+    public List<String> getParameter_names() {
+        return parameter_names;
     }
 
-    public void setParameter_name(String parameter_name) {
-        this.parameter_name = parameter_name;
+    public void setParameter_names(List<String> parameter_names) {
+        this.parameter_names = parameter_names;
     }
 }
+

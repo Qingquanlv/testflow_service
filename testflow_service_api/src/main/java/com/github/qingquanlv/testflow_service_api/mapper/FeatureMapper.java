@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface FeatureMapper {
 
+    List<Feature> SelAll();
+
     Feature SelByName(String name);
 
     Feature Sel(Long Id);

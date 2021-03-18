@@ -3,10 +3,13 @@ package com.github.qingquanlv.testflow_service_api.controller;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.service.impl.FeatureServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,9 +24,9 @@ public class Feature {
     @Autowired
     private FeatureServiceImpl featureService;
 
-    @PostMapping(path = "/create")
-    public CreateFeatureResponse createCase(@RequestBody CreateFeatureRequest request) {
-        CreateFeatureResponse rsp =  featureService.createFeature(request);
+    @RequestMapping("/queryall")
+    public QueryAllFeatureResponse getFeatureAll(){
+        QueryAllFeatureResponse rsp =  featureService.getFeatureAll();
         return rsp;
     }
 
@@ -33,9 +36,16 @@ public class Feature {
         return rsp;
     }
 
+    @PostMapping(path = "/create")
+    public CreateFeatureResponse createCase(@RequestBody CreateFeatureRequest request) {
+        CreateFeatureResponse rsp = featureService.createFeature(request);
+        return rsp;
+    }
+
     @RequestMapping("/exec/{id}")
-    public ExecFeatureResponse execFeature(@PathVariable Long id){
-        ExecFeatureResponse rsp =  featureService.execFeature(id);
+    public ExecFeatureResponse execFeature(@RequestBody ExecFeatureRequest request){
+        ExecFeatureResponse rsp = new ExecFeatureResponse();
+        featureService.execFeature(request);
         return rsp;
     }
 

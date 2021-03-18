@@ -65,7 +65,7 @@ public class CaseServiceImpl implements CaseService {
                 System.currentTimeMillis(),
                 UUID.randomUUID().toString()));
         TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        List<ParameterCase> parameterCaseList = parameterMapper.Sel(request.getParameter_name());
+        List<ParameterCase> parameterCaseList = parameterMapper.SelByNames(request.getParameter_names());
         List<Parameter> parameterList = new ArrayList<>();
         //输入参数
         if (!CollectionUtils.isEmpty(parameterCaseList)) {

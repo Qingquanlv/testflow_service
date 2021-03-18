@@ -5,10 +5,15 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.database.deleteda
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultFeatureResponse;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -31,7 +36,7 @@ public interface FeatureService {
      * @param id
      * @return
      */
-    ExecFeatureResponse execFeature(Long id);
+    CompletableFuture<ExecFeatureResponse> execFeature(ExecFeatureRequest id);
 
     /**
      * 获取feature
@@ -40,6 +45,13 @@ public interface FeatureService {
      * @return
      */
     QueryFeatureResponse getFeature(Long id);
+
+    /**
+     * 获取所有feature
+     *
+     * @return
+     */
+    QueryAllFeatureResponse getFeatureAll();
 
     /**
      * 删除feature

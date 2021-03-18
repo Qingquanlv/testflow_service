@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.DataBaseCaseMapper">
+    <resultMap id="BaseResultMap" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        <result column="case_id" jdbcType="BIGINT" property="case_id" />
+        <result column="case_name" jdbcType="VARCHAR" property="case_name" />
+        <result column="sql" jdbcType="VARCHAR" property="sql" />
+        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
+    </resultMap>
+
+    <select id="Sel" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase">
+        SELECT * FROM testflow_service.database_case where case_id = #{id}
+    </select>
+
+</mapper>

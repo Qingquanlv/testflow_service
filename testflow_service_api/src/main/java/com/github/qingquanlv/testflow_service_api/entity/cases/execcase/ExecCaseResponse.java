@@ -1,6 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.execcase;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.cases.CaseKey;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
 import java.util.List;
@@ -11,50 +12,35 @@ import java.util.List;
  * @Version 1.0
  */
 public class ExecCaseResponse {
-    /**
-     * case type
-     */
-    private String case_type;
-    /**
-     * case id
-     */
-    private Long case_id;
 
+    /**
+     * caseKey
+     */
+    private CaseKey caseKey;
     /**
      * parameters
      */
     private List<Parameter> parameters;
     /**
-     * result
+     * info
      */
-    private String result;
+    private String info;
+    /**
+     * asseration
+     */
+    private String asseration;
     /**
      * status
      */
     private Status status;
 
-    public Status getStatus() {
-        return status;
+
+    public CaseKey getCaseKey() {
+        return caseKey;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getCase_type() {
-        return case_type;
-    }
-
-    public void setCase_type(String case_type) {
-        this.case_type = case_type;
-    }
-
-    public Long getCase_id() {
-        return case_id;
-    }
-
-    public void setCase_id(Long case_id) {
-        this.case_id = case_id;
+    public void setCaseKey(CaseKey caseKey) {
+        this.caseKey = caseKey;
     }
 
     public List<Parameter> getParameters() {
@@ -65,11 +51,27 @@ public class ExecCaseResponse {
         this.parameters = parameters;
     }
 
-    public String getResult() {
-        return result;
+    public String getInfo() {
+        return info;
     }
 
-    public void setResult(String result) {
-        this.result = result;
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public String getAsseration() {
+        return asseration;
+    }
+
+    public void setAsseration(String asseration) {
+        this.asseration = asseration;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 }

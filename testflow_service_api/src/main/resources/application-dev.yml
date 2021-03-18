@@ -9,6 +9,7 @@ spring:
     url: jdbc:mysql://localhost:3306/testflow_service?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
 mybatis:
   mapper-locations: classpath:testflow_service/*.xml
   type-aliases-package: com.example.entity

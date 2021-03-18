@@ -14,7 +14,10 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.verification.Veri
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryFeature;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
@@ -23,10 +26,14 @@ import com.github.qingquanlv.testflow_service_api.service.FeatureService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +42,7 @@ import java.util.stream.Collectors;
  * @Version 1.0
  */
 @Service
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class FeatureServiceImpl implements FeatureService {
 
     @Autowired
@@ -119,6 +127,7 @@ public class FeatureServiceImpl implements FeatureService {
                 //插入feature
                 Feature feature = new Feature();
                 feature.setFeature_name(request.getFeatureName());
+                feature.setDesctription(request.getDescription());
                 featureMapper.Ins(feature);
                 //插入request case
                 if (!CollectionUtils.isEmpty(request.getRequestCasesList())) {
@@ -443,6 +452,8 @@ public class FeatureServiceImpl implements FeatureService {
      */
     @Override
     public DeleteFeatureResponse deleteFeature(Long id) {
+        Status status = new Status();
+        status.setSuccess(true);
         DeleteFeatureResponse rsp = new DeleteFeatureResponse();
         //根据featureId获取所有featureCase
         List<FeatureCase> featureCases = featureCaseMapper.SelByFId(id);
@@ -505,21 +516,27 @@ public class FeatureServiceImpl implements FeatureService {
             }
         }
         featureMapper.Del(id);
+        rsp.setStatus(status);
         return rsp;
     }
 
     /**
      * 执行feature
      *
-     * @param id
+     * @param request
      * @return
      */
+    @Async("threadPoolTaskExecutor")
     @Override
-    public ExecFeatureResponse execFeature(Long id) {
+    public CompletableFuture<ExecFeatureResponse> execFeature(ExecFeatureRequest request) {
         ExecFeatureResponse rsp = new ExecFeatureResponse();
-        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(id);
-        execFeature(id, featureCaseList);
-        return rsp;
+        Status status = new Status();
+        status.setSuccess(true);
+        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(request.getFeatureId());
+        execFeature(request.getParameter_names(), featureCaseList);
+        rsp.setStatus(status);
+        //return rsp;
+        return CompletableFuture.completedFuture(rsp);
     }
 
     @Override
@@ -686,6 +703,26 @@ public class FeatureServiceImpl implements FeatureService {
         rsp.setPaserCasesList(parseCasesList);
         rsp.setVerificationCasesList(verificationCasesList);
         rsp.setFeatureName(feature.getFeature_name());
+        rsp.setDescription(feature.getDesctription());
+        return rsp;
+    }
+
+    @Override
+    public QueryAllFeatureResponse getFeatureAll() {
+        QueryAllFeatureResponse rsp = new QueryAllFeatureResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
+        List<QueryFeature> queryFeaturesRsp = new ArrayList<>();
+        List<Feature> features = featureMapper.SelAll();
+        for (Feature feature : features) {
+            QueryFeature queryFeatureRsp = new QueryFeature();
+            queryFeatureRsp.setFeature_id(feature.getFeature_id());
+            queryFeatureRsp.setFeatureName(feature.getFeature_name());
+            queryFeatureRsp.setDescription(feature.getDesctription());
+            queryFeaturesRsp.add(queryFeatureRsp);
+        }
+        rsp.setFeatures(queryFeaturesRsp);
         return rsp;
     }
 
@@ -741,14 +778,22 @@ public class FeatureServiceImpl implements FeatureService {
      *
      * @param featureCaseList
      */
-    private void execFeature(Long id, List<FeatureCase> featureCaseList) {
+    private void execFeature(List<String> parameterNames, List<FeatureCase> featureCaseList) {
+        try {
+            for (int i = 0; i < 10; i++) {
+                System.out.print("执行第" + i + "次");
+                Thread.sleep(10000);
+            }
+        } catch (Exception exception) {
+
+        }
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),
                 UUID.randomUUID().toString()));
         TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        Feature feature = featureMapper.Sel(id);
-        List<ParameterCase> parameterCaseList = parameterMapper.Sel(feature.getParameter_name());
+        //Feature feature = featureMapper.Sel(id);
+        List<ParameterCase> parameterCaseList = CollectionUtils.isEmpty(parameterNames) ? new ArrayList<>() : parameterMapper.SelByNames(parameterNames);
         //输入参数
         if (!CollectionUtils.isEmpty(parameterCaseList)) {
             for (ParameterCase item : parameterCaseList) {
