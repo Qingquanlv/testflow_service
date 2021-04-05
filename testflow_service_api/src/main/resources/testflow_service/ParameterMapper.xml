@@ -6,6 +6,7 @@
         <result column="parameter_name" jdbcType="VARCHAR" property="parameter_name" />
         <result column="parameter_key" jdbcType="VARCHAR" property="parameter_key" />
         <result column="parameter_value" jdbcType="VARCHAR" property="parameter_value" />
+        <result column="parameter_value_index" jdbcType="BIGINT" property="parameter_value" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
@@ -31,11 +32,12 @@
 
     <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
         insert into parameter
-        ( parameter_name,parameter_key,parameter_value)
+        ( parameter_name,parameter_value_index,parameter_key,parameter_value)
         values
         <foreach collection="list" item="item" index="index" separator=",">
             (
             #{item.parameter_name},
+            #{item.parameter_value_index},
             #{item.parameter_key},
             #{item.parameter_value}
             )

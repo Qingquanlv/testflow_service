@@ -14,8 +14,14 @@ import java.util.List;
 public class ExecFeatureResponse {
     //status
     private Status status;
-    //result
-    private List<CaseResult> caseResults;
+    /**
+     * info
+     */
+    private String info;
+    /**
+     * asseration
+     */
+    private String asseration;
     //parameters
     private List<Parameter> parameters;
 
@@ -27,19 +33,27 @@ public class ExecFeatureResponse {
         this.status = status;
     }
 
-    public List<CaseResult> getCaseResults() {
-        return caseResults;
-    }
-
-    public void setCaseResults(List<CaseResult> caseResults) {
-        this.caseResults = caseResults;
-    }
-
     public List<Parameter> getParameters() {
         return parameters;
     }
 
     public void setParameters(List<Parameter> parameters) {
         this.parameters = parameters;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public String getAsseration() {
+        return asseration;
+    }
+
+    public void setAsseration(String asseration) {
+        this.asseration = asseration;
     }
 }

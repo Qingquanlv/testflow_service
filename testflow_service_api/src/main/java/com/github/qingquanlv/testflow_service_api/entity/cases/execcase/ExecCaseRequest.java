@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases.execcase;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ public class ExecCaseRequest {
     /**
      * parameters
      */
-    private List<String> parameter_names;
+    private HashMap<String, String> parameters;
     /**
      * case type
      */
@@ -51,13 +52,12 @@ public class ExecCaseRequest {
         this.case_id = case_id;
     }
 
-
-    public List<String> getParameter_names() {
-        return parameter_names;
+    public HashMap<String, String> getParameters() {
+        return parameters;
     }
 
-    public void setParameter_names(List<String> parameter_names) {
-        this.parameter_names = parameter_names;
+    public void setParameters(HashMap<String, String> parameters) {
+        this.parameters = parameters;
     }
 }
 

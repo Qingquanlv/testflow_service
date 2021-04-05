@@ -13,11 +13,13 @@ public class ParameterCase {
     private Long id;
     //parameter_id
     private String parameter_name;
+    //parameter_value_index
+    private Integer parameter_value_index;
     //parameter_key
     private String parameter_key;
     //parameter_value
     private String parameter_value;
-    //时间戳
+    //time_stamp
     private Timestamp datachanged_lasttime;
 
     public Long getId() {
@@ -52,12 +54,19 @@ public class ParameterCase {
         this.datachanged_lasttime = datachanged_lasttime;
     }
 
-
     public String getParameter_name() {
         return parameter_name;
     }
 
     public void setParameter_name(String parameter_name) {
         this.parameter_name = parameter_name;
+    }
+
+    public Integer getParameter_value_index() {
+        return parameter_value_index;
+    }
+
+    public void setParameter_value_index(Integer parameter_value_index) {
+        this.parameter_value_index = parameter_value_index;
     }
 }

@@ -8,6 +8,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,11 +30,7 @@ public class CreateParameterRequest {
     @NotBlank(message = "parameter name不能为null")
     private String parameter_name;
 
-    /**
-     * parameters
-     */
-    @Valid
-    private List<Parameter> parameters;
+    private List<HashMap<String, String>> parameters;
 
     public String getRequestId() {
         return requestId;
@@ -43,19 +40,19 @@ public class CreateParameterRequest {
         this.requestId = requestId;
     }
 
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
-    }
-
     public String getParameter_name() {
         return parameter_name;
     }
 
     public void setParameter_name(String parameter_name) {
         this.parameter_name = parameter_name;
+    }
+
+    public List<HashMap<String, String>> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(List<HashMap<String, String>> parameters) {
+        this.parameters = parameters;
     }
 }

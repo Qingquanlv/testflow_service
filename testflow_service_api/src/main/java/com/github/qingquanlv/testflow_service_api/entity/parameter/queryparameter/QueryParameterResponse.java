@@ -3,7 +3,9 @@ package com.github.qingquanlv.testflow_service_api.entity.parameter.queryparamet
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author Qingquan Lv
@@ -20,7 +22,7 @@ public class QueryParameterResponse {
     /**
      * parameters
      */
-    private List<Parameter> parameters;
+    private List<HashMap<String, String>> parameters;
 
     /**
      * status
@@ -43,11 +45,11 @@ public class QueryParameterResponse {
         this.parameter_name = parameter_name;
     }
 
-    public List<Parameter> getParameters() {
+    public List<HashMap<String, String>> getParameters() {
         return parameters;
     }
 
-    public void setParameters(List<Parameter> parameters) {
+    public void setParameters(List<HashMap<String, String>> parameters) {
         this.parameters = parameters;
     }
 }

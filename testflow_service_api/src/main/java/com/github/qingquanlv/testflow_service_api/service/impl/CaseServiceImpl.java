@@ -2,6 +2,8 @@ package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.github.qingquanlv.testflow_service_api.common.Constants;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
+import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.cases.CaseKey;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseRequest;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseResponse;
 import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseRequest;
@@ -58,22 +60,25 @@ public class CaseServiceImpl implements CaseService {
     @Override
     public ExecCaseResponse execCase(ExecCaseRequest request){
         ExecCaseResponse rsp = new ExecCaseResponse();
-        rsp.setCase_id(request.getCase_id());
-        rsp.setCase_type(request.getCase_type());
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
+        CaseKey caseKey = new CaseKey();
+        caseKey.setCaseId(request.getCase_id());
+        caseKey.setCaseType(request.getCase_type());
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),
                 UUID.randomUUID().toString()));
         TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        List<ParameterCase> parameterCaseList = parameterMapper.SelByNames(request.getParameter_names());
         List<Parameter> parameterList = new ArrayList<>();
         //输入参数
-        if (!CollectionUtils.isEmpty(parameterCaseList)) {
-            for (ParameterCase item : parameterCaseList) {
+        if (!CollectionUtils.isEmpty(request.getParameters())) {
+            for (String key : request.getParameters().keySet()) {
                 Parameter parameter = new Parameter();
-                testFlowManager.addBuffer(item.getParameter_key(), item.getParameter_value());
-                parameter.setParameter_value(item.getParameter_value());
-                parameter.setParameter_key(item.getParameter_key());
+                testFlowManager.addBuffer(key, request.getParameters().get(key));
+                parameter.setParameter_value(key);
+                parameter.setParameter_key(request.getParameters().get(key));
                 parameterList.add(parameter);
             }
         }
@@ -82,12 +87,14 @@ public class CaseServiceImpl implements CaseService {
         switch (request.getCase_type().toLowerCase()) {
             case Constants.DATABASE: {
                 DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(request.getCase_id());
+                caseKey.setCaseName(databaseCase.getCase_name());
                 rsp.setResult(testFlowManager.queryDataBase(databaseCase.getCase_name(),
                                 databaseCase.getSql()));
                 break;
             }
             case Constants.PARSE: {
                 PaserCase parseCases = paserCaseMapper.SelOne(request.getCase_id());
+                caseKey.setCaseName(parseCases.getCase_name());
                 rsp.setResult(testFlowManager.sourceParse(parseCases.getCase_name(),
                                 parseCases.getCvt_method_source(),
                                 FastJsonUtil.toList(parseCases.getParameters())));
@@ -95,6 +102,7 @@ public class CaseServiceImpl implements CaseService {
             }
             case Constants.REQUEST: {
                 RequestCase requestCase = requestCaseMapper.SelOne(request.getCase_id());
+                caseKey.setCaseName(requestCase.getCase_name());
                 rsp.setResult(testFlowManager.sendRequest(requestCase.getCase_name(),
                                 requestCase.getRequest_body(),
                                 "null".equals(requestCase.getRequest_configs())||null == requestCase.getRequest_configs() ? null : FastJsonUtil.toMap(requestCase.getRequest_configs()),
@@ -106,6 +114,7 @@ public class CaseServiceImpl implements CaseService {
             }
             case Constants.VERIFICATION: {
                 VerificationCase verificationCase = verificationCaseMapper.SelOne(request.getCase_id());
+                caseKey.setCaseName(verificationCase.getCase_name());
                 List<String> parameters = FastJsonUtil.toList(verificationCase.getParameters());
                 if (Constants.COMPARE.equals(verificationCase.getVerification_type())) {
                     FastJsonUtil.toList(verificationCase.getParameters());
@@ -120,6 +129,7 @@ public class CaseServiceImpl implements CaseService {
                 break;
             }
         }
+        rsp.setCaseKey(caseKey);
         testFlowManager.deposed();
         return rsp;
     }

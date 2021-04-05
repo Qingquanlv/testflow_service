@@ -15,6 +15,7 @@ public class Parameter {
      */
     @NotBlank(message = "parameter key不能为null")
     private String parameter_key;
+
     /**
      * parameter_value
      */

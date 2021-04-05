@@ -22,13 +22,9 @@ public class ExecCaseResponse {
      */
     private List<Parameter> parameters;
     /**
-     * info
+     * result
      */
-    private String info;
-    /**
-     * asseration
-     */
-    private String asseration;
+    private String result;
     /**
      * status
      */
@@ -51,27 +47,19 @@ public class ExecCaseResponse {
         this.parameters = parameters;
     }
 
-    public String getInfo() {
-        return info;
-    }
-
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    public String getAsseration() {
-        return asseration;
-    }
-
-    public void setAsseration(String asseration) {
-        this.asseration = asseration;
-    }
-
     public Status getStatus() {
         return status;
     }
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public String getResult() {
+        return result;
+    }
+
+    public void setResult(String result) {
+        this.result = result;
     }
 }

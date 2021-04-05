@@ -2,6 +2,7 @@ package com.github.qingquanlv.testflow_service_api.entity.parameter.updateparame
 
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ public class UpdateParameterRequest {
     /**
      * parameters
      */
-    private List<Parameter> parameters;
+    private List<HashMap<String, String>> parameters;
 
     public String getRequestId() {
         return requestId;
@@ -34,19 +35,19 @@ public class UpdateParameterRequest {
         this.requestId = requestId;
     }
 
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
-    }
-
     public String getParameter_name() {
         return parameter_name;
     }
 
     public void setParameter_name(String parameter_name) {
         this.parameter_name = parameter_name;
+    }
+
+    public List<HashMap<String, String>> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(List<HashMap<String, String>> parameters) {
+        this.parameters = parameters;
     }
 }

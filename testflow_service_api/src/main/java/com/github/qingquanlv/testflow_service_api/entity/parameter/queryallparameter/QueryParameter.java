@@ -2,6 +2,7 @@ package com.github.qingquanlv.testflow_service_api.entity.parameter.queryallpara
 
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public class QueryParameter {
     /**
      * parameters
      */
-    private List<Parameter> parameters;
+    private List<HashMap<String, String>> parameters;
 
 
     public String getParameter_name() {
@@ -30,11 +31,12 @@ public class QueryParameter {
         this.parameter_name = parameter_name;
     }
 
-    public List<Parameter> getParameters() {
+
+    public List<HashMap<String, String>> getParameters() {
         return parameters;
     }
 
-    public void setParameters(List<Parameter> parameters) {
+    public void setParameters(List<HashMap<String, String>> parameters) {
         this.parameters = parameters;
     }
 }
