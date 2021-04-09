@@ -49,7 +49,7 @@ public class ParameterServiceImpl implements ParameterService {
         List<ParameterCase> parameterCaseList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(request.getParameters())) {
             //parameter index
-            Integer index = 0;
+            Long index = 0L;
             for (HashMap<String, String> map : request.getParameters()) {
                 if (!map.isEmpty()) {
                     for (String key : map.keySet()) {
@@ -98,12 +98,12 @@ public class ParameterServiceImpl implements ParameterService {
                     if (!CollectionUtils.isEmpty(hashMapList)) {
                         List<HashMap<String, String>> listMap = new ArrayList<>();
                         //获取Parameter Index List
-                        Set<Integer> parameterIndexList = hashMapList
+                        Set<Long> parameterIndexList = hashMapList
                                 .stream().map(ParameterCase::getParameter_value_index)
                                 .collect(Collectors.toSet());
                         if (!CollectionUtils.isEmpty(parameterIndexList)) {
                             //插入Map
-                            for (Integer index : parameterIndexList) {
+                            for (Long index : parameterIndexList) {
                                 HashMap<String, String> map = new HashMap<>();
                                 List<ParameterCase> parameterCaseIndexList = hashMapList
                                         .stream().filter(item -> index.equals(item.getParameter_value_index()))
@@ -140,12 +140,12 @@ public class ParameterServiceImpl implements ParameterService {
         rsp.setParameter_name(name);
         List<HashMap<String, String>> parameterList = new ArrayList<>();
         //获取parameter index set
-        Set<Integer> indexList = list.stream().map(ParameterCase::getParameter_value_index).collect(Collectors.toSet());
+        Set<Long> indexList = list.stream().map(ParameterCase::getParameter_value_index).collect(Collectors.toSet());
         if (!CollectionUtils.isEmpty(indexList)) {
-            for (Integer index : indexList) {
+            for (Long index : indexList) {
                 HashMap<String, String> parameterMap = new HashMap<>();
                 List<ParameterCase> parameterCases = list.stream()
-                        .filter(item->item.getParameter_value_index()==index)
+                        .filter(item->index.equals(item.getParameter_value_index()))
                         .collect(Collectors.toList());
                 for (ParameterCase parameterCase : parameterCases) {
                     if (!parameterMap.containsKey(parameterCase.getParameter_key())) {
@@ -174,7 +174,7 @@ public class ParameterServiceImpl implements ParameterService {
         rsp.setStatus(status);
         List<ParameterCase> parameterCaseList = new ArrayList<>();
         //parameter index
-        Integer index = 0;
+        Long index = 0L;
         for (HashMap<String, String> map : request.getParameters()) {
             if (!map.isEmpty()) {
                 for (String key : map.keySet()) {

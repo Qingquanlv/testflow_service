@@ -79,7 +79,10 @@ public class BufferManager {
 
     public static void addBufferByKey(String bufferKey, String bufferVal) throws Exception {
         jedisUtil.set(String.format("%s:%s", pattern, bufferKey), bufferVal);
+    }
 
+    public static void appendBufferByKey(String bufferKey, String bufferVal) throws Exception {
+        jedisUtil.append(String.format("%s:%s", pattern, bufferKey), bufferVal);
     }
 
     public static boolean bufferExist(String bufferObjectMapKey) {

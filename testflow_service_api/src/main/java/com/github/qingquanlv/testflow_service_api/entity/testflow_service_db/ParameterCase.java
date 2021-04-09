@@ -11,10 +11,11 @@ public class ParameterCase {
 
     //id
     private Long id;
+
     //parameter_id
     private String parameter_name;
     //parameter_value_index
-    private Integer parameter_value_index;
+    private Long parameter_value_index;
     //parameter_key
     private String parameter_key;
     //parameter_value
@@ -62,11 +63,11 @@ public class ParameterCase {
         this.parameter_name = parameter_name;
     }
 
-    public Integer getParameter_value_index() {
+    public Long getParameter_value_index() {
         return parameter_value_index;
     }
 
-    public void setParameter_value_index(Integer parameter_value_index) {
+    public void setParameter_value_index(Long parameter_value_index) {
         this.parameter_value_index = parameter_value_index;
     }
 }

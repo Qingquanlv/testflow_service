@@ -12,17 +12,21 @@ import java.util.List;
  * @Version 1.0
  */
 public class ExecFeatureResponse {
-    //status
+    /**
+     * status
+     */
     private Status status;
     /**
      * info
      */
     private String info;
     /**
-     * asseration
+     * assertion
      */
-    private String asseration;
-    //parameters
+    private String assertion;
+    /**
+     * parameters
+     */
     private List<Parameter> parameters;
 
     public Status getStatus() {
@@ -49,11 +53,11 @@ public class ExecFeatureResponse {
         this.info = info;
     }
 
-    public String getAsseration() {
-        return asseration;
+    public String getAssertion() {
+        return assertion;
     }
 
-    public void setAsseration(String asseration) {
-        this.asseration = asseration;
+    public void setAssertion(String assertion) {
+        this.assertion = assertion;
     }
 }

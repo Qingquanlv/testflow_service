@@ -5,6 +5,8 @@ import com.github.qingquanlv.testflow_service_api.entity.cases.database.deleteda
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
@@ -31,12 +33,21 @@ public interface FeatureService {
     CreateFeatureResponse createFeature(CreateFeatureRequest request);
 
     /**
-     * 执行feature
+     * 同步执行feature
      *
      * @param id
      * @return
      */
-    CompletableFuture<ExecFeatureResponse> execFeature(ExecFeatureRequest id);
+    ExecFeatureResponse execFeature(ExecFeatureRequest id);
+
+
+    /**
+     * 异步执行feature
+     *
+     * @param id
+     * @return
+     */
+    CompletableFuture<ExecAsyncFeatureResponse> execFeatureAsync(ExecAsyncFeatureRequest id);
 
     /**
      * 获取feature

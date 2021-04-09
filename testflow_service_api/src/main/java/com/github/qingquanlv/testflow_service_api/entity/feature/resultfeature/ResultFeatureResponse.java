@@ -8,10 +8,20 @@ import com.github.qingquanlv.testflow_service_api.entity.Status;
  * @Version 1.0
  */
 public class ResultFeatureResponse {
-    //返回执行结果
 
-    //status
+    //返回执行结果
+    /**
+     * status
+     */
     private Status status;
+    /**
+     * info
+     */
+    private String info;
+    /**
+     * assertion
+     */
+    private String assertion;
 
     public Status getStatus() {
         return status;
@@ -19,5 +29,21 @@ public class ResultFeatureResponse {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public String getInfo() {
+        return info;
+    }
+
+    public void setInfo(String info) {
+        this.info = info;
+    }
+
+    public String getAssertion() {
+        return assertion;
+    }
+
+    public void setAssertion(String assertion) {
+        this.assertion = assertion;
     }
 }

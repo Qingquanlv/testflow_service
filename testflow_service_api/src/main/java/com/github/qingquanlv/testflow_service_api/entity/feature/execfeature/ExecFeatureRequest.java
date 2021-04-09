@@ -2,6 +2,7 @@ package com.github.qingquanlv.testflow_service_api.entity.feature.execfeature;
 
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ public class ExecFeatureRequest {
     /**
      * parameters
      */
-    private List<String> parameter_names;
+    private HashMap<String, String> parameters;
 
 
     public String getRequestId() {
@@ -41,11 +42,11 @@ public class ExecFeatureRequest {
         this.featureId = featureId;
     }
 
-    public List<String> getParameter_names() {
-        return parameter_names;
+    public HashMap<String, String> getParameters() {
+        return parameters;
     }
 
-    public void setParameter_names(List<String> parameter_names) {
-        this.parameter_names = parameter_names;
+    public void setParameters(HashMap<String, String> parameters) {
+        this.parameters = parameters;
     }
 }

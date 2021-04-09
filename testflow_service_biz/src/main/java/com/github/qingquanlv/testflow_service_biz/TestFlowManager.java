@@ -1,9 +1,9 @@
 package com.github.qingquanlv.testflow_service_biz;
 
+import com.github.qingquanlv.testflow_service_biz.common.AssertionHelper;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.common.LogHelper;
 import com.github.qingquanlv.testflow_service_biz.stepdefinations.*;
-import com.github.qingquanlv.testflow_service_biz.utilities.JedisUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -63,7 +63,7 @@ public class TestFlowManager {
             responseStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
         }
         catch (Exception ex) {
-            throw new AssertionError(String.format("send Request failed: %s", ex));
+            throw new AssertionError(String.format("Send request failed: %s", ex));
         }
         LogHelper.stepAfterLog(caseName, responseStr);
         return responseStr;
@@ -86,7 +86,7 @@ public class TestFlowManager {
         }
         catch (Exception ex) {
             deposed();
-            throw new AssertionError(String.format("Init object failed"));
+            throw new AssertionError(String.format("Parse object failed"));
         }
         LogHelper.stepAfterLog(caseName, str);
         return str;
@@ -108,7 +108,7 @@ public class TestFlowManager {
         }
         catch (Exception ex) {
             deposed();
-            throw new AssertionError(String.format("Query datebase failed: " + ex));
+            throw new AssertionError(String.format("Query database failed: " + ex));
         }
         LogHelper.stepAfterLog(caseName, str);
         return str;
@@ -123,8 +123,8 @@ public class TestFlowManager {
     public String verify(String expObj, String atlObj) {
         Verify verify = new Verify();
         String errorMsg = "";
-        LogHelper.stepExecLog("verify", expObj, atlObj);
         try {
+            LogHelper.stepExecLog("verify", expObj, atlObj);
             errorMsg = verify.verify(expObj, expObj);
             deposed();
         }
@@ -145,8 +145,8 @@ public class TestFlowManager {
     public String verify(String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
         Verify verify = new Verify();
         String errorMsg = "";
-        LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
         try {
+            LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
             errorMsg = verify.verify(expObj, atlObj, pkMapStr, noCompareItemMapStr);
             deposed();
         }
@@ -167,14 +167,14 @@ public class TestFlowManager {
     public String verify(String atlObj, String JsonFilter, String expValue) {
         Verify verify = new Verify();
         String errorMsg = "";
-        LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
         try {
+            LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
             errorMsg = verify.verify(atlObj, JsonFilter, expValue);
             deposed();
         }
         catch (Exception ex) {
             deposed();
-            throw new AssertionError(String.format("Verify object failed: " + ex));
+            AssertionHelper.assertion(String.format("Verify object failed: " + ex));
         }
         return errorMsg;
     }
@@ -188,8 +188,8 @@ public class TestFlowManager {
      * @return
      */
     public TestFlowManager addBuffer(String bufferKey, String bufferVal) {
-        LogHelper.stepExecLog("addBuffer", bufferKey, bufferVal);
         try {
+            LogHelper.stepExecLog("addBuffer", bufferKey, bufferVal);
             BufferManager.addBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
@@ -205,16 +205,17 @@ public class TestFlowManager {
      * @param bufferKey
      * @return
      */
-    public TestFlowManager getBuffer(String bufferKey) {
-        LogHelper.stepExecLog("addBuffer", bufferKey);
+    public String getBuffer(String bufferKey) {
+        String str = "";
         try {
-            BufferManager.getBufferByKey(bufferKey);
+            LogHelper.stepExecLog("getBuffer", bufferKey);
+            str = BufferManager.getBufferByKey(bufferKey);
         }
         catch (Exception ex) {
             deposed();
             throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey));
         }
-        return this;
+        return str;
     }
 }
 
