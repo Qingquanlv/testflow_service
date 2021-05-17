@@ -20,6 +20,7 @@ import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.Exe
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryFeature;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultCase;
 import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
@@ -612,7 +613,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .stream()
                 .filter(item->item.getCase_type().equals(Constants.REQUEST))
                 .collect(Collectors.toSet());
-        Set<Long> requestCasesIds = requestFeatureCases.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        Set<Long> requestCasesIds = requestFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
         List<RequestCase> requestCases = CollectionUtils.isEmpty(requestCasesIds)
                 ? new ArrayList<>()
                 : requestCaseMapper.SelList(requestCasesIds);
@@ -621,7 +622,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .stream()
                 .filter(item->item.getCase_type().equals(Constants.DATABASE))
                 .collect(Collectors.toSet());
-        Set<Long> databaseCasesIds = databaseFeatureCases.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        Set<Long> databaseCasesIds = databaseFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
         List<DatabaseCase> databaseCases = CollectionUtils.isEmpty(databaseCasesIds)
                 ? new ArrayList<>()
                 : dataBaseCaseMapper.SelList(databaseCasesIds);
@@ -630,7 +631,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .stream()
                 .filter(item->item.getCase_type().equals(Constants.PARSE))
                 .collect(Collectors.toSet());
-        Set<Long> parsetCasesIds = parseFeatureCases.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        Set<Long> parsetCasesIds = parseFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
         List<PaserCase> parseCases = CollectionUtils.isEmpty(parsetCasesIds)
                 ? new ArrayList<>()
                 : paserCaseMapper.SelList(parsetCasesIds);
@@ -639,7 +640,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .stream()
                 .filter(item->item.getCase_type().equals(Constants.VERIFICATION))
                 .collect(Collectors.toSet());
-        Set<Long> verifyCasesIds = verifytFeatureCases.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        Set<Long> verifyCasesIds = verifytFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
         List<VerificationCase> verifyCases = CollectionUtils.isEmpty(verifyCasesIds)
                 ? new ArrayList<>()
                 : verificationCaseMapper.SelList(verifyCasesIds);
@@ -884,12 +885,12 @@ public class FeatureServiceImpl implements FeatureService {
                 }
             }
         }
-        if (null != index && 1 != index) {
+        if (null != index && -1 != index) {
             FeatureResult featureResult = new FeatureResult();
             featureResult.setFeature_id(featureCaseList.get(0).getFeature_id());
             featureResult.setParameter_value_index(index);
-            featureResult.setLog_key(testFlowManager.getBuffer("tf_log"));
-            featureResult.setAssertion_key(testFlowManager.getBuffer("tf_assertion"));
+            featureResult.setLog_key(String.format("%s_%s",index, testFlowManager.getBuffer("tf_log")));
+            featureResult.setAssertion_key(String.format("%s_%s",index, testFlowManager.getBuffer("tf_assertion")));
             featureResultMapper.ins(featureResult);
         }
         testFlowManager.deposed();
@@ -1273,8 +1274,21 @@ public class FeatureServiceImpl implements FeatureService {
      */
     @Override
     public ResultFeatureResponse resultFeature(Long id) {
+        TestFlowManager testFlowManager = new TestFlowManager();
+        Status status = new Status();
+        status.setSuccess(true);
         ResultFeatureResponse rsp = new ResultFeatureResponse();
+        List<ResultCase> resultCaseList = new ArrayList<>();
         List<FeatureResult> featureResultList = featureResultMapper.selByFid(id);
-        return null;
+        for (int i = 0; i < featureResultList.size(); i ++) {
+            ResultCase resultCase = new ResultCase();
+            resultCase.setIndex(i);
+            resultCase.setAssertion(testFlowManager.getBuffer(featureResultList.get(i).getAssertion_key()));
+            resultCase.setInfo(testFlowManager.getBuffer(featureResultList.get(i).getLog_key()));
+            resultCaseList.add(resultCase);
+        }
+        rsp.setStatus(status);
+        rsp.setResultCaseList(resultCaseList);
+        return rsp;
     }
 }

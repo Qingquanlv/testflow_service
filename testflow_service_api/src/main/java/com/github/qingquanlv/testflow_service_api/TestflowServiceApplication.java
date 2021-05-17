@@ -19,7 +19,7 @@ public class TestflowServiceApplication {
 	}
 
 	@Bean("threadPoolTaskExecutor")
-	public TaskExecutor getAsyncExecutor() {
+	public TaskExecutor getAsyncExedcutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(20);
 		executor.setMaxPoolSize(1000);

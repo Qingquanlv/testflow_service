@@ -2,6 +2,8 @@ package com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 
+import java.util.List;
+
 /**
  * @Author Qingquan Lv
  * @Date 2021/2/3 8:01
@@ -9,19 +11,12 @@ import com.github.qingquanlv.testflow_service_api.entity.Status;
  */
 public class ResultFeatureResponse {
 
-    //返回执行结果
     /**
      * status
      */
     private Status status;
-    /**
-     * info
-     */
-    private String info;
-    /**
-     * assertion
-     */
-    private String assertion;
+
+    private List<ResultCase> resultCaseList;
 
     public Status getStatus() {
         return status;
@@ -31,19 +26,11 @@ public class ResultFeatureResponse {
         this.status = status;
     }
 
-    public String getInfo() {
-        return info;
+    public List<ResultCase> getResultCaseList() {
+        return resultCaseList;
     }
 
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    public String getAssertion() {
-        return assertion;
-    }
-
-    public void setAssertion(String assertion) {
-        this.assertion = assertion;
+    public void setResultCaseList(List<ResultCase> resultCaseList) {
+        this.resultCaseList = resultCaseList;
     }
 }
