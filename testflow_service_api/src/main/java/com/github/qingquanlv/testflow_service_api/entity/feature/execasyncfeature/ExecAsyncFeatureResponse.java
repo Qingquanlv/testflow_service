@@ -15,17 +15,7 @@ public class ExecAsyncFeatureResponse {
          * status
          */
         private Status status;
-        /**
-         * info
-         */
-        private String info;
-        /**
-         * assertion
-         */
-        private String assertion;
-        /**
-         * parameters
-         */
+
         private List<HashMap<String, String>> parameters;
 
         public Status getStatus() {
@@ -34,30 +24,6 @@ public class ExecAsyncFeatureResponse {
 
         public void setStatus(Status status) {
                 this.status = status;
-        }
-
-        public String getInfo() {
-                return info;
-        }
-
-        public void setInfo(String info) {
-                this.info = info;
-        }
-
-        public String getAssertion() {
-                return assertion;
-        }
-
-        public void setAssertion(String assertion) {
-                this.assertion = assertion;
-        }
-
-        public List<HashMap<String, String>> getParameters() {
-                return parameters;
-        }
-
-        public void setParameters(List<HashMap<String, String>> parameters) {
-                this.parameters = parameters;
         }
 }
 

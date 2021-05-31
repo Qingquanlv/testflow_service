@@ -8,16 +8,20 @@ import java.sql.Timestamp;
  */
 public class FeatureResult {
 
-        //feature_result_id
+        /**
+         * feature_result_id
+         */
         private Long feature_result_id;
         //feature_id
         private Long feature_id;
+        //task_id
+        private Long task_id;
         //parameter_value_index
         private Long parameter_value_index;
-        //log_key
-        private String log_key;
+        //log
+        private String logs;
         //assertion_key
-        private String assertion_key;
+        private String assertions;
         //time_stamp
         private Timestamp datachanged_lasttime;
 
@@ -45,27 +49,35 @@ public class FeatureResult {
                 this.parameter_value_index = parameter_value_index;
         }
 
-        public String getLog_key() {
-                return log_key;
-        }
-
-        public void setLog_key(String log_key) {
-                this.log_key = log_key;
-        }
-
-        public String getAssertion_key() {
-                return assertion_key;
-        }
-
-        public void setAssertion_key(String assertion_key) {
-                this.assertion_key = assertion_key;
-        }
-
         public Timestamp getDatachanged_lasttime() {
                 return datachanged_lasttime;
         }
 
         public void setDatachanged_lasttime(Timestamp datachanged_lasttime) {
                 this.datachanged_lasttime = datachanged_lasttime;
+        }
+
+        public Long getTask_id() {
+                return task_id;
+        }
+
+        public void setTask_id(Long task_id) {
+                this.task_id = task_id;
+        }
+
+        public String getLogs() {
+                return logs;
+        }
+
+        public void setLogs(String logs) {
+                this.logs = logs;
+        }
+
+        public String getAssertions() {
+                return assertions;
+        }
+
+        public void setAssertions(String assertions) {
+                this.assertions = assertions;
         }
 }

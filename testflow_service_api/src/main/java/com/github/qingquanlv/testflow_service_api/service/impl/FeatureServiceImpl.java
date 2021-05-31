@@ -35,6 +35,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -74,6 +75,9 @@ public class FeatureServiceImpl implements FeatureService {
 
     @Autowired
     ParameterMapper parameterMapper;
+
+    @Autowired
+    FeatureTaskMapper featureTaskMapper;
 
     /**
      * 创建feature
@@ -534,7 +538,7 @@ public class FeatureServiceImpl implements FeatureService {
      */
     @Override
     public ExecFeatureResponse execFeature(ExecFeatureRequest request) {
-        ExecFeatureResponse rsp = new ExecFeatureResponse();
+        ExecFeatureResponse rsp;
         Status status = new Status();
         status.setSuccess(true);
         List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(request.getFeatureId());
@@ -543,12 +547,12 @@ public class FeatureServiceImpl implements FeatureService {
         if (!CollectionUtils.isEmpty(request.getParameters())) {
             for (String key : request.getParameters().keySet()) {
                 Parameter parameter = new Parameter();
-                parameter.setParameter_value(key);
-                parameter.setParameter_key(request.getParameters().get(key));
+                parameter.setParameter_key(key);
+                parameter.setParameter_value(request.getParameters().get(key));
                 parameters.add(parameter);
             }
         }
-        execFeature(null, parameters, featureCaseList);
+        rsp = execFeature(parameters, featureCaseList);
         rsp.setParameters(parameters);
         rsp.setStatus(status);
         return rsp;
@@ -564,12 +568,17 @@ public class FeatureServiceImpl implements FeatureService {
     @Override
     public CompletableFuture<ExecAsyncFeatureResponse> execFeatureAsync(ExecAsyncFeatureRequest request) {
         ExecAsyncFeatureResponse rsp = new ExecAsyncFeatureResponse();
-        Status status = new Status();
-        status.setSuccess(true);
         List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(request.getFeatureId());
         //获取对应name的parameter list
         List<ParameterCase> list = parameterMapper.Sel(request.getParameter_names());
         List<HashMap<String, String>> parameterList = new ArrayList<>();
+        List<FeatureResult> featureResultList = new ArrayList<>();
+        //record task
+        FeatureTask featureTask = new FeatureTask();
+        featureTask.setTask_name("exec task");
+        featureTask.setTask_starttime(new Timestamp(System.currentTimeMillis()));
+        //插入feature task
+        featureTaskMapper.Ins(featureTask);
         //获取parameter index set
         Set<Long> indexList = list.stream().map(ParameterCase::getParameter_value_index).collect(Collectors.toSet());
         if (!CollectionUtils.isEmpty(indexList)) {
@@ -591,12 +600,14 @@ public class FeatureServiceImpl implements FeatureService {
                     }
                 }
                 //根据key-value 执行feature
-                execFeature(index, parameters, featureCaseList);
+                FeatureResult featureResult = execFeature(index, parameters, featureCaseList);
+                featureResult.setTask_id(featureTask.getTask_id());
+                featureResult.setLogs("abc");
+                featureResultList.add(featureResult);
                 parameterList.add(parameterMap);
             }
         }
-        rsp.setStatus(status);
-        //rsp.setParameters(parameterList);
+        featureResultMapper.insList(featureResultList);
         return CompletableFuture.completedFuture(rsp);
     }
 
@@ -837,10 +848,12 @@ public class FeatureServiceImpl implements FeatureService {
     /**
      * 执行feature方法
      *
+     * @param parameters
      * @param featureCaseList
+     * @return
      */
-    private void execFeature(Long index, List<Parameter> parameters, List<FeatureCase> featureCaseList) {
-
+    private ExecFeatureResponse execFeature(List<Parameter> parameters, List<FeatureCase> featureCaseList) {
+        ExecFeatureResponse rsp = new ExecFeatureResponse();
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),
@@ -850,7 +863,7 @@ public class FeatureServiceImpl implements FeatureService {
         //输入参数
         if (!CollectionUtils.isEmpty(parameters)) {
             for (Parameter item : parameters) {
-                testFlowManager.addBuffer(String.format("%s:%s", publicKey, item.getParameter_key()), item.getParameter_value());
+                testFlowManager.addBuffer(item.getParameter_key(), item.getParameter_value());
             }
         }
         //储存入度
@@ -885,15 +898,77 @@ public class FeatureServiceImpl implements FeatureService {
                 }
             }
         }
-        if (null != index && -1 != index) {
-            FeatureResult featureResult = new FeatureResult();
-            featureResult.setFeature_id(featureCaseList.get(0).getFeature_id());
-            featureResult.setParameter_value_index(index);
-            featureResult.setLog_key(String.format("%s_%s",index, testFlowManager.getBuffer("tf_log")));
-            featureResult.setAssertion_key(String.format("%s_%s",index, testFlowManager.getBuffer("tf_assertion")));
-            featureResultMapper.ins(featureResult);
-        }
+        rsp.setInfo(testFlowManager.getBuffer("tf_log"));
+        rsp.setAssertion(null == testFlowManager.getBuffer("tf_assertion") ?
+                "passed":
+                testFlowManager.getBuffer("tf_assertion"));
         testFlowManager.deposed();
+        return rsp;
+    }
+
+
+    /**
+     * 执行feature方法
+     *
+     * @param index
+     * @param parameters
+     * @param featureCaseList
+     */
+    private FeatureResult execFeature(Long index, List<Parameter> parameters, List<FeatureCase> featureCaseList) {
+        ExecFeatureResponse rsp = new ExecFeatureResponse();
+        //buffer 公共key
+        String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
+                System.currentTimeMillis(),
+                UUID.randomUUID().toString()));
+        TestFlowManager testFlowManager = new TestFlowManager(publicKey);
+        //Feature feature = featureMapper.Sel(id);
+        //输入参数
+        if (!CollectionUtils.isEmpty(parameters)) {
+            for (Parameter item : parameters) {
+                testFlowManager.addBuffer(item.getParameter_key(), item.getParameter_value());
+            }
+        }
+        //储存入度
+        Map<Long, Integer> inDegreeMap = new HashMap<>();
+        initMap(featureCaseList, inDegreeMap);
+        //主要流程
+        Queue<Long> s1 = new ArrayDeque<>();
+        Set<Long> idSet = featureCaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        //获取入度为0的case, 并且插入队列
+        idSet.removeAll(inDegreeMap.keySet());
+        for(Long item : idSet) {
+            s1.offer(item);
+        }
+        //遍历执行入度为0的case
+        while(!s1.isEmpty())
+        {
+            //抛出队头，并且执行
+            Long n = s1.poll();
+            FeatureCase featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
+            if (null == featureCase) {
+                break;
+            }
+            //执行测试用例
+            executeCase(testFlowManager, publicKey, featureCase);
+            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+            for (FeatureCaseNextCase caseKey : nextCaseKeys) {
+                //入度减一
+                inDegreeMap.put(caseKey.getCase_id(), null==inDegreeMap.get(caseKey.getCase_id()) ? 0 :inDegreeMap.get(caseKey.getCase_id()) - 1);
+                //如果入度为0
+                if(inDegreeMap.get(caseKey.getCase_id()) == 0){
+                    s1.offer(caseKey.getCase_id());
+                }
+            }
+        }
+        FeatureResult featureResult = new FeatureResult();
+        featureResult.setFeature_id(featureCaseList.get(0).getFeature_id());
+        featureResult.setParameter_value_index(index);
+        featureResult.setLogs(testFlowManager.getBuffer("tf_log"));
+        featureResult.setAssertions(null == testFlowManager.getBuffer("tf_assertion") ?
+                "passed":
+                testFlowManager.getBuffer("tf_assertion"));
+        testFlowManager.deposed();
+        return featureResult;
     }
 
     /**
@@ -962,21 +1037,22 @@ public class FeatureServiceImpl implements FeatureService {
                 if (Constants.COMPARE.equals(verificationCase.getVerification_type())) {
                     FastJsonUtil.toList(verificationCase.getParameters());
                     testFlowManager.addBuffer(
-                            verificationCase.getCase_name(),
+                            "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1)));
                 }
                 else if (Constants.XPATHCOMPARE.equals(verificationCase.getVerification_type())) {
                     testFlowManager.addBuffer(
-                            verificationCase.getCase_name(),
+                            "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2)));
                 }
                 else if (Constants.OBJCOMPARE.equals(verificationCase.getVerification_type())) {
                     testFlowManager.addBuffer(
-                            verificationCase.getCase_name(),
+                            "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3)));
                 }
                 break;
             }
+            default: {}
         }
     }
 
@@ -1283,8 +1359,8 @@ public class FeatureServiceImpl implements FeatureService {
         for (int i = 0; i < featureResultList.size(); i ++) {
             ResultCase resultCase = new ResultCase();
             resultCase.setIndex(i);
-            resultCase.setAssertion(testFlowManager.getBuffer(featureResultList.get(i).getAssertion_key()));
-            resultCase.setInfo(testFlowManager.getBuffer(featureResultList.get(i).getLog_key()));
+            resultCase.setAssertion(testFlowManager.getBuffer(featureResultList.get(i).getAssertions()));
+            resultCase.setInfo(testFlowManager.getBuffer(featureResultList.get(i).getLogs()));
             resultCaseList.add(resultCase);
         }
         rsp.setStatus(status);

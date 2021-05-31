@@ -126,9 +126,9 @@ public class TestFlowManager {
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj);
             errorMsg = verify.verify(expObj, expObj);
-            deposed();
         }
         catch (Exception ex) {
+            deposed();
             throw new AssertionError(String.format("Verify object failed: " + ex));
         }
         return errorMsg;
@@ -148,7 +148,7 @@ public class TestFlowManager {
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
             errorMsg = verify.verify(expObj, atlObj, pkMapStr, noCompareItemMapStr);
-            deposed();
+            //deposed();
         }
         catch (Exception ex) {
             deposed();
@@ -170,7 +170,7 @@ public class TestFlowManager {
         try {
             LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
             errorMsg = verify.verify(atlObj, JsonFilter, expValue);
-            deposed();
+            //deposed();
         }
         catch (Exception ex) {
             deposed();

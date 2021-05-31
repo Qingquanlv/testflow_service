@@ -4,9 +4,10 @@
     <resultMap id="FeatureResult" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult">
         <result column="feature_result_id" jdbcType="BIGINT" property="feature_result_id" />
         <result column="feature_id" jdbcType="BIGINT" property="feature_id" />
+        <result column="task_id" jdbcType="BIGINT" property="task_id" />
         <result column="parameter_value_index" jdbcType="BIGINT" property="parameter_value_index" />
-        <result column="log_key" jdbcType="VARCHAR" property="log_key" />
-        <result column="assertion_key" jdbcType="VARCHAR" property="assertion_key" />
+        <result column="logs" jdbcType="VARCHAR" property="logs" />
+        <result column="assertions" jdbcType="VARCHAR" property="assertions" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
@@ -21,14 +22,31 @@
     <insert id="ins" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult" useGeneratedKeys="true" keyColumn="feature_result_id" keyProperty="feature_result_id">
         INSERT INTO
         feature_result
-        (feature_id, parameter_value_index, log_key, assertion_key)
+        (feature_id, task_id, parameter_value_index, logs, assertions)
         VALUES
         (
             #{feature_id},
+            #{task_id},
             #{parameter_value_index},
-            #{log_key},
-            #{assertion_key}
+            #{logs},
+            #{assertions}
         )
+    </insert>
+
+    <insert id="insList" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="feature_result_id" keyProperty="feature_result_id">
+        INSERT INTO
+            feature_result
+        (feature_id, task_id, parameter_value_index, logs, assertions)
+            values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.feature_id},
+            #{item.task_id},
+            #{item.parameter_value_index},
+            #{item.logs},
+            #{item.assertions}
+            )
+        </foreach>
     </insert>
 
 </mapper>

@@ -9,6 +9,9 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+/**
+ * @author qingquanlv
+ */
 @EnableAsync
 @MapperScan("com.github.qingquanlv.testflow_service_api.mapper") //扫描的mapper
 @SpringBootApplication

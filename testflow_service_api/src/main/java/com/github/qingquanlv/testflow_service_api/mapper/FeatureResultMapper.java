@@ -18,4 +18,6 @@ public interface FeatureResultMapper {
         List<FeatureResult> selAll();
 
         void ins(FeatureResult item);
+
+        void insList(List<FeatureResult> items);
 }

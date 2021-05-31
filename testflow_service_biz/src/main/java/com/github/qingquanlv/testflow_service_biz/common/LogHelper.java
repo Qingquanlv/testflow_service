@@ -12,15 +12,16 @@ public class LogHelper {
     public static void initLog()
     {
         if(index == null) {
-            index = 1;
+            index = 0;
         }
     }
 
     public static void deposeLog() {
-        index = 1;
+        index = 0;
     }
 
     public static void stepExecLog(String stepName, String...stepParam) throws Exception {
+        index++;
         String param = "";
         for (int i=0;i<stepParam.length;i++) {
             param +=stepParam[i] + ",";

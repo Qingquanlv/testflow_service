@@ -17,6 +17,10 @@ public class ExecFeatureResponse {
      */
     private Status status;
     /**
+     * parameters
+     */
+    private List<Parameter> parameters;
+    /**
      * info
      */
     private String info;
@@ -24,10 +28,6 @@ public class ExecFeatureResponse {
      * assertion
      */
     private String assertion;
-    /**
-     * parameters
-     */
-    private List<Parameter> parameters;
 
     public Status getStatus() {
         return status;

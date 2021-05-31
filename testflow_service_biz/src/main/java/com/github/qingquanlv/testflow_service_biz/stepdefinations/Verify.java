@@ -40,7 +40,7 @@ public class Verify {
             throw new Exception(String.format("No matiched value for key \"%s\" Json string \"%s\" .", atlStr, JsonFilter));
         }
         if (!objList.get(0).toString().equals(expValue)) {
-            errMsg =  String.format("\n" + "expected: \"%s\" is not equal with actual: \"%s\".", expValue, objList.get(0).toString());
+            errMsg =  String.format("expected: \"%s\" is not equal with actual: \"%s\".", expValue, objList.get(0).toString());
         }
         return errMsg;
     }

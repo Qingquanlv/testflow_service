@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
+import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
@@ -45,16 +46,18 @@ public class Feature {
         return rsp;
     }
 
-    @RequestMapping("/exec/{id}")
+    @RequestMapping("/exec")
     public ExecFeatureResponse execFeature(@RequestBody ExecFeatureRequest request){
-        ExecFeatureResponse rsp = new ExecFeatureResponse();
-        featureService.execFeature(request);
+        ExecFeatureResponse rsp = featureService.execFeature(request);
         return rsp;
     }
 
-    @RequestMapping("/execAsync/{id}")
+    @RequestMapping("/execAsync")
     public ExecAsyncFeatureResponse execAsyncFeature(@RequestBody ExecAsyncFeatureRequest request){
         ExecAsyncFeatureResponse rsp = new ExecAsyncFeatureResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
         featureService.execFeatureAsync(request);
         return rsp;
     }
