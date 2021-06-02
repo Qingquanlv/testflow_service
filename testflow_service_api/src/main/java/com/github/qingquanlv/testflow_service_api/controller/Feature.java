@@ -68,11 +68,4 @@ public class Feature {
         return rsp;
     }
 
-    @RequestMapping("/getResult/{id}")
-    public ResultFeatureResponse resultFeature(@PathVariable Long id){
-        ResultFeatureResponse rsp =  featureService.resultFeature(id);
-        return rsp;
-    }
-
-
 }

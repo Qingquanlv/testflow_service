@@ -15,8 +15,12 @@
         SELECT * FROM feature_result
     </select>
 
-    <select id="selByFid" parameterType="java.lang.Long" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult">
-        SELECT * FROM feature_result where feature_id = #{Id}
+    <select id="selByTidSid" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult">
+        SELECT * FROM testflow_service.feature_result where task_id = #{taskId} and parameter_value_index = #{stepId} limit 1
+    </select>
+
+    <select id="selByTid" parameterType="java.lang.Long" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult">
+        SELECT * FROM testflow_service.feature_result where task_id = #{Id}
     </select>
 
     <insert id="ins" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult" useGeneratedKeys="true" keyColumn="feature_result_id" keyProperty="feature_result_id">

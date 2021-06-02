@@ -1,7 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,7 +13,9 @@ import java.util.List;
 @Repository
 public interface FeatureResultMapper {
 
-        List<FeatureResult> selByFid(Long id);
+        FeatureResult selByTidSid(@Param("taskId") Long taskId, @Param("stepId") Long stepId);
+
+        List<FeatureResult> selByTid(Long taskId);
 
         List<FeatureResult> selAll();
 

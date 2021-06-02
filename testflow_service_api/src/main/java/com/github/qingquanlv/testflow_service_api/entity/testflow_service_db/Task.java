@@ -4,9 +4,9 @@ import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/5/30 19:10
+ * @Date: 2021/6/2 20:07
  */
-public class FeatureTask {
+public class Task {
         /**
          * task_id
          */
@@ -56,3 +56,4 @@ public class FeatureTask {
                 this.datachanged_lasttime = datachanged_lasttime;
         }
 }
+

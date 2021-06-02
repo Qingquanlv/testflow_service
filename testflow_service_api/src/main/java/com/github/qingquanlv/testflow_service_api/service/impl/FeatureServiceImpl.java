@@ -1,6 +1,5 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.qingquanlv.testflow_service_api.common.Constants;
 import com.github.qingquanlv.testflow_service_api.common.Lang;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
@@ -20,8 +19,6 @@ import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.Exe
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryFeature;
 import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultCase;
-import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
 import com.github.qingquanlv.testflow_service_api.mapper.*;
@@ -77,7 +74,7 @@ public class FeatureServiceImpl implements FeatureService {
     ParameterMapper parameterMapper;
 
     @Autowired
-    FeatureTaskMapper featureTaskMapper;
+    TaskMapper taskMapper;
 
     /**
      * 创建feature
@@ -574,11 +571,11 @@ public class FeatureServiceImpl implements FeatureService {
         List<HashMap<String, String>> parameterList = new ArrayList<>();
         List<FeatureResult> featureResultList = new ArrayList<>();
         //record task
-        FeatureTask featureTask = new FeatureTask();
-        featureTask.setTask_name("exec task");
-        featureTask.setTask_starttime(new Timestamp(System.currentTimeMillis()));
+        Task task = new Task();
+        task.setTask_name("exec task");
+        task.setTask_starttime(new Timestamp(System.currentTimeMillis()));
         //插入feature task
-        featureTaskMapper.Ins(featureTask);
+        taskMapper.Ins(task);
         //获取parameter index set
         Set<Long> indexList = list.stream().map(ParameterCase::getParameter_value_index).collect(Collectors.toSet());
         if (!CollectionUtils.isEmpty(indexList)) {
@@ -601,7 +598,7 @@ public class FeatureServiceImpl implements FeatureService {
                 }
                 //根据key-value 执行feature
                 FeatureResult featureResult = execFeature(index, parameters, featureCaseList);
-                featureResult.setTask_id(featureTask.getTask_id());
+                featureResult.setTask_id(task.getTask_id());
                 featureResult.setLogs("abc");
                 featureResultList.add(featureResult);
                 parameterList.add(parameterMap);
@@ -1340,31 +1337,5 @@ public class FeatureServiceImpl implements FeatureService {
             }
         }
         return status;
-    }
-
-    /**
-     * 获取结果feature
-     *
-     * @param id
-     * @return
-     */
-    @Override
-    public ResultFeatureResponse resultFeature(Long id) {
-        TestFlowManager testFlowManager = new TestFlowManager();
-        Status status = new Status();
-        status.setSuccess(true);
-        ResultFeatureResponse rsp = new ResultFeatureResponse();
-        List<ResultCase> resultCaseList = new ArrayList<>();
-        List<FeatureResult> featureResultList = featureResultMapper.selByFid(id);
-        for (int i = 0; i < featureResultList.size(); i ++) {
-            ResultCase resultCase = new ResultCase();
-            resultCase.setIndex(i);
-            resultCase.setAssertion(testFlowManager.getBuffer(featureResultList.get(i).getAssertions()));
-            resultCase.setInfo(testFlowManager.getBuffer(featureResultList.get(i).getLogs()));
-            resultCaseList.add(resultCase);
-        }
-        rsp.setStatus(status);
-        rsp.setResultCaseList(resultCaseList);
-        return rsp;
     }
 }
