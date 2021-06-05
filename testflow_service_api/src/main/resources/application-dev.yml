@@ -5,8 +5,8 @@ server:
 spring:
   datasource:
     username: root
-    password: 123
-    url: jdbc:mysql://localhost:3306/testflow_service?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    password: QQQQWord1.
+    url: jdbc:mysql://120.77.254.161:3306/testflow_service?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
