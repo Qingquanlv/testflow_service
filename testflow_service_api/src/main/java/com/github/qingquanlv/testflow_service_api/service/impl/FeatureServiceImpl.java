@@ -599,7 +599,6 @@ public class FeatureServiceImpl implements FeatureService {
                 //根据key-value 执行feature
                 FeatureResult featureResult = execFeature(index, parameters, featureCaseList);
                 featureResult.setTask_id(task.getTask_id());
-                featureResult.setLogs("abc");
                 featureResultList.add(featureResult);
                 parameterList.add(parameterMap);
             }

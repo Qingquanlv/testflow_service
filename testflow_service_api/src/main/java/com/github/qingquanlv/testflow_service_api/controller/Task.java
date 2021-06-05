@@ -24,7 +24,7 @@ public class Task {
         }
 
         @GetMapping("/getStepResult")
-        public GetTaskStepResultResponse resultFeature(@RequestParam(name = "taskId") Long taskId, @RequestParam(name = "stepId") Long stepId){
+        public GetTaskStepResultResponse taskStepResult(@RequestParam(name = "taskId") Long taskId, @RequestParam(name = "stepId") Long stepId){
                 GetTaskStepResultResponse rsp =  taskService.getTaskStepResult(taskId, stepId);
                 return rsp;
         }

@@ -6,8 +6,8 @@
         <result column="feature_id" jdbcType="BIGINT" property="feature_id" />
         <result column="task_id" jdbcType="BIGINT" property="task_id" />
         <result column="parameter_value_index" jdbcType="BIGINT" property="parameter_value_index" />
-        <result column="logs" jdbcType="VARCHAR" property="logs" />
-        <result column="assertions" jdbcType="VARCHAR" property="assertions" />
+        <result column="logs" jdbcType="LONGVARCHAR" property="logs" />
+        <result column="assertions" jdbcType="LONGVARCHAR" property="assertions" />
         <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
     </resultMap>
 
