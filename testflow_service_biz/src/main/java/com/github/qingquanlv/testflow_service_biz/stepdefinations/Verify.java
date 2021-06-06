@@ -1,10 +1,6 @@
 package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
-import com.github.qingquanlv.testflow_service_biz.common.Constants;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.VerifyUtil;
 
@@ -21,7 +17,11 @@ public class Verify {
         String errMsg = "";
         String expObj = BufferManager.getBufferByKey(expStr);
         String atlObj = BufferManager.getBufferByKey(atlStr);
-        if (!expObj.equals(atlObj)) {
+        if (null == expObj && null == atlObj) { }
+        else if (null == expObj ||  null == atlObj) {
+            errMsg = String.format("\n" + "expected: \"%s\" not equals with actual: \"%s\".\n", expStr, atlStr);
+        }
+        else if (!expObj.equals(atlObj)) {
             errMsg = String.format("\n" + "expected: \"%s\" not equals with actual: \"%s\".\n", expStr, atlStr);
         }
         return errMsg;
