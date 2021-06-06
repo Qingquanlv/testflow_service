@@ -1,6 +1,8 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskConfig;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.Set;
  * @Version 1.0
  */
 @Repository
-public interface DataBaseCaseMapper {
+public interface DataBaseCaseMapper extends BaseMapper<DatabaseCase> {
 
     List<DatabaseCase> Sel(String name);
 

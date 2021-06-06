@@ -1,6 +1,8 @@
 package com.github.qingquanlv.testflow_service_api.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryParameter;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.DatabaseCase;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase;
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +15,7 @@ import java.util.Set;
  * @Version 1.0
  */
 @Repository
-public interface ParameterMapper {
+public interface ParameterMapper extends BaseMapper<ParameterCase> {
 
     List<ParameterCase> SelAll();
 

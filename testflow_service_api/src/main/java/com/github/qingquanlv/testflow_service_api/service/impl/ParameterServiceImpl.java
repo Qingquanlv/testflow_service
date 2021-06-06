@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
@@ -188,7 +189,10 @@ public class ParameterServiceImpl implements ParameterService {
                 index++;
             }
         }
-        parameterMapper.Del(request.getParameter_name());
+        parameterMapper.delete(
+                Wrappers.<ParameterCase>lambdaQuery()
+                        .eq(ParameterCase::getParameter_name,
+                                request.getParameter_name()));
         parameterMapper.Ins(parameterCaseList);
         return rsp;
     }
