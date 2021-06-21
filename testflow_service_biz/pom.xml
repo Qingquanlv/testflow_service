@@ -27,10 +27,17 @@
         </dependency>
 
         <!--mybatis-->
+<!--        <dependency>-->
+<!--            <groupId>org.mybatis</groupId>-->
+<!--            <artifactId>mybatis</artifactId>-->
+<!--            <version>3.2.8</version>-->
+<!--        </dependency>-->
+
+        <!--mybatisPlus可以放我们更方便的操作mybatis-->
         <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.2.8</version>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.4.0</version>
         </dependency>
 
         <!--zson-->

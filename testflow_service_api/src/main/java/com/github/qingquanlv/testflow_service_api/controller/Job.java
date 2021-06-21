@@ -1,13 +1,19 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
+import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.exexjob.ExecJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.GetResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
 import com.github.qingquanlv.testflow_service_api.service.impl.ScheduleJobImpl;
 import org.quartz.SchedulerConfigException;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author Qingquan Lv
@@ -20,6 +26,47 @@ public class Job {
     @Autowired
     private ScheduleJobImpl jobService;
 
+    @RequestMapping("/execute")
+    public ExecJobResponse executeJob(@RequestParam(name = "taskId") Long taskId){
+        ExecJobResponse rsp = new ExecJobResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
+        jobService.execJob(taskId);
+        return rsp;
+    }
+
+    @RequestMapping("/create")
+    public CreateJobResponse createJob(@RequestBody CreateJobRequest request){
+        CreateJobResponse rsp =  jobService.createJob(request);
+        return rsp;
+    }
+
+    @RequestMapping("/delete")
+    public DeleteJobResponse deleteJob(@RequestParam(name = "taskId") Long taskId){
+        DeleteJobResponse rsp =  jobService.deleteJob(taskId);
+        return rsp;
+    }
+
+    @RequestMapping("/update")
+    public UpdateJobResponse updateJob(@RequestBody UpdateJobRequest request){
+        UpdateJobResponse rsp =  jobService.updateJob(request);
+        return rsp;
+    }
+
+    @RequestMapping("/queryAll")
+    public QueryAllJobResponse queryAllJob(){
+        QueryAllJobResponse rsp =  jobService.queryAllJob();
+        return rsp;
+    }
+
+    @RequestMapping("/getResult")
+    public GetResultResponse taskResult(@RequestParam(name = "taskId") Long taskId){
+        GetResultResponse rsp =  jobService.getResult(taskId);
+        return rsp;
+    }
+
+
     @GetMapping("/load/{taskId}")
     public String loadJob(@PathVariable("taskId") String taskId){
         try {
@@ -29,6 +76,7 @@ public class Job {
         }
         return "成功";
     }
+
     @GetMapping("/resume/{taskId}")
     public String resumeJob(@PathVariable("taskId") String taskId){
         try {
@@ -38,6 +86,7 @@ public class Job {
         }
         return "成功";
     }
+
     @GetMapping("/stop/{taskId}")
     public String stopJob(@PathVariable("taskId") String taskId){
         try {
@@ -47,6 +96,7 @@ public class Job {
         }
         return "成功";
     }
+
     @GetMapping("/unload/{taskId}")
     public String unloadJob(@PathVariable("taskId") String taskId){
         try {

@@ -1,47 +1,47 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.ParameterMapper">
-    <resultMap id="Feature" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
-        <result column="id" jdbcType="BIGINT" property="id" />
-        <result column="parameter_name" jdbcType="VARCHAR" property="parameter_name" />
-        <result column="parameter_key" jdbcType="VARCHAR" property="parameter_key" />
-        <result column="parameter_value" jdbcType="VARCHAR" property="parameter_value" />
-        <result column="parameter_value_index" jdbcType="BIGINT" property="parameter_value" />
-        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
-    </resultMap>
+<!--    <resultMap id="Feature" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">-->
+<!--        <result column="id" jdbcType="BIGINT" property="id" />-->
+<!--        <result column="parameter_name" jdbcType="VARCHAR" property="parameter_name" />-->
+<!--        <result column="parameter_key" jdbcType="VARCHAR" property="parameter_key" />-->
+<!--        <result column="parameter_value" jdbcType="VARCHAR" property="parameter_value" />-->
+<!--        <result column="parameter_value_index" jdbcType="BIGINT" property="parameter_value" />-->
+<!--        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />-->
+<!--    </resultMap>-->
 
-    <select id="SelByNames"  resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
-        SELECT * FROM parameter
-        where parameter_name in
-        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
-            #{item}
-        </foreach>
-    </select>
+<!--    <select id="SelByNames"  resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">-->
+<!--        SELECT * FROM parameter-->
+<!--        where parameter_name in-->
+<!--        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">-->
+<!--            #{item}-->
+<!--        </foreach>-->
+<!--    </select>-->
 
-    <select id="SelAll" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
-        SELECT * FROM testflow_service.parameter
-    </select>
+<!--    <select id="SelAll" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">-->
+<!--        SELECT * FROM testflow_service.parameter-->
+<!--    </select>-->
 
-    <select id="Sel" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">
-        SELECT * FROM parameter where parameter_name = #{name}
-    </select>
+<!--    <select id="Sel" parameterType="java.lang.String" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterCase">-->
+<!--        SELECT * FROM parameter where parameter_name = #{name}-->
+<!--    </select>-->
 
-    <delete id="Del" parameterType="java.lang.String">
-        DELETE FROM parameter where parameter_name = #{name}
-    </delete>
+<!--    <delete id="Del" parameterType="java.lang.String">-->
+<!--        DELETE FROM parameter where parameter_name = #{name}-->
+<!--    </delete>-->
 
-    <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
-        insert into parameter
-        ( parameter_name,parameter_value_index,parameter_key,parameter_value)
-        values
-        <foreach collection="list" item="item" index="index" separator=",">
-            (
-            #{item.parameter_name},
-            #{item.parameter_value_index},
-            #{item.parameter_key},
-            #{item.parameter_value}
-            )
-        </foreach>
-    </insert>
+<!--    <insert id="Ins" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">-->
+<!--        insert into parameter-->
+<!--        ( parameter_name,parameter_value_index,parameter_key,parameter_value)-->
+<!--        values-->
+<!--        <foreach collection="list" item="item" index="index" separator=",">-->
+<!--            (-->
+<!--            #{item.parameter_name},-->
+<!--            #{item.parameter_value_index},-->
+<!--            #{item.parameter_key},-->
+<!--            #{item.parameter_value}-->
+<!--            )-->
+<!--        </foreach>-->
+<!--    </insert>-->
 
 </mapper>

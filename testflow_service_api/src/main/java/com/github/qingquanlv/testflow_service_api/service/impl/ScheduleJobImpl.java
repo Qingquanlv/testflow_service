@@ -1,17 +1,36 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.GetResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.JobDetails;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskConfig;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskResult;
 import com.github.qingquanlv.testflow_service_api.mapper.TaskConfigMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.TaskMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.TaskResultMapper;
 import com.github.qingquanlv.testflow_service_api.service.IScheduleJobService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author Qingquan Lv
@@ -20,21 +39,162 @@ import java.util.List;
  */
 
 @Service
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ScheduleJobImpl implements IScheduleJobService {
     private static Logger log = LoggerFactory.getLogger(TestFlowManager.class);
 
     @Autowired
-    private TaskConfigMapper taskConfigDao;
+    private TaskConfigMapper taskConfigMapper;
+
+    @Autowired
+    private TaskMapper taskMapper;
+
+    @Autowired
+    private TaskResultMapper taskResultMapper;
 
     @Autowired
     private Scheduler scheduler;
+
+    @Autowired
+    private FeatureServiceImpl featureService;
+
+    @Async("taskExecutor")
+    @Override
+    public void execJob(Long taskId) {
+        Task task = taskMapper.selectOne(
+                Wrappers.<Task>lambdaQuery()
+                        .eq(Task::getId, taskId));
+        //ParamIndex 格式转为 list<Long>
+        List<String> index = new ArrayList<>(
+                Arrays.asList(task.getParamIndexId().split(",")));
+        List<Long> indexLong
+                = index.stream().map(Long::parseLong)
+                .collect(Collectors.toList());
+        TaskResult taskResult
+                = featureService.execFeature(
+                        task.getFeatureId(),
+                        task.getParam_name(),
+                        indexLong);
+        taskResultMapper.insert(taskResult);
+    }
+
+    @Override
+    public CreateJobResponse createJob(CreateJobRequest request) {
+        Status status = new Status();
+        status.setSuccess(true);
+        CreateJobResponse createJobResponse = new CreateJobResponse();
+        Task task
+                = Task.builder()
+                .name(request.getName())
+                .featureId(request.getFeatureId())
+                .param_name(request.getParamName())
+                .paramIndexId(request.getParamIndexId())
+                .build();
+        TaskConfig taskConfig
+                = TaskConfig.builder()
+                .taskId(String.valueOf(task.getId()))
+                .cron(request.getCron())
+                .className(request.getClass_name())
+                .build();
+        taskConfigMapper.insert(taskConfig);
+        taskMapper.insert(task);
+        createJobResponse.setStatus(status);
+        return createJobResponse;
+    }
+
+    @Override
+    public DeleteJobResponse deleteJob(Long taskId) {
+        Status status = new Status();
+        status.setSuccess(true);
+        DeleteJobResponse createJobResponse = new DeleteJobResponse();
+        taskMapper.deleteById(taskId);
+        taskConfigMapper.delete(
+                Wrappers.<TaskConfig>lambdaQuery()
+                        .eq(TaskConfig::getTaskId, taskId));
+        createJobResponse.setStatus(status);
+        return createJobResponse;
+    }
+
+    @Override
+    public UpdateJobResponse updateJob(UpdateJobRequest request) {
+        Status status = new Status();
+        status.setSuccess(true);
+        UpdateJobResponse updateJobResponse = new UpdateJobResponse();
+        Task task
+                = Task.builder()
+                .id(request.getTaskId())
+                .name(request.getName())
+                .featureId(request.getFeatureId())
+                .param_name(request.getParamName())
+                .paramIndexId(request.getParamIndexId())
+                .build();
+        TaskConfig taskConfig
+                = TaskConfig.builder()
+                .taskId(String.valueOf(task.getId()))
+                .cron(request.getCron())
+                .className(request.getClass_name())
+                .build();
+        taskMapper.updateById(task);
+        taskConfigMapper.update(
+                taskConfig,
+                Wrappers.<TaskConfig>lambdaQuery()
+                        .eq(TaskConfig::getTaskId, task.getId()));
+        updateJobResponse.setStatus(status);
+        return updateJobResponse;
+    }
+
+    @Override
+    public QueryAllJobResponse queryAllJob() {
+        Status status = new Status();
+        status.setSuccess(true);
+        QueryAllJobResponse rsp = new QueryAllJobResponse();
+        List<Task> tasks = taskMapper.selectList(Wrappers.emptyWrapper());
+        List<TaskConfig> taskConfigs = taskConfigMapper.selectList(Wrappers.emptyWrapper());
+        List<JobDetails> jobDetailsList = new ArrayList<>();
+        for (Task item : tasks) {
+            TaskConfig taskConfig = taskConfigs.stream()
+                    .filter(i->i.equals(i.getTaskId())).findFirst().orElse(null);
+            JobDetails jobDetails
+                    = JobDetails.builder()
+                    .id(item.getId())
+                    .name(item.getName())
+                    .featureId(item.getFeatureId())
+                    .paramName(item.getParam_name())
+                    .paramIndexId(item.getParamIndexId()).build();
+            if (null != taskConfig) {
+                jobDetails.setCron(taskConfig.getCron());
+                jobDetails.setClass_name(taskConfig.getClassName());
+                jobDetails.setDescription(taskConfig.getDescription());
+            }
+            jobDetailsList.add(jobDetails);
+        }
+        rsp.setJobDetails(jobDetailsList);
+        rsp.setStatus(status);
+        return rsp;
+    }
+
+    @Override
+    public GetResultResponse getResult(Long taskId) {
+        Status status = new Status();
+        status.setSuccess(true);
+        TaskResult taskResult
+                = taskResultMapper.selectOne(
+                Wrappers.<TaskResult>lambdaQuery()
+                        .eq(TaskResult::getTaskId, taskId));
+        GetResultResponse rsp
+                = GetResultResponse.builder()
+                .status(status)
+                .assertions(taskResult.getAssertions())
+                .logs(taskResult.getLogs()).build();
+        return rsp;
+    }
 
     /**
      * 程序启动开始加载定时任务
      */
     @Override
     public void startJob(){
-        List<TaskConfig> taskConfigEntities = taskConfigDao.selectList(
+        List<TaskConfig> taskConfigEntities = taskConfigMapper.selectList(
                 Wrappers.<TaskConfig>lambdaQuery()
                         .eq(TaskConfig::getStatus, 1));
         if (taskConfigEntities == null || taskConfigEntities.size() == 0){
@@ -87,7 +247,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
      */
     @Override
     public void loadJob(String taskId) throws SchedulerConfigException {
-        TaskConfig taskConfigEntity = taskConfigDao.selectOne(
+        TaskConfig taskConfigEntity = taskConfigMapper.selectOne(
                 Wrappers.<TaskConfig>lambdaQuery()
                         .eq(TaskConfig::getTaskId, taskId)
                         .eq(TaskConfig::getStatus, 1));
@@ -103,6 +263,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
             throw new SchedulerConfigException("加载定时任务异常", e);
         }
     }
+
     @Override
     public void unloadJob(String taskId) throws SchedulerException {
         // 停止触发器
@@ -119,7 +280,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
      */
     @Override
     public void reload(String taskId) throws Exception {
-        TaskConfig taskConfigEntity = taskConfigDao.selectOne(
+        TaskConfig taskConfigEntity = taskConfigMapper.selectOne(
                 Wrappers.<TaskConfig>lambdaQuery()
                         .eq(TaskConfig::getTaskId, taskId)
                         .eq(TaskConfig::getStatus, 1));

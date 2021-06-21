@@ -1,5 +1,11 @@
 package com.github.qingquanlv.testflow_service_api.entity.testflow_service_db;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.Builder;
+import lombok.Data;
+
 import java.sql.Timestamp;
 
 /**
@@ -7,47 +13,28 @@ import java.sql.Timestamp;
  * @Date 2021/1/2 11:13
  * @Version 1.0
  */
+@Data
+@Builder
 public class Feature {
 
-    //case_id
+    /**
+     * case_id
+     */
+    @TableId(value = "feature_id",type = IdType.AUTO)
     private Long feature_id;
-    //name
+    /**
+     * feature_name
+     */
+    @TableField("feature_name")
     private String feature_name;
-    //desctription
-    private String desctription;
-    //时间戳
+    /**
+     * desctription
+     */
+    @TableField("description")
+    private String description;
+    /**
+     * 时间戳
+     */
+    @TableField("datachanged_lasttime")
     private Timestamp datachanged_lasttime;
-
-
-    public Long getFeature_id() {
-        return feature_id;
-    }
-
-    public void setFeature_id(Long feature_id) {
-        this.feature_id = feature_id;
-    }
-
-    public String getFeature_name() {
-        return feature_name;
-    }
-
-    public void setFeature_name(String feature_name) {
-        this.feature_name = feature_name;
-    }
-
-    public Timestamp getDatachanged_lasttime() {
-        return datachanged_lasttime;
-    }
-
-    public void setDatachanged_lasttime(Timestamp datachanged_lasttime) {
-        this.datachanged_lasttime = datachanged_lasttime;
-    }
-
-    public String getDesctription() {
-        return desctription;
-    }
-
-    public void setDesctription(String desctription) {
-        this.desctription = desctription;
-    }
 }

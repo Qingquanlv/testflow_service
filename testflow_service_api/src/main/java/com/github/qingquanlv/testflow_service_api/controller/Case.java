@@ -1,7 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseResponse;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseRequest;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseResponse;
 import com.github.qingquanlv.testflow_service_api.service.impl.CaseServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;

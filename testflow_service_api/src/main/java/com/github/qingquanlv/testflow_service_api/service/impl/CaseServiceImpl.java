@@ -3,28 +3,14 @@ package com.github.qingquanlv.testflow_service_api.service.impl;
 import com.github.qingquanlv.testflow_service_api.common.Constants;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.cases.CaseKey;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase.QueryDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase.QueryDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
-import com.github.qingquanlv.testflow_service_api.mapper.*;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseRequest;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseResponse;
 import com.github.qingquanlv.testflow_service_api.service.CaseService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,21 +22,6 @@ import java.util.UUID;
 @Service
 public class CaseServiceImpl implements CaseService {
 
-    @Autowired
-    DataBaseCaseMapper dataBaseCaseMapper;
-
-    @Autowired
-    VerificationCaseMapper verificationCaseMapper;
-
-    @Autowired
-    PaserCaseMapper paserCaseMapper;
-
-    @Autowired
-    RequestCaseMapper requestCaseMapper;
-
-    @Autowired
-    ParameterMapper parameterMapper;
-
     /**
      * 执行Case
      *
@@ -58,80 +29,168 @@ public class CaseServiceImpl implements CaseService {
      * @return
      */
     @Override
-    public ExecCaseResponse execCase(ExecCaseRequest request){
-        ExecCaseResponse rsp = new ExecCaseResponse();
+    public ExecCaseResponse execCase(ExecCaseRequest request) {
         Status status = new Status();
         status.setSuccess(true);
-        rsp.setStatus(status);
-        CaseKey caseKey = new CaseKey();
-        caseKey.setCaseId(request.getCase_id());
-        caseKey.setCaseType(request.getCase_type());
+        ExecCaseResponse rsp
+                = ExecCaseResponse.builder()
+                .status(status)
+                .params(request.getParams())
+                .build();
+        String result = "";
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),
                 UUID.randomUUID().toString()));
         TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        List<Parameter> parameterList = new ArrayList<>();
         //输入参数
-        if (!CollectionUtils.isEmpty(request.getParameters())) {
-            for (String key : request.getParameters().keySet()) {
-                Parameter parameter = new Parameter();
-                testFlowManager.addBuffer(key, request.getParameters().get(key));
-                parameter.setParameter_value(key);
-                parameter.setParameter_key(request.getParameters().get(key));
-                parameterList.add(parameter);
+        if (!CollectionUtils.isEmpty(request.getParams())) {
+            for (String key : request.getParams().keySet()) {
+                testFlowManager.addBuffer(key, request.getParams().get(key));
             }
         }
-        rsp.setParameters(parameterList);
-        //忽略大小写
-        switch (request.getCase_type().toLowerCase()) {
-            case Constants.DATABASE: {
-                DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(request.getCase_id());
-                caseKey.setCaseName(databaseCase.getCase_name());
-                rsp.setResult(testFlowManager.queryDataBase(databaseCase.getCase_name(),
-                                databaseCase.getSql()));
-                break;
-            }
-            case Constants.PARSE: {
-                PaserCase parseCases = paserCaseMapper.SelOne(request.getCase_id());
-                caseKey.setCaseName(parseCases.getCase_name());
-                rsp.setResult(testFlowManager.sourceParse(parseCases.getCase_name(),
-                                parseCases.getCvt_method_source(),
-                                FastJsonUtil.toList(parseCases.getParameters())));
-                break;
-            }
-            case Constants.REQUEST: {
-                RequestCase requestCase = requestCaseMapper.SelOne(request.getCase_id());
-                caseKey.setCaseName(requestCase.getCase_name());
-                rsp.setResult(testFlowManager.sendRequest(requestCase.getCase_name(),
-                                requestCase.getRequest_body(),
-                                "null".equals(requestCase.getRequest_configs())||null == requestCase.getRequest_configs() ? null : FastJsonUtil.toMap(requestCase.getRequest_configs()),
-                                "null".equals(requestCase.getRequest_headers())|| null == requestCase.getRequest_headers() ? null : FastJsonUtil.toMap(requestCase.getRequest_headers()),
-                                requestCase.getRequest_type(),
-                                requestCase.getContent_type(),
-                                requestCase.getUrl()));
-                break;
-            }
-            case Constants.VERIFICATION: {
-                VerificationCase verificationCase = verificationCaseMapper.SelOne(request.getCase_id());
-                caseKey.setCaseName(verificationCase.getCase_name());
-                List<String> parameters = FastJsonUtil.toList(verificationCase.getParameters());
-                if (Constants.COMPARE.equals(verificationCase.getVerification_type())) {
-                    FastJsonUtil.toList(verificationCase.getParameters());
-                    rsp.setResult(testFlowManager.verify(parameters.get(0), parameters.get(1)));
+        if (null != request.getConfig()) {
+            rsp.setId(request.getConfig().getId());
+            //忽略大小写
+            switch (request.getConfig().getClazz().toLowerCase()) {
+                case Constants.DATABASE: {
+                    String sqlStr
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "sqlStr".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "sqlStr".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    result = testFlowManager.queryDataBase(request.getConfig().getId(),
+                            sqlStr);
+                    break;
                 }
-                else if (Constants.XPATHCOMPARE.equals(verificationCase.getVerification_type())) {
-                    rsp.setResult(testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2)));
+                case Constants.PARSE: {
+                    String convertMethodSource
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "convertMethodSource".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "convertMethodSource".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String params
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "parameters".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "parameters".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    result = testFlowManager.sourceParse(request.getConfig().getId(),
+                            convertMethodSource,
+                            FastJsonUtil.toList(params));
+                    break;
                 }
-                else if (Constants.OBJCOMPARE.equals(verificationCase.getVerification_type())) {
-                    rsp.setResult(testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3)));
+                case Constants.REQUEST: {
+                    String requestBody
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "requestBody".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "requestBody".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String requestConfigs
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "requestConfigs".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "requestConfigs".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String requestHeaders
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "requestHeaders".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "requestHeaders".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String requestType
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "requestType".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "requestType".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String contentType
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "contentType".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "contentType".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String url
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "url".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "url".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    result = testFlowManager.sendRequest(request.getConfig().getId(),
+                            requestBody,
+                            "null".equals(requestConfigs) || null == requestConfigs ? null : FastJsonUtil.toMap(requestConfigs),
+                            "null".equals(requestHeaders) || null == requestHeaders ? null : FastJsonUtil.toMap(requestHeaders),
+                            requestType,
+                            contentType,
+                            url
+                    );
+                    break;
                 }
-                break;
+                case Constants.VERIFICATION: {
+                    String verificationType
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "verificationType".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "verificationType".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    String params
+                            = request.getConfig().getParams()
+                            .stream().allMatch(item ->
+                                    "parameters".equals(item.getKey()))
+                            ? request.getConfig().getParams()
+                            .stream().filter(item ->
+                                    "parameters".equals(item.getKey()))
+                            .findFirst()
+                            .get().getValue() : "";
+                    List<String> parameters = FastJsonUtil.toList(params);
+                    if (Constants.COMPARE.equals(verificationType)) {
+                        testFlowManager.verify(parameters.get(0), parameters.get(1));
+                    } else if (Constants.XPATHCOMPARE.equals(verificationType)) {
+                        testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2));
+                    } else if (Constants.OBJCOMPARE.equals(verificationType)) {
+                        testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3));
+                    }
+                    break;
+                }
+                default: {
+                }
             }
         }
-        rsp.setCaseKey(caseKey);
         testFlowManager.deposed();
+        rsp.setResult(result);
         return rsp;
     }
-
 }

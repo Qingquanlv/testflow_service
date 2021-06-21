@@ -1,8 +1,9 @@
 package com.github.qingquanlv.testflow_service_api.entity.feature.execfeature;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.feature.CaseResult;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.List;
 
@@ -11,6 +12,8 @@ import java.util.List;
  * @Date 2021/1/5 8:41
  * @Version 1.0
  */
+@Data
+@Builder
 public class ExecFeatureResponse {
     /**
      * status
@@ -29,35 +32,4 @@ public class ExecFeatureResponse {
      */
     private String assertion;
 
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<Parameter> parameters) {
-        this.parameters = parameters;
-    }
-
-    public String getInfo() {
-        return info;
-    }
-
-    public void setInfo(String info) {
-        this.info = info;
-    }
-
-    public String getAssertion() {
-        return assertion;
-    }
-
-    public void setAssertion(String assertion) {
-        this.assertion = assertion;
-    }
 }

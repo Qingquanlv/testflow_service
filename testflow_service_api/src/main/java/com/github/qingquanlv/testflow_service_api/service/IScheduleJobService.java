@@ -1,5 +1,12 @@
 package com.github.qingquanlv.testflow_service_api.service;
 
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.GetResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
 import org.quartz.SchedulerConfigException;
 import org.quartz.SchedulerException;
 
@@ -9,6 +16,18 @@ import org.quartz.SchedulerException;
  * @Version 1.0
  */
 public interface IScheduleJobService {
+
+    void execJob(Long taskId);
+
+    CreateJobResponse createJob(CreateJobRequest request);
+
+    DeleteJobResponse deleteJob(Long taskId);
+
+    UpdateJobResponse updateJob(UpdateJobRequest request);
+
+    QueryAllJobResponse queryAllJob();
+
+    GetResultResponse getResult(Long taskId);
 
     void startJob();
 

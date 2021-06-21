@@ -1,16 +1,12 @@
 package com.github.qingquanlv.testflow_service_api.service;
 
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
-
-import java.util.concurrent.CompletableFuture;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryfeature.QueryFeatureResponse;
 
 
 /**
@@ -34,15 +30,6 @@ public interface FeatureService {
      * @return
      */
     ExecFeatureResponse execFeature(ExecFeatureRequest id);
-
-
-    /**
-     * 异步执行feature
-     *
-     * @param id
-     * @return
-     */
-    CompletableFuture<ExecAsyncFeatureResponse> execFeatureAsync(ExecAsyncFeatureRequest id);
 
     /**
      * 获取feature

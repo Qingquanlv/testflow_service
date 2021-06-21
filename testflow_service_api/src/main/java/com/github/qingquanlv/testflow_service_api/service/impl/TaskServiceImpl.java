@@ -46,7 +46,6 @@ public class TaskServiceImpl implements TaskService {
          */
         @Override
         public GetTaskResultResponse getTaskResult(Long taskId) {
-                TestFlowManager testFlowManager = new TestFlowManager();
                 Status status = new Status();
                 status.setSuccess(true);
                 GetTaskResultResponse rsp = new GetTaskResultResponse();
@@ -55,12 +54,12 @@ public class TaskServiceImpl implements TaskService {
                 rsp.setStatus(status);
                 if  (!CollectionUtils.isEmpty(featureResults)) {
                         //获取feature name
-                        Feature feature = featureMapper.Sel(featureResults.get(0).getFeature_id());
+                        Feature feature = featureMapper.selectById(featureResults.get(0).getFeature_id());
                         rsp.setFeatureName(null != feature ? feature.getFeature_name() : "");
                         rsp.setTaskId(featureResults.get(0).getTask_id());
                         //获取task name
-                        Task task = taskMapper.Sel(featureResults.get(0).getTask_id());
-                        rsp.setTaskName(null != task ? task.getTask_name() : "");
+                        Task task = taskMapper.selectById(featureResults.get(0).getTask_id());
+                        rsp.setTaskName(null != task ? task.getName() : "");
                         rsp.setFeatureId(featureResults.get(0).getFeature_id());
                         // set step result
                         for (FeatureResult featureResult : featureResults) {
@@ -92,12 +91,12 @@ public class TaskServiceImpl implements TaskService {
                 rsp.setStatus(status);
                 rsp.setFeatureId(featureResult.getFeature_id());
                 //获取feature name
-                Feature feature = featureMapper.Sel(featureResult.getFeature_id());
+                Feature feature = featureMapper.selectById(featureResult.getFeature_id());
                 rsp.setFeatureName(null != feature ? feature.getFeature_name() : "");
                 rsp.setTaskId(featureResult.getTask_id());
                 //获取task name
-                Task task = taskMapper.Sel(featureResult.getTask_id());
-                rsp.setTaskName(null != feature ? task.getTask_name() : "");
+                Task task = taskMapper.selectById(featureResult.getTask_id());
+                rsp.setTaskName(null != feature ? task.getName() : "");
                 rsp.setStepId(stepId);
                 rsp.setAssertions(featureResult.getAssertions());
                 rsp.setLogs(featureResult.getLogs());

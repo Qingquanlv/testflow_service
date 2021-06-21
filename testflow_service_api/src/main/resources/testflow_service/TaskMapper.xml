@@ -1,26 +1,5 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.TaskMapper">
-    <resultMap id="Feature" type="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task">
-        <result column="task_id" jdbcType="BIGINT" property="task_id" />
-        <result column="task_name" jdbcType="VARCHAR" property="task_name" />
-        <result column="task_starttime" jdbcType="TIMESTAMP" property="task_starttime" />
-        <result column="datachanged_lasttime" jdbcType="TIMESTAMP" property="datachanged_lasttime" />
-    </resultMap>
-
-    <select id="Sel" parameterType="java.lang.Long" resultType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task">
-        SELECT * FROM task where task_id = #{Id}
-    </select>
-
-    <insert id="Ins" parameterType="com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task" useGeneratedKeys="true" keyColumn="task_id" keyProperty="task_id">
-        INSERT INTO
-        task
-        (task_name, task_starttime)
-        VALUES
-        (
-        #{task_name},
-        #{task_starttime}
-        )
-    </insert>
 
 </mapper>

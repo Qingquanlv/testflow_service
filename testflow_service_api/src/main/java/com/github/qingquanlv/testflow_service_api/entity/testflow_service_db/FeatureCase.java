@@ -1,5 +1,11 @@
 package com.github.qingquanlv.testflow_service_api.entity.testflow_service_db;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.Builder;
+import lombok.Data;
+
 import java.sql.Timestamp;
 
 /**
@@ -7,56 +13,48 @@ import java.sql.Timestamp;
  * @Date 2021/1/2 11:13
  * @Version 1.0
  */
+@Data
+@Builder
 public class FeatureCase {
-    //id
+    /**
+     * id
+     */
+    @TableId(value = "id",type = IdType.AUTO)
     private Long id;
-    //feature_id
+    /**
+     * feature_id
+     */
+    @TableField("feature_id")
     private Long feature_id;
-    //case_id
+    /**
+     * case_id
+     */
+    @TableField("case_id")
     private Long case_id;
-    //case_type
+    /**
+     * case_type
+     */
+    @TableField("case_type")
     private String case_type;
-    //时间戳
+    /**
+     * label
+     */
+    @TableField("label")
+    private String label;
+    /**
+     * x
+     */
+    @TableField("x")
+    private Long x;
+    /**
+     * y
+     */
+    @TableField("y")
+    private Long y;
+    /**
+     * 时间戳
+     */
+    @TableField("datachanged_lasttime")
     private Timestamp datachanged_lasttime;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Timestamp getDatachanged_lasttime() {
-        return datachanged_lasttime;
-    }
-
-    public void setDatachanged_lasttime(Timestamp datachanged_lasttime) {
-        this.datachanged_lasttime = datachanged_lasttime;
-    }
-
-    public String getCase_type() {
-        return case_type;
-    }
-
-    public void setCase_type(String case_type) {
-        this.case_type = case_type;
-    }
-
-    public Long getFeature_id() {
-        return feature_id;
-    }
-
-    public void setFeature_id(Long feature_id) {
-        this.feature_id = feature_id;
-    }
-
-    public Long getCase_id() {
-        return case_id;
-    }
-
-    public void setCase_id(Long case_id) {
-        this.case_id = case_id;
-    }
 }
 

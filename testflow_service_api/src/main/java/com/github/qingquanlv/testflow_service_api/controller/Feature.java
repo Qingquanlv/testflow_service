@@ -1,19 +1,14 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
-import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature.ResultFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryfeature.QueryFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.service.impl.FeatureServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,7 +23,7 @@ public class Feature {
     @Autowired
     private FeatureServiceImpl featureService;
 
-    @RequestMapping("/queryall")
+    @RequestMapping("/queryAll")
     public QueryAllFeatureResponse getFeatureAll(){
         QueryAllFeatureResponse rsp =  featureService.getFeatureAll();
         return rsp;
@@ -49,16 +44,6 @@ public class Feature {
     @RequestMapping("/exec")
     public ExecFeatureResponse execFeature(@RequestBody ExecFeatureRequest request){
         ExecFeatureResponse rsp = featureService.execFeature(request);
-        return rsp;
-    }
-
-    @RequestMapping("/execAsync")
-    public ExecAsyncFeatureResponse execAsyncFeature(@RequestBody ExecAsyncFeatureRequest request){
-        ExecAsyncFeatureResponse rsp = new ExecAsyncFeatureResponse();
-        Status status = new Status();
-        status.setSuccess(true);
-        rsp.setStatus(status);
-        featureService.execFeatureAsync(request);
         return rsp;
     }
 

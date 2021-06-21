@@ -1,16 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.service;
 
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.createdatabase.CreateDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.deletedatabase.DeleteDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase.QueryDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.querydatabase.QueryDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.updatedatabase.UpdateDataBaseCaseResponse;
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseRequest;
-import com.github.qingquanlv.testflow_service_api.entity.cases.execcase.ExecCaseResponse;
-import org.springframework.stereotype.Service;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseResponse;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase.ExecCaseRequest;
 
 /**
  * @Author Qingquan Lv

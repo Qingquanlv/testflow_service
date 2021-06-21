@@ -3,8 +3,8 @@ package com.github.qingquanlv.testflow_service_api.entity.testflow_service_db;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
@@ -14,6 +14,7 @@ import java.io.Serializable;
  * @Version 1.0
  */
 @Data
+@Builder
 public class TaskConfig implements Serializable {
 
     @TableId(value = "id",type = IdType.AUTO)

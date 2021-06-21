@@ -1,24 +1,20 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.qingquanlv.testflow_service_api.common.Constants;
-import com.github.qingquanlv.testflow_service_api.common.Lang;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.cases.CaseKey;
-import com.github.qingquanlv.testflow_service_api.entity.cases.database.DataBaseCases;
-import com.github.qingquanlv.testflow_service_api.entity.cases.parse.ParseCases;
-import com.github.qingquanlv.testflow_service_api.entity.cases.request.RequestCases;
-import com.github.qingquanlv.testflow_service_api.entity.cases.verification.VerificationCases;
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.createfeature.CreateFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.deletefeature.DeleteFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature.ExecAsyncFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryAllFeatureResponse;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryallfeature.QueryFeature;
-import com.github.qingquanlv.testflow_service_api.entity.feature.queryfeature.QueryFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Config;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Edges;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Nodes;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryFeature;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryfeature.QueryFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
 import com.github.qingquanlv.testflow_service_api.mapper.*;
@@ -26,15 +22,10 @@ import com.github.qingquanlv.testflow_service_api.service.FeatureService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -43,32 +34,28 @@ import java.util.stream.Collectors;
  * @Version 1.0
  */
 @Service
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class FeatureServiceImpl implements FeatureService {
 
     @Autowired
     FeatureMapper featureMapper;
 
     @Autowired
-    FeatureCaseMapper featureCaseMapper;
+    CazeMapper caseMapper;
 
     @Autowired
     FeatureCaseNextCaseMapper featureCaseNextCaseMapper;
 
     @Autowired
-    FeatureResultMapper featureResultMapper;
+    RequestCaseConfigMapper requestCaseConfigMapper;
 
     @Autowired
-    DataBaseCaseMapper dataBaseCaseMapper;
+    DatabaseCaseConfigMapper databaseCaseConfigMapper;
 
     @Autowired
-    VerificationCaseMapper verificationCaseMapper;
+    ParseCaseConfigMapper parseCaseConfigMapper;
 
     @Autowired
-    PaserCaseMapper paserCaseMapper;
-
-    @Autowired
-    RequestCaseMapper requestCaseMapper;
+    VerificationCaseConfigMapper verificationCaseConfigMapper;
 
     @Autowired
     ParameterMapper parameterMapper;
@@ -86,369 +73,167 @@ public class FeatureServiceImpl implements FeatureService {
     public CreateFeatureResponse createFeature(CreateFeatureRequest request) {
         CreateFeatureResponse response = new CreateFeatureResponse();
         Status status = new Status();
-
-        try {
-            //status = assertion(request);
-            //如果request报文入参没有问题
-            if (true || status.getSuccess()) {
-                List<FeatureCaseNextCase> featureCaseNextCaseList = new ArrayList<>();
-                //插入request
-                List<RequestCase> requestCaseList = new ArrayList<>();
-                //更新request
-                List<RequestCase> requestUpdateCaseList = new ArrayList<>();
-                //插入database
-                List<DatabaseCase> databaseCaseList = new ArrayList<>();
-                //更新database
-                List<DatabaseCase> databaseUpdateCaseList = new ArrayList<>();
-                //插入parse
-                List<PaserCase> paserCaseList = new ArrayList<>();
-                //删除parse
-                List<PaserCase> paserCaseUpdateList = new ArrayList<>();
-                //插入VerificationCase
-                List<VerificationCase> verificationCaseList = new ArrayList<>();
-                //插入VerificationCase
-                List<VerificationCase> verificationUpdateCaseList = new ArrayList<>();
-                //feature case
-                List<FeatureCase> featureCaseList = featureCaseMapper.Sel(request.getFeatureId());
-
-                List<FeatureCase> featureCaseRequstList = featureCaseList
-                        .stream()
-                        .filter(item -> Constants.REQUEST.equals(item.getCase_type()))
-                        .collect(Collectors.toList());
-
-                List<FeatureCase> featureCaseDatabaseList = featureCaseList
-                        .stream()
-                        .filter(item -> Constants.DATABASE.equals(item.getCase_type()))
-                        .collect(Collectors.toList());
-
-                List<FeatureCase> featureCaseParseList = featureCaseList
-                        .stream()
-                        .filter(item -> Constants.PARSE.equals(item.getCase_type()))
-                        .collect(Collectors.toList());
-
-                List<FeatureCase> featureCaseVerificationList = featureCaseList
-                        .stream()
-                        .filter(item -> Constants.VERIFICATION.equals(item.getCase_type()))
-                        .collect(Collectors.toList());
-
-                //插入feature
-                Feature feature = new Feature();
-                feature.setFeature_name(request.getFeatureName());
-                feature.setDesctription(request.getDescription());
-                featureMapper.Ins(feature);
-                //插入request case
-                if (!CollectionUtils.isEmpty(request.getRequestCasesList())) {
-                    for (RequestCases item : request.getRequestCasesList()) {
-                        RequestCase requstCase = new RequestCase();
-                        requstCase.setCase_name(item.getKey().getCaseName());
-                        requstCase.setContent_type(item.getContentType());
-                        requstCase.setRequest_type(item.getRequestType());
-                        requstCase.setRequest_body(item.getRequestBody());
-                        requstCase.setUrl(item.getUrl());
-                        requstCase.setRequest_configs(FastJsonUtil.toJson(item.getConfigs()));
-                        requstCase.setRequest_headers(FastJsonUtil.toJson(item.getHeaders()));
-                        //保存更新case
-                        if (!CollectionUtils.isEmpty(featureCaseRequstList)
-                                && null != featureCaseRequstList
-                                .stream()
-                                .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                .findFirst().orElse(null)) {
-                            requstCase.setCase_id(item.getKey().getCaseId());
-                            requestUpdateCaseList.add(requstCase);
-                            //保存删除case
-                            featureCaseRequstList.remove(featureCaseRequstList
-                                    .stream()
-                                    .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                    .findFirst().orElse(null));
-                        } else {
-                            //保存插入case
-                            requestCaseList.add(requstCase);
-                        }
-                    }
-                    //删除request list
-                    Set<Long> delIds = featureCaseRequstList.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delIds)) {
-                        requestCaseMapper.Del(delIds);
-                    }
-                    //更新requset list
-                    if (!CollectionUtils.isEmpty(requestUpdateCaseList)) {
-                        requestCaseMapper.Upd(requestUpdateCaseList);
-                    }
-                    //插入request list
-                    if (!CollectionUtils.isEmpty(requestCaseList)) {
-                        requestCaseMapper.Ins(requestCaseList);
-                    }
-                    //删除 featureCase list
-                    Set<Long> delfcIds = featureCaseRequstList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delfcIds)) {
-                        featureCaseMapper.DelByFId(delfcIds);
-                    }
-                    //删除全部featureCase next case
-                    Set<Long> fdIds = featureCaseRequstList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(fdIds)) {
-                        featureCaseNextCaseMapper.Del(fdIds);
-                    }
-                    //当前request list
-                    requestCaseList.addAll(requestUpdateCaseList);
+        status.setSuccess(true);
+        Feature feature =
+                Feature.builder()
+                        .feature_name(request.getFeatureName())
+                        .description(request.getDescription())
+                        .build();
+        //if feature exist, update feature
+        if (null != request.getFeatureId()
+                && null != featureMapper.selectById(request.getFeatureId())) {
+            feature.setFeature_id(request.getFeatureId());
+            featureMapper.updateById(feature);
+        } else {
+            featureMapper.insert(feature);
+        }
+        List<Caze> cases = new ArrayList<>();
+        //遍历node节点，如果存在id和type相同节点则更新
+        if (!CollectionUtils.isEmpty(request.getNodes())) {
+            for (Nodes node : request.getNodes()) {
+                Caze featureCase =
+                        Caze.builder()
+                                .label(node.getLabel())
+                                .featureId(feature.getFeature_id())
+                                .caseType(node.getClazz())
+                                .x(node.getX())
+                                .y(node.getY())
+                                .build();
+                //判断caseId在db中存在，更新数据
+                if (null != node.getId()
+                        && !CollectionUtils.isEmpty(
+                        caseMapper.selectList(
+                                Wrappers.<Caze>lambdaQuery()
+                                        .eq(Caze::getId, node.getId())))) {
+                    featureCase.setId(node.getId());
+                    caseMapper.updateById(featureCase);
+                    insertCaseConfig(request,
+                            node.getClazz(),
+                            featureCase.getId(),
+                            featureCase.getLabel());
+                } else {
+                    caseMapper.insert(featureCase);
+                    insertCaseConfig(request,
+                            node.getClazz(),
+                            featureCase.getId(),
+                            featureCase.getLabel());
                 }
-                //database case
-                if (!CollectionUtils.isEmpty(request.getDataBaseCasesList())) {
-                    for (DataBaseCases item : request.getDataBaseCasesList()) {
-                        DatabaseCase databaseCase = new DatabaseCase();
-                        databaseCase.setCase_name(item.getKey().getCaseName());
-                        databaseCase.setSql(item.getSql());
-                        //保存更新case
-                        if (!CollectionUtils.isEmpty(featureCaseDatabaseList)
-                                && null != featureCaseDatabaseList
-                                .stream()
-                                .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                .findFirst().orElse(null)) {
-                            databaseCase.setCase_id(item.getKey().getCaseId());
-                            databaseUpdateCaseList.add(databaseCase);
-                            //保存删除case
-                            featureCaseDatabaseList.remove(featureCaseDatabaseList
-                                    .stream()
-                                    .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                    .findFirst().orElse(null));
-                        } else {
-                            //保存插入case
-                            databaseCaseList.add(databaseCase);
-                        }
-                    }
-                    //删除database list
-                    Set<Long> delIds = featureCaseDatabaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delIds)) {
-                        dataBaseCaseMapper.Del(delIds);
-                    }
-                    //更新database list
-                    if (!CollectionUtils.isEmpty(databaseUpdateCaseList)) {
-                        dataBaseCaseMapper.Upd(databaseUpdateCaseList);
-                    }
-                    //插入database list
-                    if (!CollectionUtils.isEmpty(databaseCaseList)) {
-                        dataBaseCaseMapper.Ins(databaseCaseList);
-                    }
-                    //删除 featureCase list
-                    Set<Long> delfcIds = featureCaseDatabaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delfcIds)) {
-                        featureCaseMapper.DelByFId(delfcIds);
-                    }
-                    //删除全部featureCase next case
-                    Set<Long> fdIds = featureCaseDatabaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(fdIds)) {
-                        featureCaseNextCaseMapper.Del(fdIds);
-                    }
-                    //当前request list
-                    databaseCaseList.addAll(databaseUpdateCaseList);
-                }
-                //parse case
-                if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-                    for (ParseCases item : request.getPaserCasesList()) {
-                        PaserCase paserCase = new PaserCase();
-                        paserCase.setCase_name(item.getKey().getCaseName());
-                        paserCase.setCvt_method_source(item.getCvtMethodSource());
-                        paserCase.setParameters(FastJsonUtil.toJson(item.getParameters()));
-                        //保存更新case
-                        if (!CollectionUtils.isEmpty(featureCaseParseList)
-                                && null != featureCaseParseList
-                                .stream()
-                                .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                .findFirst().orElse(null)) {
-                            paserCase.setCase_id(item.getKey().getCaseId());
-                            paserCaseUpdateList.add(paserCase);
-                            //保存删除case
-                            featureCaseParseList.remove(featureCaseParseList
-                                    .stream()
-                                    .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                    .findFirst().orElse(null));
-                        } else {
-                            //保存插入case
-                            paserCaseList.add(paserCase);
-                        }
-                    }
-                    //删除parse list
-                    Set<Long> delIds = featureCaseParseList.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delIds)) {
-                        paserCaseMapper.Del(delIds);
-                    }
-                    //更新parse list
-                    if (!CollectionUtils.isEmpty(paserCaseUpdateList)) {
-                        paserCaseMapper.Upd(paserCaseUpdateList);
-                    }
-                    //插入parse list
-                    if (!CollectionUtils.isEmpty(paserCaseList)) {
-                        paserCaseMapper.Ins(paserCaseList);
-                    }
-                    //删除 featureCase list
-                    Set<Long> delfcIds = featureCaseParseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delfcIds)) {
-                        featureCaseMapper.DelByFId(delfcIds);
-                    }
-                    //删除全部featureCase next case
-                    Set<Long> fdIds = featureCaseParseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(fdIds)) {
-                        featureCaseNextCaseMapper.Del(fdIds);
-                    }
-                    //当前request list
-                    paserCaseList.addAll(paserCaseUpdateList);
-                }
-                //verification case
-                if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-                    for (VerificationCases item : request.getVerificationCasesList()) {
-                        VerificationCase verificationCase = new VerificationCase();
-                        verificationCase.setCase_name(item.getKey().getCaseName());
-                        verificationCase.setVerification_type(item.getVerifyType());
-                        verificationCase.setParameters(FastJsonUtil.toJson(item.getParameters()));
-                        //保存更新case
-                        if (!CollectionUtils.isEmpty(featureCaseVerificationList)
-                                && null != featureCaseVerificationList
-                                .stream()
-                                .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                .findFirst().orElse(null)) {
-                            verificationCase.setCase_id(item.getKey().getCaseId());
-                            verificationUpdateCaseList.add(verificationCase);
-                            //保存删除case
-                            featureCaseVerificationList.remove(featureCaseVerificationList
-                                    .stream()
-                                    .filter(i -> i.getCase_id().equals(item.getKey().getCaseId()))
-                                    .findFirst().orElse(null));
-                        } else {
-                            //保存插入case
-                            verificationCaseList.add(verificationCase);
-                        }
-                    }
-                    //删除verification list
-                    Set<Long> delIds = featureCaseVerificationList.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delIds)) {
-                        verificationCaseMapper.Del(delIds);
-                    }
-                    //更新verification list
-                    if (!CollectionUtils.isEmpty(verificationUpdateCaseList)) {
-                        verificationCaseMapper.Upd(verificationUpdateCaseList);
-                    }
-                    //插入verification list
-                    if (!CollectionUtils.isEmpty(verificationCaseList)) {
-                        verificationCaseMapper.Ins(verificationCaseList);
-                    }
-                    //删除 featureCase list
-                    Set<Long> delfcIds = featureCaseVerificationList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(delfcIds)) {
-                        featureCaseMapper.DelByFId(delfcIds);
-                    }
-                    //删除全部featureCase next case
-                    Set<Long> fdIds = featureCaseVerificationList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-                    if (!CollectionUtils.isEmpty(fdIds)) {
-                        featureCaseNextCaseMapper.Del(fdIds);
-                    }
-                    //当前request list
-                    verificationCaseList.addAll(verificationCaseList);
-                }
-                //feature-case
-                if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
-                    for (RequestCases item : request.getRequestCasesList()) {
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setFeature_id(feature.getFeature_id());
-                        RequestCase cs = requestCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
-                        featureCase.setCase_id(cs.getCase_id());
-                        featureCase.setCase_type("request");
-                        featureCaseMapper.InsOne(featureCase);
-                        if (null != item.getNextKeys()) {
-                            for (CaseKey caseKey : item.getNextKeys()) {
-                                FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
-                                featureCaseNextCase.setFeature_case_id(featureCase.getId());
-                                featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList, verificationCaseList));
-                                featureCaseNextCase.setCase_type(caseKey.getCaseType());
-                                featureCaseNextCaseList.add(featureCaseNextCase);
-                            }
-                        }
-                    }
-                }
-                if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
-                    for (DataBaseCases item : request.getDataBaseCasesList()) {
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setFeature_id(feature.getFeature_id());
-                        DatabaseCase cs = databaseCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
-                        featureCase.setCase_id(cs.getCase_id());
-                        featureCase.setCase_type("database");
-                        featureCaseMapper.InsOne(featureCase);
-                        for (CaseKey caseKey : item.getNextKeys()) {
-                            FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
-                            featureCaseNextCase.setFeature_case_id(featureCase.getId());
-                            featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList, verificationCaseList));
-                            featureCaseNextCase.setCase_type(caseKey.getCaseType());
-                            featureCaseNextCaseList.add(featureCaseNextCase);
-                        }
-                    }
-                }
-                if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-                    for (ParseCases item : request.getPaserCasesList()) {
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setFeature_id(feature.getFeature_id());
-                        PaserCase cs = paserCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
-                        featureCase.setCase_id(cs.getCase_id());
-                        featureCase.setCase_type("parse");
-                        featureCaseMapper.InsOne(featureCase);
-                        for (CaseKey caseKey : item.getNextKeys()) {
-                            FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
-                            featureCaseNextCase.setFeature_case_id(featureCase.getId());
-                            featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList, verificationCaseList));
-                            featureCaseNextCase.setCase_type(caseKey.getCaseType());
-                            featureCaseNextCaseList.add(featureCaseNextCase);
-                        }
-                    }
-                }
-                if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-                    for (VerificationCases item : request.getVerificationCasesList()) {
-                        FeatureCase featureCase = new FeatureCase();
-                        featureCase.setFeature_id(feature.getFeature_id());
-                        VerificationCase cs = verificationCaseList.stream().filter(i -> item.getKey().getCaseName().equals(i.getCase_name())).findFirst().orElse(null);
-                        featureCase.setCase_id(cs.getCase_id());
-                        featureCase.setCase_type("verification");
-                        featureCaseMapper.InsOne(featureCase);
-                        for (CaseKey caseKey : item.getNextKeys()) {
-                            FeatureCaseNextCase featureCaseNextCase = new FeatureCaseNextCase();
-                            featureCaseNextCase.setFeature_case_id(featureCase.getId());
-                            featureCaseNextCase.setCase_id(getCaseId(caseKey.getCaseType(), caseKey.getCaseName(), requestCaseList, databaseCaseList, paserCaseList, verificationCaseList));
-                            featureCaseNextCase.setCase_type(caseKey.getCaseType());
-                            featureCaseNextCaseList.add(featureCaseNextCase);
-                        }
-                    }
-                }
-
-                //插入next feature case关联关系
-                featureCaseNextCaseMapper.Ins(featureCaseNextCaseList);
+                cases.add(featureCase);
+                //case的下一节点，直接删除并且重新insert
+                featureCaseNextCaseMapper.delete(
+                        Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                                .eq(FeatureCaseNextCase::getSourceCaseId, featureCase.getId()));
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            status.setSuccess(false);
-            status.setErrorCode(109);
-            status.setMessage(Lang.getErrorCode(109));
+        }
+        if (!CollectionUtils.isEmpty(request.getEdges())) {
+            for (Edges edge : request.getEdges()) {
+                //判断当前线的源节点和目标节点存在
+                if (!CollectionUtils.isEmpty(request.getNodes())
+                        && cases
+                        .stream()
+                        .anyMatch(item ->
+                                item.getLabel().equals(edge.getSource()))
+                        && cases
+                        .stream()
+                        .anyMatch(item ->
+                                item.getLabel().equals(edge.getSource()))) {
+                    Caze sourceCase = cases.stream()
+                            .filter(item->edge.getSource().equals(item.getLabel()))
+                            .findFirst().orElse(null);
+                    Caze targetCase = cases.stream()
+                            .filter(item->edge.getTarget().equals(item.getLabel()))
+                            .findFirst().orElse(null);
+                    FeatureCaseNextCase featureCaseNextCase =
+                            FeatureCaseNextCase
+                                    .builder()
+                                    .sourceCaseId(sourceCase.getId())
+                                    .targetCaseId(targetCase.getId())
+                                    .sourceanchor(edge.getSourceAnchor())
+                                    .targetanchor(edge.getTargetAnchor())
+                                    .build();
+                    featureCaseNextCaseMapper.insert(featureCaseNextCase);
+                }
+            }
         }
         response.setStatus(status);
         return response;
     }
 
-    private Long getCaseId(String caseType, String caseName, List<RequestCase> requestCaseList, List<DatabaseCase> databaseCaseList, List<PaserCase> paserCaseList, List<VerificationCase> verificationCaseList) {
-
-        try {
-            if ("request".equals(caseType.toLowerCase())) {
-                RequestCase rcs = requestCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
-                return rcs.getCase_id();
-            } else if ("database".equals(caseType.toLowerCase())) {
-                DatabaseCase dcs = databaseCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
-                return dcs.getCase_id();
-            } else if ("parse".equals(caseType.toLowerCase())) {
-                PaserCase pcs = paserCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
-                return pcs.getCase_id();
-            } else if ("verification".equals(caseType.toLowerCase())) {
-                VerificationCase vcs = verificationCaseList.stream().filter(i -> caseName.equals(i.getCase_name())).findFirst().orElse(null);
-                return vcs.getCase_id();
+    private void insertCaseConfig(CreateFeatureRequest request, String type, Long caseId, String caseLabel) {
+        //判断相关case的配置在request中是否存在，若存在插入db
+        if (!CollectionUtils.isEmpty(request.getConfig())
+                && null != caseLabel
+                && null != request.getConfig()
+                .stream()
+                .filter(item -> !caseLabel.equals(item.getLabel()))
+                .findFirst().orElse(null)) {
+            Config config = request.getConfig()
+                    .stream()
+                    .filter(item -> !caseLabel.equals(item.getLabel()))
+                    .findFirst().orElse(null);
+            if ("request".equals(type)) {
+                RequestCaseConfig requestCaseConfig =
+                        RequestCaseConfig.builder(
+                        ).caseId(caseId
+                        ).requestBody(config.getParams()
+                                .get("request_body")
+                        ).requestType(config.getParams()
+                                .get("request_type")
+                        ).url(config.getParams()
+                                .get("url")
+                        ).contentType(config.getParams()
+                                .get("content_type")
+                        ).requestConfigs(config.getParams()
+                                .get("request_configs")
+                        ).requestHeaders(config.getParams()
+                                .get("request_headers")
+                        ).build();
+                requestCaseConfigMapper.delete(
+                        Wrappers.<RequestCaseConfig>lambdaQuery()
+                                .eq(RequestCaseConfig::getCaseId, caseId));
+                requestCaseConfigMapper.insert(requestCaseConfig);
+            }
+            else if ("parse".equals(type)) {
+                ParseCaseConfig parseCaseConfig =
+                        ParseCaseConfig.builder(
+                        ).caseId(caseId
+                        ).parameters(config.getParams()
+                                .get("parameters")
+                        ).cvtMethodSource(config.getParams()
+                                .get("cvt_method_source")
+                        ).build();
+                parseCaseConfigMapper.delete(
+                        Wrappers.<ParseCaseConfig>lambdaQuery()
+                                .eq(ParseCaseConfig::getCaseId, caseId));
+                parseCaseConfigMapper.insert(parseCaseConfig);
+            }
+            else if ("database".equals(type)) {
+                DatabaseCaseConfig databaseCaseConfig =
+                        DatabaseCaseConfig.builder(
+                        ).caseId(caseId
+                        ).sqlStr(config.getParams()
+                                .get("sql_str")
+                        ).build();
+                databaseCaseConfigMapper.delete(
+                        Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                                .eq(DatabaseCaseConfig::getCaseId, caseId));
+                databaseCaseConfigMapper.insert(databaseCaseConfig);
+            }
+            else if ("verification".equals(type)) {
+                VerificationCaseConfig verificationCaseConfig =
+                        VerificationCaseConfig.builder(
+                        ).caseId(caseId
+                        ).verificationType(config.getParams()
+                                .get("verification_type")
+                        ).parameters(config.getParams()
+                                .get("parameters")
+                        ).build();
+                verificationCaseConfigMapper.delete(
+                        Wrappers.<VerificationCaseConfig>lambdaQuery()
+                                .eq(VerificationCaseConfig::getCaseId, caseId));
+                verificationCaseConfigMapper.insert(verificationCaseConfig);
             }
         }
-        catch (Exception ex) {
-            return null;
-        }
-        return null;
     }
 
     /**
@@ -461,69 +246,40 @@ public class FeatureServiceImpl implements FeatureService {
     public DeleteFeatureResponse deleteFeature(Long id) {
         Status status = new Status();
         status.setSuccess(true);
-        DeleteFeatureResponse rsp = new DeleteFeatureResponse();
-        //根据featureId获取所有featureCase
-        List<FeatureCase> featureCases = featureCaseMapper.SelByFId(id);
-        if (!CollectionUtils.isEmpty(featureCases)) {
-            Set<Long> fcIds = featureCases.stream()
-                    .map(FeatureCase::getId)
-                    .collect(Collectors.toSet());
-            //删除request case
-            List<FeatureCase> requestFeatureCaseRequsts = featureCases
+        //根据featureId查询所有case
+        List<Caze> featureCaseList
+                = caseMapper.selectList(Wrappers.<Caze>lambdaQuery()
+                .eq(Caze::getFeatureId, id));
+        if (!CollectionUtils.isEmpty(featureCaseList)) {
+            List<Long> caseIds = featureCaseList
                     .stream()
-                    .filter(i -> Constants.REQUEST.equals(i.getCase_type()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(requestFeatureCaseRequsts)) {
-                Set<Long> requestIds = requestFeatureCaseRequsts
-                        .stream()
-                        .map(FeatureCase::getCase_id)
-                        .collect(Collectors.toSet());
-                requestCaseMapper.Del(requestIds);
-            }
-            //删除parse case
-            List<FeatureCase> parseFeatureCaseRequsts = featureCases
-                    .stream()
-                    .filter(i -> Constants.PARSE.equals(i.getCase_type()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(parseFeatureCaseRequsts)) {
-                Set<Long> parseIds = parseFeatureCaseRequsts
-                        .stream()
-                        .map(FeatureCase::getCase_id)
-                        .collect(Collectors.toSet());
-                paserCaseMapper.Del(parseIds);
-            }
-            //删除database case
-            List<FeatureCase> databaseFeatureCaseRequsts = featureCases
-                    .stream()
-                    .filter(i -> Constants.DATABASE.equals(i.getCase_type()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(databaseFeatureCaseRequsts)) {
-                Set<Long> databaseIds = databaseFeatureCaseRequsts
-                        .stream()
-                        .map(FeatureCase::getCase_id)
-                        .collect(Collectors.toSet());
-                paserCaseMapper.Del(databaseIds);
-            }
-            //删除verification case
-            List<FeatureCase> verificationFeatureCaseRequsts = featureCases
-                    .stream()
-                    .filter(i -> Constants.DATABASE.equals(i.getCase_type()))
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(verificationFeatureCaseRequsts)) {
-                Set<Long> verificationIds = verificationFeatureCaseRequsts
-                        .stream()
-                        .map(FeatureCase::getCase_id)
-                        .collect(Collectors.toSet());
-                paserCaseMapper.Del(verificationIds);
-            }
-            //删除faetureCase和featureNextCase
-            featureCaseMapper.Del(id);
-            if (!CollectionUtils.isEmpty(fcIds)) {
-                featureCaseNextCaseMapper.Del(fcIds);
-            }
+                    .map(Caze::getId).collect(Collectors.toList());
+            requestCaseConfigMapper.delete(
+                    Wrappers.<RequestCaseConfig>lambdaQuery()
+                            .in(RequestCaseConfig::getCaseId, caseIds));
+            parseCaseConfigMapper.delete(
+                    Wrappers.<ParseCaseConfig>lambdaQuery()
+                            .in(ParseCaseConfig::getCaseId, caseIds));
+            databaseCaseConfigMapper.delete(
+                    Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                            .in(DatabaseCaseConfig::getCaseId, caseIds));
+            verificationCaseConfigMapper.delete(
+                    Wrappers.<VerificationCaseConfig>lambdaQuery()
+                            .in(VerificationCaseConfig::getCaseId, caseIds));
+            featureCaseNextCaseMapper.delete(
+                    Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                            .in(FeatureCaseNextCase::getSourceCaseId, caseIds));
+            caseMapper.delete(
+                    Wrappers.<Caze>lambdaQuery()
+                            .in(Caze::getId, caseIds));
+            featureMapper.delete(
+                    Wrappers.<Feature>lambdaQuery()
+                            .eq(Feature::getFeature_id, id));
         }
-        featureMapper.Del(id);
-        rsp.setStatus(status);
+        DeleteFeatureResponse rsp
+                = DeleteFeatureResponse.builder()
+                .status(status)
+                .build();
         return rsp;
     }
 
@@ -535,10 +291,12 @@ public class FeatureServiceImpl implements FeatureService {
      */
     @Override
     public ExecFeatureResponse execFeature(ExecFeatureRequest request) {
-        ExecFeatureResponse rsp;
         Status status = new Status();
         status.setSuccess(true);
-        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(request.getFeatureId());
+        List<Caze> featureCases
+                = caseMapper.selectList(
+                Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId, request.getFeatureId()));
         List<Parameter> parameters = new ArrayList<>();
         //输入参数
         if (!CollectionUtils.isEmpty(request.getParameters())) {
@@ -549,296 +307,230 @@ public class FeatureServiceImpl implements FeatureService {
                 parameters.add(parameter);
             }
         }
-        rsp = execFeature(parameters, featureCaseList);
-        rsp.setParameters(parameters);
-        rsp.setStatus(status);
+        //执行feature
+        TaskResult taskResult
+                = execFeature(parameters, featureCases);
+        ExecFeatureResponse rsp
+                = ExecFeatureResponse.builder()
+                .info(taskResult.getLogs())
+                .assertion(taskResult.getAssertions())
+                .parameters(parameters)
+                .status(status).build();
         return rsp;
     }
 
-    /**
-     * 异步执行feature
-     *
-     * @param request
-     * @return
-     */
-    @Async("threadPoolTaskExecutor")
-    @Override
-    public CompletableFuture<ExecAsyncFeatureResponse> execFeatureAsync(ExecAsyncFeatureRequest request) {
-        ExecAsyncFeatureResponse rsp = new ExecAsyncFeatureResponse();
-        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(request.getFeatureId());
+    public TaskResult execFeature(Long featureId, String paramName, List<Long> paramIndexList) {
+        TaskResult taskResult = TaskResult.builder().build();
+        List<Caze> featureCases
+                = caseMapper.selectList(
+                Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId, featureId));
         //获取对应name的parameter list
-        List<ParameterCase> list = parameterMapper.Sel(request.getParameter_names());
-        List<HashMap<String, String>> parameterList = new ArrayList<>();
-        List<FeatureResult> featureResultList = new ArrayList<>();
-        //record task
-        Task task = new Task();
-        task.setTask_name("exec task");
-        task.setTask_starttime(new Timestamp(System.currentTimeMillis()));
-        //插入feature task
-        taskMapper.Ins(task);
-        //获取parameter index set
-        Set<Long> indexList = list.stream().map(ParameterCase::getParameter_value_index).collect(Collectors.toSet());
-        if (!CollectionUtils.isEmpty(indexList)) {
-            for (Long index : indexList) {
-                List<Parameter> parameters = new ArrayList<>();
-                HashMap<String, String> parameterMap = new HashMap<>();
-                //获取对应index下所有parameter key-value
-                List<ParameterCase> parameterCases = list.stream()
-                        .filter(item->index.equals(item.getParameter_value_index()))
-                        .collect(Collectors.toList());
-                for (ParameterCase parameterCase : parameterCases) {
-                    if (!parameterMap.containsKey(parameterCase.getParameter_key())) {
-                        Parameter parameter = new Parameter();
-                        parameter.setParameter_key(parameterCase.getParameter_key());
-                        parameter.setParameter_value(parameterCase.getParameter_value());
-                        parameters.add(parameter);
-                        parameterMap.put(parameterCase.getParameter_key(),
-                                parameterCase.getParameter_key());
+        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> list = new ArrayList<>();
+        if (CollectionUtils.isEmpty(paramIndexList)) {
+            list = parameterMapper.selectList(
+                    Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
+                            .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, paramName));
+        } else {
+            list = parameterMapper.selectList(
+                    Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
+                            .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, paramName)
+                            .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, paramIndexList));
+        }
+        //输入参数
+        if (!CollectionUtils.isEmpty(list)) {
+                //获取parameter index set
+                Set<Long> indexList = list
+                        .stream()
+                        .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex)
+                        .collect(Collectors.toSet());
+                if (!CollectionUtils.isEmpty(indexList)) {
+                    for (Long index : indexList) {
+                        List<Parameter> parameters = new ArrayList<>();
+                        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameterCases
+                                = list.stream()
+                                .filter(item -> index.equals(item.getParameterValueIndex()))
+                                .collect(Collectors.toList());
+                        for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter param : parameterCases) {
+                            Parameter parameter = new Parameter();
+                            parameter.setParameter_key(param.getParameterKey());
+                            parameter.setParameter_value(param.getParameterValue());
+                            parameters.add(parameter);
+                        }
+                        //执行feature
+                        taskResult.setLogs(
+                                String.format("%s%s",
+                                        taskResult.getLogs(),
+                                        execFeature(parameters, featureCases).getLogs()));
+                        taskResult.setAssertions(
+                                String.format("%s%s",
+                                        taskResult.getAssertions(),
+                                        execFeature(parameters, featureCases).getAssertions()));
                     }
                 }
-                //根据key-value 执行feature
-                FeatureResult featureResult = execFeature(index, parameters, featureCaseList);
-                featureResult.setTask_id(task.getTask_id());
-                featureResultList.add(featureResult);
-                parameterList.add(parameterMap);
             }
-        }
-        featureResultMapper.insList(featureResultList);
-        return CompletableFuture.completedFuture(rsp);
+        return taskResult;
     }
 
     @Override
     public QueryFeatureResponse getFeature(Long id) {
-        QueryFeatureResponse rsp = new QueryFeatureResponse();
-        Feature feature = featureMapper.Sel(id);
-        List<FeatureCase> featureCaseList = featureCaseMapper.SelByFId(id);
-        //获取featureCaseId
-        Set<Long> featureCaseId = featureCaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-        List<FeatureCaseNextCase> featureCaseNextCases = featureCaseNextCaseMapper.SelListByFCId(featureCaseId);
-        //获取requestCase
-        Set<FeatureCase> requestFeatureCases = featureCaseList
+        Feature feature = featureMapper.selectById(id);
+        //根据featureId查询所有case
+        List<Caze> featureCaseList
+                = caseMapper.selectList(Wrappers.<Caze>lambdaQuery()
+                .eq(Caze::getFeatureId, id));
+        List<Nodes> nodes = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(featureCaseList)) {
+            for (Caze featureCase : featureCaseList) {
+                Nodes node = Nodes.builder()
+                        .id(featureCase.getId())
+                        .label(featureCase.getLabel())
+                        .clazz(featureCase.getCaseType())
+                        .x(featureCase.getX())
+                        .y(featureCase.getY())
+                        .build();
+                nodes.add(node);
+            }
+        }
+        List<Long> caseIds = nodes
                 .stream()
-                .filter(item->item.getCase_type().equals(Constants.REQUEST))
-                .collect(Collectors.toSet());
-        Set<Long> requestCasesIds = requestFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-        List<RequestCase> requestCases = CollectionUtils.isEmpty(requestCasesIds)
-                ? new ArrayList<>()
-                : requestCaseMapper.SelList(requestCasesIds);
-        //获取databaseCase
-        Set<FeatureCase> databaseFeatureCases = featureCaseList
-                .stream()
-                .filter(item->item.getCase_type().equals(Constants.DATABASE))
-                .collect(Collectors.toSet());
-        Set<Long> databaseCasesIds = databaseFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-        List<DatabaseCase> databaseCases = CollectionUtils.isEmpty(databaseCasesIds)
-                ? new ArrayList<>()
-                : dataBaseCaseMapper.SelList(databaseCasesIds);
-        //获取parseCase
-        Set<FeatureCase> parseFeatureCases = featureCaseList
-                .stream()
-                .filter(item->item.getCase_type().equals(Constants.PARSE))
-                .collect(Collectors.toSet());
-        Set<Long> parsetCasesIds = parseFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-        List<PaserCase> parseCases = CollectionUtils.isEmpty(parsetCasesIds)
-                ? new ArrayList<>()
-                : paserCaseMapper.SelList(parsetCasesIds);
-        //获取verifyCase
-        Set<FeatureCase> verifytFeatureCases = featureCaseList
-                .stream()
-                .filter(item->item.getCase_type().equals(Constants.VERIFICATION))
-                .collect(Collectors.toSet());
-        Set<Long> verifyCasesIds = verifytFeatureCases.stream().map(FeatureCase::getCase_id).collect(Collectors.toSet());
-        List<VerificationCase> verifyCases = CollectionUtils.isEmpty(verifyCasesIds)
-                ? new ArrayList<>()
-                : verificationCaseMapper.SelList(verifyCasesIds);
+                .map(Nodes::getId).collect(Collectors.toList());
+        List<Config> configs = new ArrayList<>();
+        List<Edges> edges = new ArrayList<>();
 
-        List<RequestCases> requestCasesList = new ArrayList<>();
-        for (RequestCase item : requestCases) {
-            RequestCases requestCase = new RequestCases();
-            requestCase.setUrl(item.getUrl());
-            requestCase.setContentType(item.getContent_type());
-            requestCase.setRequestBody(item.getRequest_body());
-            requestCase.setRequestType(item.getRequest_type());
-            CaseKey caseKey = new CaseKey();
-            caseKey.setCaseId(item.getCase_id());
-            caseKey.setCaseName(item.getCase_name());
-            caseKey.setCaseType(Constants.REQUEST);
-            requestCase.setKey(caseKey);
-            List<CaseKey> newCaseKeys = new ArrayList<>();
-            //获取nextCaseList
-            List<FeatureCaseNextCase> nextCases = featureCaseNextCases.stream().filter(i->requestCasesIds.contains(i.getFeature_case_id())).collect(Collectors.toList());
-            for (FeatureCaseNextCase featureCaseNextCase : nextCases) {
-                CaseKey caseKeyItem = new CaseKey();
-                caseKeyItem.setCaseType(featureCaseNextCase.getCase_type());
-                caseKeyItem.setCaseId(featureCaseNextCase.getCase_id());
-                caseKeyItem.setCaseName(getCaseName(featureCaseNextCase.getCase_id(),
-                        featureCaseNextCase.getCase_type(),
-                        requestCases,
-                        databaseCases,
-                        parseCases,
-                        verifyCases));
-                newCaseKeys.add(caseKeyItem);
+        if (!CollectionUtils.isEmpty(caseIds)) {
+            //根据featureId查询所有caseConfig
+            List<RequestCaseConfig> requestCaseConfigs
+                    = requestCaseConfigMapper.selectList(
+                    Wrappers.<RequestCaseConfig>lambdaQuery()
+                    .in(RequestCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(requestCaseConfigs)) {
+                for (RequestCaseConfig requestCaseConfig : requestCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->requestCaseConfig.getId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("url", requestCaseConfig.getUrl());
+                    params.put("request_body", requestCaseConfig.getRequestBody());
+                    params.put("request_type",requestCaseConfig.getRequestType());
+                    params.put("content_type", requestCaseConfig.getContentType());
+                    params.put("request_configs", requestCaseConfig.getRequestConfigs());
+                    params.put("request_headers", requestCaseConfig.getRequestHeaders());
+                    Config config = Config.builder()
+                            .label(null == node ? "" : node.getLabel())
+                            .params(params)
+                            .build();
+                    configs.add(config);
+                }
             }
-            requestCase.setNextKeys(newCaseKeys);
-            requestCasesList.add(requestCase);
-        }
-        List<DataBaseCases> databaseCasesList = new ArrayList<>();
-        for (DatabaseCase item : databaseCases) {
-            DataBaseCases databaseCase = new DataBaseCases();
-            databaseCase.setSql(item.getSql());
-            CaseKey caseKey = new CaseKey();
-            caseKey.setCaseId(item.getCase_id());
-            caseKey.setCaseName(item.getCase_name());
-            caseKey.setCaseType(Constants.DATABASE);
-            databaseCase.setKey(caseKey);
-            List<CaseKey> newCaseKeys = new ArrayList<>();
-            //获取nextCaseList
-            List<FeatureCaseNextCase> nextCases = featureCaseNextCases.stream().filter(i->databaseCasesIds.contains(i.getFeature_case_id())).collect(Collectors.toList());
-            for (FeatureCaseNextCase featureCaseNextCase : nextCases) {
-                CaseKey caseKeyItem = new CaseKey();
-                caseKeyItem.setCaseType(featureCaseNextCase.getCase_type());
-                caseKeyItem.setCaseId(featureCaseNextCase.getCase_id());
-                caseKeyItem.setCaseName(getCaseName(featureCaseNextCase.getCase_id(),
-                        featureCaseNextCase.getCase_type(),
-                        requestCases,
-                        databaseCases,
-                        parseCases,
-                        verifyCases));
-                newCaseKeys.add(caseKeyItem);
+            List<DatabaseCaseConfig> databaseCaseConfigs
+                    = databaseCaseConfigMapper.selectList(
+                    Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                            .in(DatabaseCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(databaseCaseConfigs)) {
+                for (DatabaseCaseConfig databaseCaseConfig : databaseCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->databaseCaseConfig.getId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("sql_str", databaseCaseConfig.getSqlStr());
+                    Config config = Config.builder()
+                            .label(null == node ? "" : node.getLabel())
+                            .params(params)
+                            .build();
+                    configs.add(config);
+                }
             }
-            databaseCase.setNextKeys(newCaseKeys);
-            databaseCasesList.add(databaseCase);
-        }
-        List<ParseCases> parseCasesList = new ArrayList<>();
-        for (PaserCase item : parseCases) {
-            ParseCases parseCase = new ParseCases();
-            parseCase.setCvtMethodSource(item.getCvt_method_source());
-            List<String> parameterList = FastJsonUtil.toList(item.getParameters());
-            parseCase.setParameters(parameterList);
-            CaseKey caseKey = new CaseKey();
-            caseKey.setCaseId(item.getCase_id());
-            caseKey.setCaseName(item.getCase_name());
-            caseKey.setCaseType(Constants.PARSE);
-            parseCase.setKey(caseKey);
-            List<CaseKey> newCaseKeys = new ArrayList<>();
-            //获取nextCaseList
-            List<FeatureCaseNextCase> nextCases = featureCaseNextCases.stream().filter(i->parsetCasesIds.contains(i.getFeature_case_id())).collect(Collectors.toList());
-            for (FeatureCaseNextCase featureCaseNextCase : nextCases) {
-                CaseKey caseKeyItem = new CaseKey();
-                caseKeyItem.setCaseType(featureCaseNextCase.getCase_type());
-                caseKeyItem.setCaseId(featureCaseNextCase.getCase_id());
-                caseKeyItem.setCaseName(getCaseName(featureCaseNextCase.getCase_id(),
-                        featureCaseNextCase.getCase_type(),
-                        requestCases,
-                        databaseCases,
-                        parseCases,
-                        verifyCases));
-                newCaseKeys.add(caseKeyItem);
+            List<ParseCaseConfig> parseCaseConfigs
+                    = parseCaseConfigMapper.selectList(
+                    Wrappers.<ParseCaseConfig>lambdaQuery()
+                            .in(ParseCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(parseCaseConfigs)) {
+                for (ParseCaseConfig parseCaseConfig : parseCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->parseCaseConfig.getId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("parameters", parseCaseConfig.getParameters());
+                    params.put("cvt_method_source", parseCaseConfig.getCvtMethodSource());
+                    Config config = Config.builder()
+                            .label(null == node ? "" : node.getLabel())
+                            .params(params)
+                            .build();
+                    configs.add(config);
+                }
             }
-            parseCase.setNextKeys(newCaseKeys);
-            parseCasesList.add(parseCase);
-        }
-        List<VerificationCases> verificationCasesList = new ArrayList<>();
-        for (VerificationCase item : verifyCases) {
-            VerificationCases verificationCase = new VerificationCases();
-            verificationCase.setParameters(FastJsonUtil.toList(item.getParameters()));
-            verificationCase.setVerifyType(item.getVerification_type());
-            CaseKey caseKey = new CaseKey();
-            caseKey.setCaseId(item.getCase_id());
-            caseKey.setCaseName(item.getCase_name());
-            caseKey.setCaseType(Constants.VERIFICATION);
-            verificationCase.setKey(caseKey);
-            List<CaseKey> newCaseKeys = new ArrayList<>();
-            //获取nextCaseList
-            List<FeatureCaseNextCase> nextCases = featureCaseNextCases.stream().filter(i->parsetCasesIds.contains(i.getFeature_case_id())).collect(Collectors.toList());
-            for (FeatureCaseNextCase featureCaseNextCase : nextCases) {
-                CaseKey caseKeyItem = new CaseKey();
-                caseKeyItem.setCaseType(featureCaseNextCase.getCase_type());
-                caseKeyItem.setCaseId(featureCaseNextCase.getCase_id());
-                caseKeyItem.setCaseName(getCaseName(featureCaseNextCase.getCase_id(),
-                        featureCaseNextCase.getCase_type(),
-                        requestCases,
-                        databaseCases,
-                        parseCases,
-                        verifyCases));
-                newCaseKeys.add(caseKeyItem);
+            List<VerificationCaseConfig> verificationCaseConfigs
+                    = verificationCaseConfigMapper.selectList(
+                    Wrappers.<VerificationCaseConfig>lambdaQuery()
+                            .in(VerificationCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(verificationCaseConfigs)) {
+                for (VerificationCaseConfig verificationCaseConfig : verificationCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->verificationCaseConfig.getId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("verification_type", verificationCaseConfig.getVerificationType());
+                    params.put("parameters", verificationCaseConfig.getParameters());
+                    Config config = Config.builder()
+                            .label(null == node ? "" : node.getLabel())
+                            .params(params)
+                            .build();
+                    configs.add(config);
+                }
             }
-            verificationCase.setNextKeys(newCaseKeys);
-            verificationCasesList.add(verificationCase);
+            //根据featureId查询所有连线
+            List<FeatureCaseNextCase> featureCaseNextCases
+                    = featureCaseNextCaseMapper.selectList(
+                    Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                            .in(FeatureCaseNextCase::getSourceCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(featureCaseNextCases)) {
+                for (FeatureCaseNextCase featureCaseNextCase : featureCaseNextCases) {
+                    Edges edge = Edges.builder()
+                            .source(String.valueOf(featureCaseNextCase.getSourceCaseId()))
+                            .target(String.valueOf(featureCaseNextCase.getTargetCaseId()))
+                            .sourceAnchor(featureCaseNextCase.getSourceanchor())
+                            .targetAnchor(featureCaseNextCase.getTargetanchor()).build();
+                    edges.add(edge);
+                }
+            }
         }
-        rsp.setRequestCasesList(requestCasesList);
-        rsp.setDataBaseCasesList(databaseCasesList);
-        rsp.setPaserCasesList(parseCasesList);
-        rsp.setVerificationCasesList(verificationCasesList);
-        rsp.setFeatureName(feature.getFeature_name());
-        rsp.setDescription(feature.getDesctription());
+        QueryFeatureResponse rsp
+                = QueryFeatureResponse.builder()
+                .featureId(id)
+                .featureName(null == feature ? "" : feature.getFeature_name())
+                .description(null == feature ? "" : feature.getDescription())
+                .config(configs)
+                .edges(edges)
+                .nodes(nodes)
+                .build();
         return rsp;
     }
 
     @Override
     public QueryAllFeatureResponse getFeatureAll() {
-        QueryAllFeatureResponse rsp = new QueryAllFeatureResponse();
         Status status = new Status();
         status.setSuccess(true);
-        rsp.setStatus(status);
-        List<QueryFeature> queryFeaturesRsp = new ArrayList<>();
-        List<Feature> features = featureMapper.SelAll();
+        List<Feature> features
+                = featureMapper.selectList(Wrappers.emptyWrapper());
+        List<QueryFeature> queryFeatures = new ArrayList<>();
         for (Feature feature : features) {
-            QueryFeature queryFeatureRsp = new QueryFeature();
-            queryFeatureRsp.setFeature_id(feature.getFeature_id());
-            queryFeatureRsp.setFeatureName(feature.getFeature_name());
-            queryFeatureRsp.setDescription(feature.getDesctription());
-            queryFeaturesRsp.add(queryFeatureRsp);
+            QueryFeature queryFeature
+                    = QueryFeature.builder()
+                    .feature_id(feature.getFeature_id())
+                    .featureName(feature.getFeature_name())
+                    .description(feature.getDescription()).build();
+            queryFeatures.add(queryFeature);
         }
-        rsp.setFeatures(queryFeaturesRsp);
+        QueryAllFeatureResponse rsp =
+            QueryAllFeatureResponse.builder()
+                    .status(status)
+                    .features(queryFeatures).build();
         return rsp;
-    }
-
-    /**
-     * 根据caseId caseType获取caseType
-     *
-     * @param caseId
-     * @param caseType
-     * @param requestCases
-     * @param databaseCases
-     * @param parseCases
-     * @param verifyCases
-     * @return
-     */
-    private String getCaseName(Long caseId, String caseType, List<RequestCase> requestCases, List<DatabaseCase> databaseCases, List<PaserCase> parseCases, List<VerificationCase> verifyCases) {
-        //忽略大小写
-        String caseName = "";
-        switch (caseType.toLowerCase()) {
-            case Constants.REQUEST: {
-                RequestCase tCase = requestCases.stream().filter(item -> item.getCase_id().equals(caseId)).findFirst().orElse(null);
-                if (null != tCase) {
-                    caseName = tCase.getCase_name();
-                }
-                break;
-            }
-            case Constants.DATABASE: {
-                DatabaseCase tCase = databaseCases.stream().filter(item -> item.getCase_id().equals(caseId)).findFirst().orElse(null);
-                if (null != tCase) {
-                    caseName = tCase.getCase_name();
-                }
-                break;
-            }
-            case Constants.PARSE: {
-                PaserCase tCase = parseCases.stream().filter(item -> item.getCase_id().equals(caseId)).findFirst().orElse(null);
-                if (null != tCase) {
-                    caseName = tCase.getCase_name();
-                }
-                break;
-            }
-            case Constants.VERIFICATION: {
-                VerificationCase tCase = verifyCases.stream().filter(item -> item.getCase_id().equals(caseId)).findFirst().orElse(null);
-                if (null != tCase) {
-                    caseName = tCase.getCase_name();
-                }
-                break;
-            }
-        }
-        return caseName;
     }
 
     /**
@@ -846,16 +538,13 @@ public class FeatureServiceImpl implements FeatureService {
      *
      * @param parameters
      * @param featureCaseList
-     * @return
      */
-    private ExecFeatureResponse execFeature(List<Parameter> parameters, List<FeatureCase> featureCaseList) {
-        ExecFeatureResponse rsp = new ExecFeatureResponse();
+    private TaskResult execFeature(List<Parameter> parameters, List<Caze> featureCaseList) {
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),
                 UUID.randomUUID().toString()));
         TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        //Feature feature = featureMapper.Sel(id);
         //输入参数
         if (!CollectionUtils.isEmpty(parameters)) {
             for (Parameter item : parameters) {
@@ -867,7 +556,7 @@ public class FeatureServiceImpl implements FeatureService {
         initMap(featureCaseList, inDegreeMap);
         //主要流程
         Queue<Long> s1 = new ArrayDeque<>();
-        Set<Long> idSet = featureCaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
+        Set<Long> idSet = featureCaseList.stream().map(Caze::getId).collect(Collectors.toSet());
         //获取入度为0的case, 并且插入队列
         idSet.removeAll(inDegreeMap.keySet());
         for(Long item : idSet) {
@@ -878,93 +567,32 @@ public class FeatureServiceImpl implements FeatureService {
         {
             //抛出队头，并且执行
             Long n = s1.poll();
-            FeatureCase featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
+            Caze featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
             if (null == featureCase) {
                 break;
             }
             //执行测试用例
             executeCase(testFlowManager, publicKey, featureCase);
-            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+            //List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+            List<FeatureCaseNextCase> nextCaseKeys = new ArrayList<>();
             for (FeatureCaseNextCase caseKey : nextCaseKeys) {
                 //入度减一
-                inDegreeMap.put(caseKey.getCase_id(), null==inDegreeMap.get(caseKey.getCase_id()) ? 0 :inDegreeMap.get(caseKey.getCase_id()) - 1);
+                inDegreeMap.put(caseKey.getSourceCaseId(), null==inDegreeMap.get(caseKey.getSourceCaseId()) ? 0 :inDegreeMap.get(caseKey.getSourceCaseId()) - 1);
                 //如果入度为0
-                if(inDegreeMap.get(caseKey.getCase_id()) == 0){
-                    s1.offer(caseKey.getCase_id());
+                if(inDegreeMap.get(caseKey.getSourceCaseId()) == 0){
+                    s1.offer(caseKey.getSourceCaseId());
                 }
             }
         }
-        rsp.setInfo(testFlowManager.getBuffer("tf_log"));
-        rsp.setAssertion(null == testFlowManager.getBuffer("tf_assertion") ?
-                "passed":
-                testFlowManager.getBuffer("tf_assertion"));
+        TaskResult taskResult
+                = TaskResult.builder()
+                .logs(testFlowManager.getBuffer("tf_log"))
+                .assertions(null == testFlowManager.getBuffer("tf_assertion") ?
+                        "passed":
+                        testFlowManager.getBuffer("tf_assertion"))
+                .build();
         testFlowManager.deposed();
-        return rsp;
-    }
-
-
-    /**
-     * 执行feature方法
-     *
-     * @param index
-     * @param parameters
-     * @param featureCaseList
-     */
-    private FeatureResult execFeature(Long index, List<Parameter> parameters, List<FeatureCase> featureCaseList) {
-        ExecFeatureResponse rsp = new ExecFeatureResponse();
-        //buffer 公共key
-        String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
-                System.currentTimeMillis(),
-                UUID.randomUUID().toString()));
-        TestFlowManager testFlowManager = new TestFlowManager(publicKey);
-        //Feature feature = featureMapper.Sel(id);
-        //输入参数
-        if (!CollectionUtils.isEmpty(parameters)) {
-            for (Parameter item : parameters) {
-                testFlowManager.addBuffer(item.getParameter_key(), item.getParameter_value());
-            }
-        }
-        //储存入度
-        Map<Long, Integer> inDegreeMap = new HashMap<>();
-        initMap(featureCaseList, inDegreeMap);
-        //主要流程
-        Queue<Long> s1 = new ArrayDeque<>();
-        Set<Long> idSet = featureCaseList.stream().map(FeatureCase::getId).collect(Collectors.toSet());
-        //获取入度为0的case, 并且插入队列
-        idSet.removeAll(inDegreeMap.keySet());
-        for(Long item : idSet) {
-            s1.offer(item);
-        }
-        //遍历执行入度为0的case
-        while(!s1.isEmpty())
-        {
-            //抛出队头，并且执行
-            Long n = s1.poll();
-            FeatureCase featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
-            if (null == featureCase) {
-                break;
-            }
-            //执行测试用例
-            executeCase(testFlowManager, publicKey, featureCase);
-            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
-            for (FeatureCaseNextCase caseKey : nextCaseKeys) {
-                //入度减一
-                inDegreeMap.put(caseKey.getCase_id(), null==inDegreeMap.get(caseKey.getCase_id()) ? 0 :inDegreeMap.get(caseKey.getCase_id()) - 1);
-                //如果入度为0
-                if(inDegreeMap.get(caseKey.getCase_id()) == 0){
-                    s1.offer(caseKey.getCase_id());
-                }
-            }
-        }
-        FeatureResult featureResult = new FeatureResult();
-        featureResult.setFeature_id(featureCaseList.get(0).getFeature_id());
-        featureResult.setParameter_value_index(index);
-        featureResult.setLogs(testFlowManager.getBuffer("tf_log"));
-        featureResult.setAssertions(null == testFlowManager.getBuffer("tf_assertion") ?
-                "passed":
-                testFlowManager.getBuffer("tf_assertion"));
-        testFlowManager.deposed();
-        return featureResult;
+        return taskResult;
     }
 
     /**
@@ -973,11 +601,17 @@ public class FeatureServiceImpl implements FeatureService {
      * @param featureCaseList
      * @param inDegreeMap
      */
-    private void initMap(List<FeatureCase> featureCaseList, Map<Long, Integer> inDegreeMap) {
-        for (FeatureCase featureCase : featureCaseList) {
-            List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
+    private void initMap(List<Caze> featureCaseList, Map<Long, Integer> inDegreeMap) {
+        for (Caze featureCase : featureCaseList) {
+            List<FeatureCaseNextCase> nextCaseKeys
+                    = featureCaseNextCaseMapper.selectList(
+                            Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                                    .in(FeatureCaseNextCase::getSourceCaseId, featureCase.getId()));
             for (FeatureCaseNextCase caseKey : nextCaseKeys) {
-                inDegreeMap.put(caseKey.getCase_id(), null == inDegreeMap.get(caseKey.getCase_id()) ? 1 : inDegreeMap.get(caseKey.getCase_id()) + 1);
+                inDegreeMap.put(caseKey.getSourceCaseId(),
+                        null == inDegreeMap.get(caseKey.getSourceCaseId())
+                                ? 1
+                                : inDegreeMap.get(caseKey.getSourceCaseId()) + 1);
             }
         }
     }
@@ -989,59 +623,71 @@ public class FeatureServiceImpl implements FeatureService {
      * @param publicKey
      * @param featureCase
      */
-    private void executeCase(TestFlowManager testFlowManager, String publicKey, FeatureCase featureCase) {
+    private void executeCase(TestFlowManager testFlowManager, String publicKey, Caze featureCase) {
         //忽略大小写
-        switch (featureCase.getCase_type().toLowerCase()) {
+        switch (featureCase.getCaseType().toLowerCase()) {
             case Constants.DATABASE: {
-                DatabaseCase databaseCase = dataBaseCaseMapper.SelOne(featureCase.getCase_id());
+                DatabaseCaseConfig databaseCaseConfig
+                        = databaseCaseConfigMapper.selectOne(
+                                Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                                .eq(DatabaseCaseConfig::getCaseId, featureCase.getId()));
                 testFlowManager.addBuffer(
-                        databaseCase.getCase_name(),
-                        testFlowManager.queryDataBase(databaseCase.getCase_name(),
-                                databaseCase.getSql())
+                        featureCase.getLabel(),
+                        testFlowManager.queryDataBase(featureCase.getLabel(),
+                                databaseCaseConfig.getSqlStr())
                 );
                 break;
             }
             case Constants.PARSE: {
-                PaserCase parseCases = paserCaseMapper.SelOne(featureCase.getCase_id());
+                ParseCaseConfig parseCaseConfig
+                        = parseCaseConfigMapper.selectOne(
+                        Wrappers.<ParseCaseConfig>lambdaQuery()
+                                .eq(ParseCaseConfig::getCaseId, featureCase.getId()));
                 testFlowManager.addBuffer(
-                        parseCases.getCase_name(),
-                        testFlowManager.sourceParse(parseCases.getCase_name(),
-                                parseCases.getCvt_method_source(),
-                                FastJsonUtil.toList(parseCases.getParameters())
+                        featureCase.getLabel(),
+                        testFlowManager.sourceParse(featureCase.getLabel(),
+                                parseCaseConfig.getCvtMethodSource(),
+                                FastJsonUtil.toList(parseCaseConfig.getParameters())
                         )
                 );
                 break;
             }
             case Constants.REQUEST: {
-                RequestCase requestCase = requestCaseMapper.SelOne(featureCase.getCase_id());
+                RequestCaseConfig requestCaseConfig
+                        = requestCaseConfigMapper.selectOne(
+                        Wrappers.<RequestCaseConfig>lambdaQuery()
+                                .eq(RequestCaseConfig::getCaseId, featureCase.getId()));
                 testFlowManager.addBuffer(
-                        requestCase.getCase_name(),
-                        testFlowManager.sendRequest(requestCase.getCase_name(),
-                                requestCase.getRequest_body(),
-                                "null".equals(requestCase.getRequest_configs())||null == requestCase.getRequest_configs() ? null : FastJsonUtil.toMap(requestCase.getRequest_configs()),
-                                "null".equals(requestCase.getRequest_headers())|| null == requestCase.getRequest_headers() ? null : FastJsonUtil.toMap(requestCase.getRequest_headers()),
-                                requestCase.getRequest_type(),
-                                requestCase.getContent_type(),
-                                requestCase.getUrl()
+                        featureCase.getLabel(),
+                        testFlowManager.sendRequest(featureCase.getLabel(),
+                                requestCaseConfig.getRequestBody(),
+                                "null".equals(requestCaseConfig.getRequestConfigs())||null == requestCaseConfig.getRequestConfigs() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestConfigs()),
+                                "null".equals(requestCaseConfig.getRequestHeaders())|| null == requestCaseConfig.getRequestHeaders() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestHeaders()),
+                                requestCaseConfig.getRequestType(),
+                                requestCaseConfig.getContentType(),
+                                requestCaseConfig.getUrl()
                         )
                 );
                 break;
             }
             case Constants.VERIFICATION: {
-                VerificationCase verificationCase = verificationCaseMapper.SelOne(featureCase.getCase_id());
-                List<String> parameters = FastJsonUtil.toList(verificationCase.getParameters());
-                if (Constants.COMPARE.equals(verificationCase.getVerification_type())) {
-                    FastJsonUtil.toList(verificationCase.getParameters());
+                VerificationCaseConfig verificationCaseConfig
+                        = verificationCaseConfigMapper.selectOne(
+                        Wrappers.<VerificationCaseConfig>lambdaQuery()
+                                .eq(VerificationCaseConfig::getCaseId, featureCase.getId()));
+                List<String> parameters = FastJsonUtil.toList(verificationCaseConfig.getParameters());
+                if (Constants.COMPARE.equals(verificationCaseConfig.getVerificationType())) {
+                    FastJsonUtil.toList(verificationCaseConfig.getParameters());
                     testFlowManager.addBuffer(
                             "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1)));
                 }
-                else if (Constants.XPATHCOMPARE.equals(verificationCase.getVerification_type())) {
+                else if (Constants.XPATHCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
                     testFlowManager.addBuffer(
                             "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2)));
                 }
-                else if (Constants.OBJCOMPARE.equals(verificationCase.getVerification_type())) {
+                else if (Constants.OBJCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
                     testFlowManager.addBuffer(
                             "tf_assertion",
                     testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3)));
@@ -1050,291 +696,5 @@ public class FeatureServiceImpl implements FeatureService {
             }
             default: {}
         }
-    }
-
-    /**
-     * assertion
-     *
-     * @param request
-     * @return
-     * @throws Exception
-     */
-    private Status assertion(CreateFeatureRequest request) {
-        Status status = new Status();
-        status.setSuccess(true);
-        status.setMessage("Create Success");
-        if (null == request) {
-            status.setSuccess(false);
-            status.setErrorCode(110);
-            status.setMessage(Lang.getErrorCode(110));
-        } else if (null == request.getFeatureName()) {
-            status.setSuccess(false);
-            status.setErrorCode(101);
-            status.setMessage(Lang.getErrorCode(101));
-//        } else if (null != featureMapper.SelByName(request.getFeatureName().trim())) {
-//            status.setSuccess(false);
-//            status.setErrorCode(102);
-//            status.setMessage(Lang.getErrorCode(102));
-        } else if (status.getSuccess().equals(true)) {
-            //case name 集合
-            List<String> caseNameList = new ArrayList<>();
-            //判断request case name 和 type是否为空
-            if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<CaseKey> caseKeyList = request.getRequestCasesList().stream().map(RequestCases::getKey).collect(Collectors.toList());
-                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
-                for (CaseKey caseKey : caseKeyList) {
-                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                        emptyErrorName.add(caseKey.getCaseName());
-                    } else {
-                        if (!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                            existErrorName.add(caseKey.getCaseName());
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                }
-            }
-            //判断database case name 和 type是否为空
-            if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<CaseKey> caseKeyList = request.getDataBaseCasesList().stream().map(DataBaseCases::getKey).collect(Collectors.toList());
-                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
-                for (CaseKey caseKey : caseKeyList) {
-                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                        emptyErrorName.add(caseKey.getCaseName());
-                    } else {
-                        if (!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                            existErrorName.add(caseKey.getCaseName());
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                }
-            }
-
-            //判断parse case name 和 type是否为空
-            if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<CaseKey> caseKeyList = request.getPaserCasesList().stream().map(ParseCases::getKey).collect(Collectors.toList());
-                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
-                for (CaseKey caseKey : caseKeyList) {
-                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                        emptyErrorName.add(caseKey.getCaseName());
-                    } else {
-                        if (!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                            existErrorName.add(caseKey.getCaseName());
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                }
-            }
-
-            //判断verification case name 和 type是否为空
-            if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<CaseKey> caseKeyList = request.getVerificationCasesList().stream().map(VerificationCases::getKey).collect(Collectors.toList());
-                caseNameList.addAll(caseKeyList.stream().map(CaseKey::getCaseName).collect(Collectors.toList()));
-                for (CaseKey caseKey : caseKeyList) {
-                    if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                        emptyErrorName.add(caseKey.getCaseName());
-                    } else {
-                        if (!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                            existErrorName.add(caseKey.getCaseName());
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                }
-            }
-
-            //判断request next case name 和 type是否为空
-//            if (null != request.getRequestCasesList() && !request.getRequestCasesList().isEmpty()) {
-//                List<String> emptyErrorName = new ArrayList<>();
-//                List<String> existErrorName = new ArrayList<>();
-//                List<String> notExistErrorName = new ArrayList<>();
-//                for (RequestCases requestCases : request.getRequestCasesList()) {
-//                    if (null == requestCases.getNextKeys() || null == requestCases.getNextKeys()) {
-//                        emptyErrorName.add(requestCases.getKey().getCaseName());
-//                    } else {
-//                        for (CaseKey caseKey : requestCases.getNextKeys()) {
-//                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-//                                emptyErrorName.add(requestCases.getKey().getCaseName());
-//                            } else {
-//                                if (!requestCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-//                                    existErrorName.add(caseKey.getCaseName());
-//                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
-//                                    notExistErrorName.add(caseKey.getCaseName());
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//                if (!emptyErrorName.isEmpty()) {
-//                    status.setSuccess(false);
-//                    status.setErrorCode(103);
-//                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-//                } else if (!existErrorName.isEmpty()) {
-//                    status.setSuccess(false);
-//                    status.setErrorCode(104);
-//                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-//                } else if (!notExistErrorName.isEmpty()) {
-//                    status.setSuccess(false);
-//                    status.setErrorCode(105);
-//                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
-//                }
-//
-//            }
-
-            //判断database next case name 和 type是否为空
-            if (null != request.getDataBaseCasesList() && !request.getDataBaseCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<String> notExistErrorName = new ArrayList<>();
-                for (DataBaseCases dataBaseCase : request.getDataBaseCasesList()) {
-                    if (null == dataBaseCase.getNextKeys() || null == dataBaseCase.getNextKeys()) {
-                        emptyErrorName.add(dataBaseCase.getKey().getCaseName());
-                    } else {
-                        for (CaseKey caseKey : dataBaseCase.getNextKeys()) {
-                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                                emptyErrorName.add(dataBaseCase.getKey().getCaseName());
-                            } else {
-                                if (!dataBaseCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                    existErrorName.add(caseKey.getCaseName());
-                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
-                                    notExistErrorName.add(caseKey.getCaseName());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                } else if (!notExistErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(105);
-                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
-                }
-
-            }
-
-
-            //判断parse next case name 和 type是否为空
-            if (null != request.getPaserCasesList() && !request.getPaserCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<String> notExistErrorName = new ArrayList<>();
-                for (ParseCases parseCases : request.getPaserCasesList()) {
-                    if (null == parseCases.getNextKeys() || null == parseCases.getNextKeys()) {
-                        emptyErrorName.add(parseCases.getKey().getCaseName());
-                    } else {
-                        for (CaseKey caseKey : parseCases.getNextKeys()) {
-                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                                emptyErrorName.add(parseCases.getKey().getCaseName());
-                            } else {
-                                if (!paserCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                    existErrorName.add(caseKey.getCaseName());
-                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
-                                    notExistErrorName.add(caseKey.getCaseName());
-                                }
-                            }
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                } else if (!notExistErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(105);
-                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
-                }
-            }
-
-
-            //判断verification next case name 和 type是否为空
-            if (null != request.getVerificationCasesList() && !request.getVerificationCasesList().isEmpty()) {
-                List<String> emptyErrorName = new ArrayList<>();
-                List<String> existErrorName = new ArrayList<>();
-                List<String> notExistErrorName = new ArrayList<>();
-                for (VerificationCases verificationCases : request.getVerificationCasesList()) {
-                    if (null == verificationCases.getNextKeys() || null == verificationCases.getNextKeys()) {
-                        emptyErrorName.add(verificationCases.getKey().getCaseName());
-                    } else {
-                        for (CaseKey caseKey : verificationCases.getNextKeys()) {
-                            if ("".equals(caseKey.getCaseName()) || "".equals(caseKey.getCaseType())) {
-                                emptyErrorName.add(verificationCases.getKey().getCaseName());
-                            } else {
-                                if (!verificationCaseMapper.Sel(caseKey.getCaseName()).isEmpty()) {
-                                    existErrorName.add(caseKey.getCaseName());
-                                } else if (!caseNameList.contains(caseKey.getCaseName())) {
-                                    notExistErrorName.add(caseKey.getCaseName());
-                                }
-                            }
-                        }
-                    }
-                }
-                if (!emptyErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(103);
-                    status.setMessage(Lang.getErrorCode(103) + emptyErrorName);
-                } else if (!existErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(104);
-                    status.setMessage(Lang.getErrorCode(104) + existErrorName);
-                } else if (!notExistErrorName.isEmpty()) {
-                    status.setSuccess(false);
-                    status.setErrorCode(105);
-                    status.setMessage(Lang.getErrorCode(105) + notExistErrorName);
-                }
-
-            }
-        }
-        return status;
     }
 }
