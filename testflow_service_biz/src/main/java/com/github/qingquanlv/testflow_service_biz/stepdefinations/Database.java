@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
+import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
 import org.apache.ibatis.io.Resources;
@@ -23,8 +24,11 @@ public class Database {
      * @return 查询结果序列化Json
      * @throws Exception
      */
-    public String queryDataBase(String sql) throws Exception{
+    public String queryDataBase(String caseName, String sql) throws Exception{
         sql = ParamUtil.parseParam(sql);
+        BufferManager.addConfigByKey(caseName,
+                String.format("sql:%s",
+                        sql));
         InputStream inputStream = Resources.getResourceAsStream(resource);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
         SqlSession session = sqlSessionFactory.openSession();
@@ -41,9 +45,12 @@ public class Database {
      * @return 查询结果序列化Json
      * @throws Exception
      */
-    public String queryDataBase(String queryKey, String param) throws Exception{
+    public String queryDataBase(String caseName, String queryKey, String param) throws Exception{
         param = ParamUtil.parseParam(param);
         Map<String, String> map = ParamUtil.parseMapParam(param);
+        BufferManager.addConfigByKey(caseName,
+                String.format("sql:%s",
+                        param));
         InputStream inputStream = Resources.getResourceAsStream(resource);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
         SqlSession session = sqlSessionFactory.openSession();

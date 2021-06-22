@@ -24,7 +24,7 @@ public class Parser {
      * 根据Buffer中保存的实体，构建实体Json
      *
      */
-    public String parseValueVidStr(String convertMethodSource, List<String> paramList) throws Exception
+    public String parseValueVidStr(String caseName, String convertMethodSource, List<String> paramList) throws Exception
     {
         //方法参数
         String parameterStr = "";
@@ -62,6 +62,9 @@ public class Parser {
         try {
             String convertFileSource = Constants.PARSE_VALUE_FILE_SOURCE.replace(Constants.PARAMETER, parameterStr)
                     .replace(Constants.METHOD, convertMethodSource);
+            BufferManager.addConfigByKey(caseName,
+                    String.format("method:%s",
+                            convertFileSource));
             Map<String, byte[]> results = compiler.compile(className, convertFileSource);
             Class<?> clazz = compiler.loadClass(Constants.SERVICES_CLASS_PATH, results);
             Method fieldGetMet =  ServiceAccess.reflectMethod(clazz, Constants.METHOD_NAME, List.class);

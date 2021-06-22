@@ -1,6 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases_v2.execcase;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.CaseInfo;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,17 +16,13 @@ import java.util.HashMap;
 public class ExecCaseResponse {
 
         /**
-         * caseKey
-         */
-        private String id;
-        /**
          * parameters
          */
         private HashMap<String, String> params;
         /**
          * result
          */
-        private String result;
+        private CaseInfo info;
         /**
          * status
          */

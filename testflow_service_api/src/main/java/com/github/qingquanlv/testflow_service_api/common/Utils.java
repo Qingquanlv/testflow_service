@@ -2,6 +2,10 @@ package com.github.qingquanlv.testflow_service_api.common;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Author Qingquan Lv
@@ -9,6 +13,15 @@ import java.security.NoSuchAlgorithmException;
  * @Version 1.0
  */
 public class Utils {
+
+    public static List<String> toListStr(String key) {
+        List<String> list = new ArrayList<>();
+        if (null != key) {
+            String[] arrays = key.split(",");
+            list = Stream.of(arrays).collect(Collectors.toList());
+        }
+        return list;
+    }
 
     public static String hashKeyForDisk(String key) {
         String cacheKey;

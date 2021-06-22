@@ -60,7 +60,7 @@ public class TestFlowManager {
         String responseStr;
         try {
             LogHelper.stepExecLog("sendRequest", requestStr, url, caseName);
-            responseStr = request.sendRequest(requestStr, config, headerMap, requestType, contentType, url);
+            responseStr = request.sendRequest(caseName, requestStr, config, headerMap, requestType, contentType, url);
         }
         catch (Exception ex) {
             throw new AssertionError(String.format("Send request failed: %s", ex));
@@ -82,7 +82,7 @@ public class TestFlowManager {
         try {
             LogHelper.stepExecLog("sourceParse", convertMethodSource, paramList.toString());
             //覆盖一个参数到四个参数的场景
-            str = parser.parseValueVidStr(convertMethodSource, paramList);
+            str = parser.parseValueVidStr(caseName, convertMethodSource, paramList);
         }
         catch (Exception ex) {
             deposed();
@@ -104,7 +104,7 @@ public class TestFlowManager {
         String str;
         try {
             LogHelper.stepExecLog("queryDataBase", caseName, sql);
-            str = database.queryDataBase(sql);
+            str = database.queryDataBase(caseName, sql);
         }
         catch (Exception ex) {
             deposed();
@@ -120,12 +120,12 @@ public class TestFlowManager {
      * @param atlObj : 实际值缓存Key
      *
      */
-    public String verify(String expObj, String atlObj) {
+    public String verify(String caseName, String expObj, String atlObj) {
         Verify verify = new Verify();
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj);
-            errorMsg = verify.verify(expObj, expObj);
+            errorMsg = verify.verify(caseName, expObj, atlObj);
         }
         catch (Exception ex) {
             deposed();
@@ -142,12 +142,12 @@ public class TestFlowManager {
      * @param atlObj : 实体中不对比的字段
      *
      */
-    public String verify(String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
+    public String verify(String caseName, String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
         Verify verify = new Verify();
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
-            errorMsg = verify.verify(expObj, atlObj, pkMapStr, noCompareItemMapStr);
+            errorMsg = verify.verify(caseName, expObj, atlObj, pkMapStr, noCompareItemMapStr);
             //deposed();
         }
         catch (Exception ex) {
@@ -164,12 +164,12 @@ public class TestFlowManager {
      * @param expValue : 特定key的预期值
      *
      */
-    public String verify(String atlObj, String JsonFilter, String expValue) {
+    public String verify(String caseName, String atlObj, String JsonFilter, String expValue) {
         Verify verify = new Verify();
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
-            errorMsg = verify.verify(atlObj, JsonFilter, expValue);
+            errorMsg = verify.verify(caseName, atlObj, JsonFilter, expValue);
             //deposed();
         }
         catch (Exception ex) {
@@ -179,6 +179,24 @@ public class TestFlowManager {
         return errorMsg;
     }
 
+    /**
+     * 追加缓存
+     *
+     * @param bufferKey
+     * @param bufferVal
+     * @return
+     */
+    public TestFlowManager appendBuffer(String bufferKey, String bufferVal) {
+        try {
+            LogHelper.stepExecLog("appendBuffer", bufferKey, bufferVal);
+            BufferManager.appendBufferByKey(bufferKey, bufferVal);
+        }
+        catch (Exception ex) {
+            deposed();
+            throw new AssertionError(String.format("append Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
+        }
+        return this;
+    }
 
     /**
      * 添加缓存

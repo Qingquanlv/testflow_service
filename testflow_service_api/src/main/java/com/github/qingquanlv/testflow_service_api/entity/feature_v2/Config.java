@@ -13,6 +13,7 @@ import java.util.HashMap;
 @Builder
 public class Config {
 
+        private Long id;
         private String label;
         private HashMap<String, String> params;
 }

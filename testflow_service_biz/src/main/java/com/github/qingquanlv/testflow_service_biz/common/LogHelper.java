@@ -29,14 +29,14 @@ public class LogHelper {
         logger.info(String.format("*********************************************************************************************************************************************************************************************************"));
         String log = String.format("Start execute %s step: step Name \'%s\' step Param \'%s\'.", index, stepName, param);
         logger.info(log);
-        BufferManager.appendBufferByKey("tf_log", log);
+        //BufferManager.appendBufferByKey("tf_log", log);
     }
 
     public static void stepAfterLog(String stepName, String buffer) {
         String log = String.format("Step %s Passed: buffer key\'%s\' buffer \'%s\'.", index, stepName, buffer);
         logger.info(log);
         try {
-            BufferManager.appendBufferByKey("tf_log", log);
+            //BufferManager.appendBufferByKey("tf_log", log);
         }
         catch (Exception ex)
         {

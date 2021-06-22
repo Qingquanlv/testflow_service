@@ -1,10 +1,9 @@
 package com.github.qingquanlv.testflow_service_api.entity.cases_v2;
 
-import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Params;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * @Author: qingquan.lv
@@ -14,7 +13,7 @@ import java.util.List;
 @Builder
 public class Config {
 
-        private String id;
+        private String label;
         private String clazz;
-        private List<Params> params;
+        private HashMap<String, String> params;
 }

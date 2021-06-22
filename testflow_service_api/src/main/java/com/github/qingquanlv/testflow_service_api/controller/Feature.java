@@ -1,7 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
-import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;

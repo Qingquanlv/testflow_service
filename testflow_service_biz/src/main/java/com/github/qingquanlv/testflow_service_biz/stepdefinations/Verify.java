@@ -13,16 +13,19 @@ public class Verify {
      * 对比字符串
      *
      */
-    public String verify(String expStr, String atlStr) throws Exception {
+    public String verify(String caseName, String expStr, String atlStr) throws Exception {
         String errMsg = "";
         String expObj = BufferManager.getBufferByKey(expStr);
         String atlObj = BufferManager.getBufferByKey(atlStr);
+        BufferManager.addConfigByKey(caseName,
+                String.format("expValue:%s, atlValue:%s",
+                        expObj, atlObj));
         if (null == expObj && null == atlObj) { }
         else if (null == expObj ||  null == atlObj) {
-            errMsg = String.format("\n" + "expected: \"%s\" not equals with actual: \"%s\".\n", expStr, atlStr);
+            errMsg = String.format("expected: \"%s\" not equals with actual: \"%s\".", expStr, atlStr);
         }
         else if (!expObj.equals(atlObj)) {
-            errMsg = String.format("\n" + "expected: \"%s\" not equals with actual: \"%s\".\n", expStr, atlStr);
+            errMsg = String.format("expected value: \"%s\" not equals with actual: \"%s\".", expStr, atlStr);
         }
         return errMsg;
     }
@@ -31,16 +34,18 @@ public class Verify {
      * 对比Json某一节点
      *
      */
-    public String verify(String atlObj, String JsonFilter, String expValue) throws Exception {
+    public String verify(String caseName, String atlObj, String JsonFilter, String expValue) throws Exception {
         String errMsg = "";
         String atlStr = BufferManager.getBufferByKey(atlObj);
-
+        BufferManager.addConfigByKey(caseName,
+                String.format("expValue:%s, jsonFilter:%s, atlValue:%s",
+                        expValue, JsonFilter, atlStr));
         List<Object> objList = ParamUtil.getMapValFromJson(atlStr, JsonFilter);
         if (objList == null || objList.isEmpty()) {
             throw new Exception(String.format("No matiched value for key \"%s\" Json string \"%s\" .", atlStr, JsonFilter));
         }
         if (!objList.get(0).toString().equals(expValue)) {
-            errMsg =  String.format("expected: \"%s\" is not equal with actual: \"%s\".", expValue, objList.get(0).toString());
+            errMsg =  String.format("expected value: \"%s\" is not equal with actual: \"%s\".", expValue, objList.get(0).toString());
         }
         return errMsg;
     }
@@ -49,9 +54,12 @@ public class Verify {
      * 对比实体
      *
      */
-    public String verify(String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr) throws Exception {
+    public String verify(String caseName, String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr) throws Exception {
         String exp = BufferManager.getBufferByKey(expStr);
         String atl = BufferManager.getBufferByKey(atlStr);
+        BufferManager.addConfigByKey(caseName,
+                String.format("expValue:%s, atlValue:%s, primaryKey:%s, noCompareItem:%s" ,
+                        exp, atl, pkMapStr, noCompareItemMapStr));
         //primary key map
         Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(BufferManager.getBufferByKey(pkMapStr));
         //no compare map

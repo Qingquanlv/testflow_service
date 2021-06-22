@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
+import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.serviceaccess.HttpClientUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class Request {
      * @throws Exception
      *
      */
-    public String sendRequest(String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) throws Exception {
+    public String sendRequest(String caseName, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) throws Exception {
         String requestObject;
 
         requestStr = null == requestStr ? "" : ParamUtil.parseParam(requestStr);
@@ -62,6 +63,9 @@ public class Request {
         else {
             contentType = CONTENT_TYPE_XML;
         }
+        BufferManager.addConfigByKey(caseName,
+                String.format("url:%s, requestBody:%s, headers:%s, configs:%s, contentType:%s",
+                        url, requestStr, headerMap, config, contentType));
         //requestType类型
         if (POST.equals(requestType)) {
             requestObject = HttpClientUtil.sendHttpPost(url, requestStr, headerMap, config, contentType);

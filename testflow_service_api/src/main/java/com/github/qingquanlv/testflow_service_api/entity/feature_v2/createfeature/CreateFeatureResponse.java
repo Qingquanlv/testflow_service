@@ -11,4 +11,6 @@ import lombok.Data;
 public class CreateFeatureResponse {
         //status
         private Status status;
+
+        private Long featureId;
 }

@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.qingquanlv.testflow_service_api.common.Constants;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature.execfeature.ExecFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.CaseInfo;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Config;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Edges;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Nodes;
@@ -24,6 +25,7 @@ import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -90,6 +92,30 @@ public class FeatureServiceImpl implements FeatureService {
         List<Caze> cases = new ArrayList<>();
         //遍历node节点，如果存在id和type相同节点则更新
         if (!CollectionUtils.isEmpty(request.getNodes())) {
+            List<Caze> CaseList = caseMapper.selectList(
+                    Wrappers.<Caze>lambdaQuery()
+                    .in(Caze::getFeatureId, feature.getFeature_id()));
+            if (!CollectionUtils.isEmpty(CaseList)) {
+                List<Long> caseIds = CaseList
+                        .stream()
+                        .map(Caze::getId)
+                        .collect(Collectors.toList());
+                requestCaseConfigMapper.delete(
+                        Wrappers.<RequestCaseConfig>lambdaQuery()
+                                .in(RequestCaseConfig::getCaseId, caseIds));
+                parseCaseConfigMapper.delete(
+                        Wrappers.<ParseCaseConfig>lambdaQuery()
+                                .in(ParseCaseConfig::getCaseId, caseIds));
+                databaseCaseConfigMapper.delete(
+                        Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                                .in(DatabaseCaseConfig::getCaseId, caseIds));
+                verificationCaseConfigMapper.delete(
+                        Wrappers.<VerificationCaseConfig>lambdaQuery()
+                                .in(VerificationCaseConfig::getCaseId, caseIds));
+                //case 数据全删全插
+                caseMapper.delete(Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId, feature.getFeature_id()));
+            }
             for (Nodes node : request.getNodes()) {
                 Caze featureCase =
                         Caze.builder()
@@ -99,25 +125,11 @@ public class FeatureServiceImpl implements FeatureService {
                                 .x(node.getX())
                                 .y(node.getY())
                                 .build();
-                //判断caseId在db中存在，更新数据
-                if (null != node.getId()
-                        && !CollectionUtils.isEmpty(
-                        caseMapper.selectList(
-                                Wrappers.<Caze>lambdaQuery()
-                                        .eq(Caze::getId, node.getId())))) {
-                    featureCase.setId(node.getId());
-                    caseMapper.updateById(featureCase);
-                    insertCaseConfig(request,
-                            node.getClazz(),
-                            featureCase.getId(),
-                            featureCase.getLabel());
-                } else {
-                    caseMapper.insert(featureCase);
-                    insertCaseConfig(request,
-                            node.getClazz(),
-                            featureCase.getId(),
-                            featureCase.getLabel());
-                }
+                caseMapper.insert(featureCase);
+                insertCaseConfig(request,
+                        node.getClazz(),
+                        featureCase.getId(),
+                        featureCase.getLabel());
                 cases.add(featureCase);
                 //case的下一节点，直接删除并且重新insert
                 featureCaseNextCaseMapper.delete(
@@ -155,6 +167,7 @@ public class FeatureServiceImpl implements FeatureService {
                 }
             }
         }
+        response.setFeatureId(null == feature ? null : feature.getFeature_id());
         response.setStatus(status);
         return response;
     }
@@ -169,7 +182,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .findFirst().orElse(null)) {
             Config config = request.getConfig()
                     .stream()
-                    .filter(item -> !caseLabel.equals(item.getLabel()))
+                    .filter(item -> caseLabel.equals(item.getLabel()))
                     .findFirst().orElse(null);
             if ("request".equals(type)) {
                 RequestCaseConfig requestCaseConfig =
@@ -188,23 +201,19 @@ public class FeatureServiceImpl implements FeatureService {
                         ).requestHeaders(config.getParams()
                                 .get("request_headers")
                         ).build();
-                requestCaseConfigMapper.delete(
-                        Wrappers.<RequestCaseConfig>lambdaQuery()
-                                .eq(RequestCaseConfig::getCaseId, caseId));
                 requestCaseConfigMapper.insert(requestCaseConfig);
             }
             else if ("parse".equals(type)) {
                 ParseCaseConfig parseCaseConfig =
                         ParseCaseConfig.builder(
                         ).caseId(caseId
-                        ).parameters(config.getParams()
-                                .get("parameters")
+                        ).parameters(FastJsonUtil.toJson(
+                                Utils.toListStr(
+                                        config.getParams()
+                                                .get("parameters")))
                         ).cvtMethodSource(config.getParams()
                                 .get("cvt_method_source")
                         ).build();
-                parseCaseConfigMapper.delete(
-                        Wrappers.<ParseCaseConfig>lambdaQuery()
-                                .eq(ParseCaseConfig::getCaseId, caseId));
                 parseCaseConfigMapper.insert(parseCaseConfig);
             }
             else if ("database".equals(type)) {
@@ -214,9 +223,6 @@ public class FeatureServiceImpl implements FeatureService {
                         ).sqlStr(config.getParams()
                                 .get("sql_str")
                         ).build();
-                databaseCaseConfigMapper.delete(
-                        Wrappers.<DatabaseCaseConfig>lambdaQuery()
-                                .eq(DatabaseCaseConfig::getCaseId, caseId));
                 databaseCaseConfigMapper.insert(databaseCaseConfig);
             }
             else if ("verification".equals(type)) {
@@ -225,12 +231,11 @@ public class FeatureServiceImpl implements FeatureService {
                         ).caseId(caseId
                         ).verificationType(config.getParams()
                                 .get("verification_type")
-                        ).parameters(config.getParams()
-                                .get("parameters")
+                        ).parameters(FastJsonUtil.toJson(
+                                Utils.toListStr(
+                                        config.getParams()
+                                                .get("parameters")))
                         ).build();
-                verificationCaseConfigMapper.delete(
-                        Wrappers.<VerificationCaseConfig>lambdaQuery()
-                                .eq(VerificationCaseConfig::getCaseId, caseId));
                 verificationCaseConfigMapper.insert(verificationCaseConfig);
             }
         }
@@ -312,9 +317,10 @@ public class FeatureServiceImpl implements FeatureService {
                 = execFeature(parameters, featureCases);
         ExecFeatureResponse rsp
                 = ExecFeatureResponse.builder()
-                .info(taskResult.getLogs())
-                .assertion(taskResult.getAssertions())
-                .parameters(parameters)
+                .info(FastJsonUtil.toListBean(
+                        taskResult.getLogs(),
+                        CaseInfo.class))
+                .parameters(request.getParameters())
                 .status(status).build();
         return rsp;
     }
@@ -409,7 +415,7 @@ public class FeatureServiceImpl implements FeatureService {
                     HashMap<String, String> params = new HashMap<>();
                     Nodes node = nodes
                             .stream()
-                            .filter(item->requestCaseConfig.getId().equals(item.getId()))
+                            .filter(item->requestCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
                     params.put("url", requestCaseConfig.getUrl());
                     params.put("request_body", requestCaseConfig.getRequestBody());
@@ -418,6 +424,7 @@ public class FeatureServiceImpl implements FeatureService {
                     params.put("request_configs", requestCaseConfig.getRequestConfigs());
                     params.put("request_headers", requestCaseConfig.getRequestHeaders());
                     Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
                             .params(params)
                             .build();
@@ -433,10 +440,11 @@ public class FeatureServiceImpl implements FeatureService {
                     HashMap<String, String> params = new HashMap<>();
                     Nodes node = nodes
                             .stream()
-                            .filter(item->databaseCaseConfig.getId().equals(item.getId()))
+                            .filter(item->databaseCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
                     params.put("sql_str", databaseCaseConfig.getSqlStr());
                     Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
                             .params(params)
                             .build();
@@ -452,11 +460,12 @@ public class FeatureServiceImpl implements FeatureService {
                     HashMap<String, String> params = new HashMap<>();
                     Nodes node = nodes
                             .stream()
-                            .filter(item->parseCaseConfig.getId().equals(item.getId()))
+                            .filter(item->parseCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
                     params.put("parameters", parseCaseConfig.getParameters());
                     params.put("cvt_method_source", parseCaseConfig.getCvtMethodSource());
                     Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
                             .params(params)
                             .build();
@@ -472,11 +481,12 @@ public class FeatureServiceImpl implements FeatureService {
                     HashMap<String, String> params = new HashMap<>();
                     Nodes node = nodes
                             .stream()
-                            .filter(item->verificationCaseConfig.getId().equals(item.getId()))
+                            .filter(item->verificationCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
                     params.put("verification_type", verificationCaseConfig.getVerificationType());
                     params.put("parameters", verificationCaseConfig.getParameters());
                     Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
                             .params(params)
                             .build();
@@ -567,29 +577,45 @@ public class FeatureServiceImpl implements FeatureService {
         {
             //抛出队头，并且执行
             Long n = s1.poll();
-            Caze featureCase = featureCaseList.stream().filter(item->item.getId().equals(n)).findFirst().orElse(null);
+            Caze featureCase = featureCaseList
+                    .stream()
+                    .filter(item->item.getId().equals(n))
+                    .findFirst().orElse(null);
             if (null == featureCase) {
                 break;
             }
             //执行测试用例
             executeCase(testFlowManager, publicKey, featureCase);
-            //List<FeatureCaseNextCase> nextCaseKeys = featureCaseNextCaseMapper.SelByFCId(featureCase.getId());
-            List<FeatureCaseNextCase> nextCaseKeys = new ArrayList<>();
+            List<FeatureCaseNextCase> nextCaseKeys
+                    = featureCaseNextCaseMapper.selectList(
+                            Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                            .in(FeatureCaseNextCase::getSourceCaseId, featureCase.getId()));
             for (FeatureCaseNextCase caseKey : nextCaseKeys) {
                 //入度减一
-                inDegreeMap.put(caseKey.getSourceCaseId(), null==inDegreeMap.get(caseKey.getSourceCaseId()) ? 0 :inDegreeMap.get(caseKey.getSourceCaseId()) - 1);
+                inDegreeMap.put(caseKey.getTargetCaseId(),
+                        null==inDegreeMap.get(caseKey.getTargetCaseId())
+                                ? 0
+                                : inDegreeMap.get(caseKey.getTargetCaseId()) - 1);
                 //如果入度为0
-                if(inDegreeMap.get(caseKey.getSourceCaseId()) == 0){
-                    s1.offer(caseKey.getSourceCaseId());
+                if(inDegreeMap.get(caseKey.getTargetCaseId()) == 0){
+                    s1.offer(caseKey.getTargetCaseId());
                 }
             }
         }
+        List<CaseInfo> caseInfoList = new ArrayList<>();
+        for (Caze caze : featureCaseList) {
+            CaseInfo caseInfo = new CaseInfo();
+            caseInfo.setClazz(caze.getCaseType());
+            caseInfo.setConfig(testFlowManager
+                            .getBuffer(String.format("config$%s",caze.getLabel())));
+            caseInfo.setLabel(caze.getLabel());
+            caseInfo.setData(testFlowManager
+                            .getBuffer(caze.getLabel()));
+            caseInfoList.add(caseInfo);
+        }
         TaskResult taskResult
                 = TaskResult.builder()
-                .logs(testFlowManager.getBuffer("tf_log"))
-                .assertions(null == testFlowManager.getBuffer("tf_assertion") ?
-                        "passed":
-                        testFlowManager.getBuffer("tf_assertion"))
+                .logs(FastJsonUtil.toJson(caseInfoList))
                 .build();
         testFlowManager.deposed();
         return taskResult;
@@ -608,10 +634,10 @@ public class FeatureServiceImpl implements FeatureService {
                             Wrappers.<FeatureCaseNextCase>lambdaQuery()
                                     .in(FeatureCaseNextCase::getSourceCaseId, featureCase.getId()));
             for (FeatureCaseNextCase caseKey : nextCaseKeys) {
-                inDegreeMap.put(caseKey.getSourceCaseId(),
-                        null == inDegreeMap.get(caseKey.getSourceCaseId())
+                inDegreeMap.put(caseKey.getTargetCaseId(),
+                        null == inDegreeMap.get(caseKey.getTargetCaseId())
                                 ? 1
-                                : inDegreeMap.get(caseKey.getSourceCaseId()) + 1);
+                                : inDegreeMap.get(caseKey.getTargetCaseId()) + 1);
             }
         }
     }
@@ -660,8 +686,8 @@ public class FeatureServiceImpl implements FeatureService {
                 testFlowManager.addBuffer(
                         featureCase.getLabel(),
                         testFlowManager.sendRequest(featureCase.getLabel(),
-                                requestCaseConfig.getRequestBody(),
-                                "null".equals(requestCaseConfig.getRequestConfigs())||null == requestCaseConfig.getRequestConfigs() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestConfigs()),
+                                "null".equals(requestCaseConfig.getRequestBody())|| null == requestCaseConfig.getRequestBody() ? null : requestCaseConfig.getRequestBody(),
+                                "null".equals(requestCaseConfig.getRequestConfigs())|| null == requestCaseConfig.getRequestConfigs() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestConfigs()),
                                 "null".equals(requestCaseConfig.getRequestHeaders())|| null == requestCaseConfig.getRequestHeaders() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestHeaders()),
                                 requestCaseConfig.getRequestType(),
                                 requestCaseConfig.getContentType(),
@@ -671,27 +697,37 @@ public class FeatureServiceImpl implements FeatureService {
                 break;
             }
             case Constants.VERIFICATION: {
+                String errorMsg = "";
                 VerificationCaseConfig verificationCaseConfig
                         = verificationCaseConfigMapper.selectOne(
                         Wrappers.<VerificationCaseConfig>lambdaQuery()
                                 .eq(VerificationCaseConfig::getCaseId, featureCase.getId()));
                 List<String> parameters = FastJsonUtil.toList(verificationCaseConfig.getParameters());
                 if (Constants.COMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    FastJsonUtil.toList(verificationCaseConfig.getParameters());
-                    testFlowManager.addBuffer(
-                            "tf_assertion",
-                    testFlowManager.verify(parameters.get(0), parameters.get(1)));
+                    errorMsg =
+                        testFlowManager.verify(featureCase.getLabel(),
+                                parameters.get(0),
+                                parameters.get(1));
                 }
                 else if (Constants.XPATHCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    testFlowManager.addBuffer(
-                            "tf_assertion",
-                    testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2)));
+                    errorMsg =
+                        testFlowManager.verify(featureCase.getLabel(),
+                                parameters.get(0),
+                                parameters.get(1),
+                                parameters.get(2));
                 }
                 else if (Constants.OBJCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    testFlowManager.addBuffer(
-                            "tf_assertion",
-                    testFlowManager.verify(parameters.get(0), parameters.get(1), parameters.get(2), parameters.get(3)));
+                    errorMsg =
+                        testFlowManager.verify(featureCase.getLabel(),
+                                parameters.get(0),
+                                parameters.get(1),
+                                parameters.get(2),
+                                parameters.get(3));
                 }
+                testFlowManager.appendBuffer(featureCase.getLabel(),
+                        StringUtils.isEmpty(errorMsg)
+                                ? "passed"
+                                : errorMsg);
                 break;
             }
             default: {}
