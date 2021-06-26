@@ -26,16 +26,6 @@ public class Job {
     @Autowired
     private ScheduleJobImpl jobService;
 
-    @RequestMapping("/execute")
-    public ExecJobResponse executeJob(@RequestParam(name = "taskId") Long taskId){
-        ExecJobResponse rsp = new ExecJobResponse();
-        Status status = new Status();
-        status.setSuccess(true);
-        rsp.setStatus(status);
-        jobService.execJob(taskId);
-        return rsp;
-    }
-
     @RequestMapping("/create")
     public CreateJobResponse createJob(@RequestBody CreateJobRequest request){
         CreateJobResponse rsp =  jobService.createJob(request);
@@ -57,6 +47,16 @@ public class Job {
     @RequestMapping("/queryAll")
     public QueryAllJobResponse queryAllJob(){
         QueryAllJobResponse rsp =  jobService.queryAllJob();
+        return rsp;
+    }
+
+    @RequestMapping("/execute")
+    public ExecJobResponse executeJob(@RequestParam(name = "taskId") Long taskId){
+        ExecJobResponse rsp = new ExecJobResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
+        jobService.execJob(taskId);
         return rsp;
     }
 

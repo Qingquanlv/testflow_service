@@ -277,10 +277,10 @@ public class FeatureServiceImpl implements FeatureService {
             caseMapper.delete(
                     Wrappers.<Caze>lambdaQuery()
                             .in(Caze::getId, caseIds));
-            featureMapper.delete(
-                    Wrappers.<Feature>lambdaQuery()
-                            .eq(Feature::getFeature_id, id));
         }
+        featureMapper.delete(
+                Wrappers.<Feature>lambdaQuery()
+                        .eq(Feature::getFeature_id, id));
         DeleteFeatureResponse rsp
                 = DeleteFeatureResponse.builder()
                 .status(status)

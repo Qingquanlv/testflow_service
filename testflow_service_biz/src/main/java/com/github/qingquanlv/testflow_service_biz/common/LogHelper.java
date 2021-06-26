@@ -36,7 +36,7 @@ public class LogHelper {
         String log = String.format("Step %s Passed: buffer key\'%s\' buffer \'%s\'.", index, stepName, buffer);
         logger.info(log);
         try {
-            //BufferManager.appendBufferByKey("tf_log", log);
+            //BufferManager.appendBufferByKey("tf_log", log);F
         }
         catch (Exception ex)
         {
