@@ -31,8 +31,6 @@ public class TaskResult  {
 
     private String logs;
 
-    private String assertions;
-
     private Timestamp datachangedLasttime;
 
 }

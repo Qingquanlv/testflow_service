@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
  * @Version 1.0
  */
 public class MyJob implements Job {
+
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         LocalDateTime now = LocalDateTime.now();

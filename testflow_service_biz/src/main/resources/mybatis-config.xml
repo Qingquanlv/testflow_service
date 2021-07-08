@@ -17,8 +17,8 @@
 <!--                <property name="url" value="jdbc:mysql://120.77.254.161:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>-->
                 <property name="url" value="jdbc:mysql://127.0.0.1:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>
                 <property name="username" value="root"/>
-<!--                <property name="password" value="123"/>-->
-                <property name="password" value="QQQQWord1."/>
+                <property name="password" value="123"/>
+<!--                <property name="password" value="QQQQWord1."/>-->
             </dataSource>
         </environment>
     </environments>

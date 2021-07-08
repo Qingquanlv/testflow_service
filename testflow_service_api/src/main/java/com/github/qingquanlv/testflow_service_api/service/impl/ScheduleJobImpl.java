@@ -2,22 +2,25 @@ package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.CaseInfo;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.GetResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.TaskResults;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.JobDetails;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Caze;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskConfig;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskResult;
-import com.github.qingquanlv.testflow_service_api.mapper.TaskConfigMapper;
-import com.github.qingquanlv.testflow_service_api.mapper.TaskMapper;
-import com.github.qingquanlv.testflow_service_api.mapper.TaskResultMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.*;
 import com.github.qingquanlv.testflow_service_api.service.IScheduleJobService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
+import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +30,7 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +62,12 @@ public class ScheduleJobImpl implements IScheduleJobService {
     @Autowired
     private FeatureServiceImpl featureService;
 
+    @Autowired
+    ParameterMapper parameterMapper;
+
+    @Autowired
+    CazeMapper caseMapper;
+
     @Async("taskExecutor")
     @Override
     public void execJob(Long taskId) {
@@ -70,11 +80,34 @@ public class ScheduleJobImpl implements IScheduleJobService {
         List<Long> indexLong
                 = index.stream().map(Long::parseLong)
                 .collect(Collectors.toList());
+
+        List<Caze> featureCases
+                = caseMapper.selectList(
+                Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId, task.getFeatureId()));
+
+        //构建参数
+        List<Parameter> list = new ArrayList<>();
+        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters =
+                parameterMapper.selectList(
+                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
+                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, task.getParam_name())
+                                .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, indexLong));
+        for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : parameters) {
+            Parameter parameter = new Parameter();
+            parameter.setParameter_value(item.getParameterValue());
+            parameter.setParameter_key(item.getParameterKey());
+            list.add(parameter);
+        }
+        Timestamp startTime = new Timestamp(System.currentTimeMillis());
+        //执行feature
         TaskResult taskResult
                 = featureService.execFeature(
-                        task.getFeatureId(),
-                        task.getParam_name(),
-                        indexLong);
+                    list, featureCases);
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        taskResult.setTaskId(taskId);
+        taskResult.setStarttime(startTime);
+        taskResult.setEndtime(endTime);
         taskResultMapper.insert(taskResult);
     }
 
@@ -90,14 +123,15 @@ public class ScheduleJobImpl implements IScheduleJobService {
                 .param_name(request.getParamName())
                 .paramIndexId(request.getParamIndexId())
                 .build();
+        taskMapper.insert(task);
         TaskConfig taskConfig
                 = TaskConfig.builder()
                 .taskId(String.valueOf(task.getId()))
+                .className("com.github.qingquanlv.testflow_service_api.job.MyJob")
+                .description(request.getDescription())
                 .cron(request.getCron())
-                .className(request.getClass_name())
                 .build();
         taskConfigMapper.insert(taskConfig);
-        taskMapper.insert(task);
         createJobResponse.setStatus(status);
         return createJobResponse;
     }
@@ -132,7 +166,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
                 = TaskConfig.builder()
                 .taskId(String.valueOf(task.getId()))
                 .cron(request.getCron())
-                .className(request.getClass_name())
+                .className("com.github.qingquanlv.testflow_service_api.job.MyJob")
                 .build();
         taskMapper.updateById(task);
         taskConfigMapper.update(
@@ -153,7 +187,8 @@ public class ScheduleJobImpl implements IScheduleJobService {
         List<JobDetails> jobDetailsList = new ArrayList<>();
         for (Task item : tasks) {
             TaskConfig taskConfig = taskConfigs.stream()
-                    .filter(i->i.equals(i.getTaskId())).findFirst().orElse(null);
+                    .filter(i->String.valueOf(item.getId()).equals(i.getTaskId()))
+                    .findFirst().orElse(null);
             JobDetails jobDetails
                     = JobDetails.builder()
                     .id(item.getId())
@@ -177,15 +212,27 @@ public class ScheduleJobImpl implements IScheduleJobService {
     public GetResultResponse getResult(Long taskId) {
         Status status = new Status();
         status.setSuccess(true);
-        TaskResult taskResult
-                = taskResultMapper.selectOne(
+        List<TaskResult> taskResultList
+                = taskResultMapper.selectList(
                 Wrappers.<TaskResult>lambdaQuery()
                         .eq(TaskResult::getTaskId, taskId));
+        //赋值taskResult
+        List<TaskResults> list = new ArrayList<>();
+        for (TaskResult item : taskResultList) {
+            TaskResults taskResults
+                    = TaskResults.builder()
+                    .starttime(item.getStarttime())
+                    .endtime(item.getEndtime())
+                    .info(FastJsonUtil.toListBean(
+                        item.getLogs(),
+                        CaseInfo.class)).build();
+            list.add(taskResults);
+        }
         GetResultResponse rsp
                 = GetResultResponse.builder()
                 .status(status)
-                .assertions(taskResult.getAssertions())
-                .logs(taskResult.getLogs()).build();
+                .taskId(taskId)
+                .taskResults(list).build();
         return rsp;
     }
 

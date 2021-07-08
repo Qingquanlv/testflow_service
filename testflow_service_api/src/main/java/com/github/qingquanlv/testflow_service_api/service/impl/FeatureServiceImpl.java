@@ -5,14 +5,14 @@ import com.github.qingquanlv.testflow_service_api.common.Constants;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.CaseInfo;
-import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureRequest;
-import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Config;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Edges;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Nodes;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureRequest;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.ExecFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryFeature;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryfeature.QueryFeatureResponse;
@@ -325,59 +325,6 @@ public class FeatureServiceImpl implements FeatureService {
         return rsp;
     }
 
-    public TaskResult execFeature(Long featureId, String paramName, List<Long> paramIndexList) {
-        TaskResult taskResult = TaskResult.builder().build();
-        List<Caze> featureCases
-                = caseMapper.selectList(
-                Wrappers.<Caze>lambdaQuery()
-                        .eq(Caze::getFeatureId, featureId));
-        //获取对应name的parameter list
-        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> list = new ArrayList<>();
-        if (CollectionUtils.isEmpty(paramIndexList)) {
-            list = parameterMapper.selectList(
-                    Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                            .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, paramName));
-        } else {
-            list = parameterMapper.selectList(
-                    Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                            .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, paramName)
-                            .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, paramIndexList));
-        }
-        //输入参数
-        if (!CollectionUtils.isEmpty(list)) {
-                //获取parameter index set
-                Set<Long> indexList = list
-                        .stream()
-                        .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex)
-                        .collect(Collectors.toSet());
-                if (!CollectionUtils.isEmpty(indexList)) {
-                    for (Long index : indexList) {
-                        List<Parameter> parameters = new ArrayList<>();
-                        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameterCases
-                                = list.stream()
-                                .filter(item -> index.equals(item.getParameterValueIndex()))
-                                .collect(Collectors.toList());
-                        for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter param : parameterCases) {
-                            Parameter parameter = new Parameter();
-                            parameter.setParameter_key(param.getParameterKey());
-                            parameter.setParameter_value(param.getParameterValue());
-                            parameters.add(parameter);
-                        }
-                        //执行feature
-                        taskResult.setLogs(
-                                String.format("%s%s",
-                                        taskResult.getLogs(),
-                                        execFeature(parameters, featureCases).getLogs()));
-                        taskResult.setAssertions(
-                                String.format("%s%s",
-                                        taskResult.getAssertions(),
-                                        execFeature(parameters, featureCases).getAssertions()));
-                    }
-                }
-            }
-        return taskResult;
-    }
-
     @Override
     public QueryFeatureResponse getFeature(Long id) {
         Feature feature = featureMapper.selectById(id);
@@ -549,7 +496,7 @@ public class FeatureServiceImpl implements FeatureService {
      * @param parameters
      * @param featureCaseList
      */
-    private TaskResult execFeature(List<Parameter> parameters, List<Caze> featureCaseList) {
+    public TaskResult execFeature(List<Parameter> parameters, List<Caze> featureCaseList) {
         //buffer 公共key
         String publicKey = Utils.hashKeyForDisk(String.format("%s%s",
                 System.currentTimeMillis(),

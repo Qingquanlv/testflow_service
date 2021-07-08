@@ -4,7 +4,7 @@ import com.github.qingquanlv.testflow_service_api.entity.Status;
 import lombok.Builder;
 import lombok.Data;
 
-import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * @Author: qingquan.lv
@@ -14,18 +14,14 @@ import java.sql.Timestamp;
 @Builder
 public class GetResultResponse {
 
-        //status
+        /**
+         * status
+         */
         private Status status;
 
         private Long taskId;
 
-        private String logs;
-
-        private String assertions;
-
-        private Timestamp starttime;
-
-        private Timestamp endtime;
+        private List<TaskResults> taskResults;
 
 
 }
