@@ -15,5 +15,5 @@ public class Config {
 
         private Long id;
         private String label;
-        private HashMap<String, String> params;
+        private HashMap<String, String> exec_params;
 }

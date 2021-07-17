@@ -32,17 +32,23 @@ public class Parser {
             String parameterType = "String";
             String parameterName = paramList.get(i);
             String js = "parameterType parameterName = (parameterType)JSON.parse(BufferManager.getBufferByKey(sourceData.get(index)));";
+            String jss = "String parameterName = BufferManager.getBufferByKey(sourceData.get(index));";
             String s = "String parameterName = BufferManager.getBufferByKey(sourceData.get(index));";
             String jsonStr = BufferManager.getBufferByKey(paramList.get(i));
             try {
                 Object object = JSON.parse(jsonStr);
                 if (object instanceof JSONObject) {
                     parameterType = Constants.JSON_OBJECT_TYPE;
+                    js = js.replace(Constants.PARAMETER_TYPE, parameterType);
                 } else if (object instanceof JSONArray) {
                     parameterType = Constants.JSON_ARRAY_TYPE;
+                    js = js.replace(Constants.PARAMETER_TYPE, parameterType);
+                }
+                else {
+                    js = jss.replace(Constants.PARAMETER_TYPE, parameterType);
                 }
                 js = js.replace(Constants.INDEX, String.valueOf(i));
-                js = js.replace(Constants.PARAMETER_TYPE, parameterType);
+
                 js = js.replace(Constants.PARAMETER_NAME, parameterName);
                 parameterStr += js;
             }

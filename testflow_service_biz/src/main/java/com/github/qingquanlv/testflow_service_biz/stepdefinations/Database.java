@@ -29,9 +29,11 @@ public class Database {
         BufferManager.addConfigByKey(caseName,
                 String.format("sql:%s",
                         sql));
+        System.out.print("Start To Load Session");
         InputStream inputStream = Resources.getResourceAsStream(resource);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
         SqlSession session = sqlSessionFactory.openSession();
+        System.out.print("Session is" + session);
         List<LinkedHashMap<String, Object>> value = session.selectList("select", sql);
         session.close();
         return FastJsonUtil.toJson(value);

@@ -188,17 +188,17 @@ public class FeatureServiceImpl implements FeatureService {
                 RequestCaseConfig requestCaseConfig =
                         RequestCaseConfig.builder(
                         ).caseId(caseId
-                        ).requestBody(config.getParams()
+                        ).requestBody(config.getExec_params()
                                 .get("request_body")
-                        ).requestType(config.getParams()
+                        ).requestType(config.getExec_params()
                                 .get("request_type")
-                        ).url(config.getParams()
+                        ).url(config.getExec_params()
                                 .get("url")
-                        ).contentType(config.getParams()
+                        ).contentType(config.getExec_params()
                                 .get("content_type")
-                        ).requestConfigs(config.getParams()
+                        ).requestConfigs(config.getExec_params()
                                 .get("request_configs")
-                        ).requestHeaders(config.getParams()
+                        ).requestHeaders(config.getExec_params()
                                 .get("request_headers")
                         ).build();
                 requestCaseConfigMapper.insert(requestCaseConfig);
@@ -209,9 +209,9 @@ public class FeatureServiceImpl implements FeatureService {
                         ).caseId(caseId
                         ).parameters(FastJsonUtil.toJson(
                                 Utils.toListStr(
-                                        config.getParams()
+                                        config.getExec_params()
                                                 .get("parameters")))
-                        ).cvtMethodSource(config.getParams()
+                        ).cvtMethodSource(config.getExec_params()
                                 .get("cvt_method_source")
                         ).build();
                 parseCaseConfigMapper.insert(parseCaseConfig);
@@ -220,7 +220,7 @@ public class FeatureServiceImpl implements FeatureService {
                 DatabaseCaseConfig databaseCaseConfig =
                         DatabaseCaseConfig.builder(
                         ).caseId(caseId
-                        ).sqlStr(config.getParams()
+                        ).sqlStr(config.getExec_params()
                                 .get("sql_str")
                         ).build();
                 databaseCaseConfigMapper.insert(databaseCaseConfig);
@@ -229,11 +229,11 @@ public class FeatureServiceImpl implements FeatureService {
                 VerificationCaseConfig verificationCaseConfig =
                         VerificationCaseConfig.builder(
                         ).caseId(caseId
-                        ).verificationType(config.getParams()
+                        ).verificationType(config.getExec_params()
                                 .get("verification_type")
                         ).parameters(FastJsonUtil.toJson(
                                 Utils.toListStr(
-                                        config.getParams()
+                                        config.getExec_params()
                                                 .get("parameters")))
                         ).build();
                 verificationCaseConfigMapper.insert(verificationCaseConfig);
@@ -373,7 +373,7 @@ public class FeatureServiceImpl implements FeatureService {
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
-                            .params(params)
+                            .exec_params(params)
                             .build();
                     configs.add(config);
                 }
@@ -393,7 +393,7 @@ public class FeatureServiceImpl implements FeatureService {
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
-                            .params(params)
+                            .exec_params(params)
                             .build();
                     configs.add(config);
                 }
@@ -414,7 +414,7 @@ public class FeatureServiceImpl implements FeatureService {
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
-                            .params(params)
+                            .exec_params(params)
                             .build();
                     configs.add(config);
                 }
@@ -435,7 +435,7 @@ public class FeatureServiceImpl implements FeatureService {
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
-                            .params(params)
+                            .exec_params(params)
                             .build();
                     configs.add(config);
                 }

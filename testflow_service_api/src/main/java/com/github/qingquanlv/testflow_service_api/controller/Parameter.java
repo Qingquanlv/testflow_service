@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @Author Qingquan Lv
  * @Date 2021/2/3 6:47
@@ -36,8 +38,11 @@ public class Parameter {
         return rsp;
     }
 
-    @RequestMapping("/query")
-    public QueryParameterResponse getParameter(@RequestParam(value = "name")String name){
+    @GetMapping("/query")
+    public QueryParameterResponse getParameter(
+            @RequestParam(value = "name", required = true)
+            @NotNull(message = "parameter name cannot be null")
+                    String name){
         QueryParameterResponse rsp =  parameterService.getParameter(name);
         return rsp;
     }

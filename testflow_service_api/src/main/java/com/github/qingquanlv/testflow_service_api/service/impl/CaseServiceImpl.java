@@ -58,18 +58,18 @@ public class CaseServiceImpl implements CaseService {
                 case Constants.REQUEST: {
                     result =
                             testFlowManager.sendRequest(config.getLabel(),
-                                "null".equals(config.getParams().get("request_body")) || null == config.getParams().get("request_body") ? null : config.getParams().get("request_body"),
-                                "null".equals(config.getParams().get("request_configs")) || null == config.getParams().get("request_configs") ? null : FastJsonUtil.toMap(config.getParams().get("request_configs")),
-                                "null".equals(config.getParams().get("request_headers")) || null == config.getParams().get("request_headers") ? null : FastJsonUtil.toMap(config.getParams().get("request_headers")),
-                                config.getParams().get("request_type"),
-                                config.getParams().get("content_type"),
-                                config.getParams().get("url")
+                                "null".equals(config.getExec_params().get("request_body")) || null == config.getExec_params().get("request_body") ? null : config.getExec_params().get("request_body"),
+                                "null".equals(config.getExec_params().get("request_configs")) || null == config.getExec_params().get("request_configs") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_configs")),
+                                "null".equals(config.getExec_params().get("request_headers")) || null == config.getExec_params().get("request_headers") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_headers")),
+                                config.getExec_params().get("request_type"),
+                                config.getExec_params().get("content_type"),
+                                config.getExec_params().get("url")
                     );
                     break;
                 }
                 case Constants.DATABASE: {
                     String sqlStr
-                            = config.getParams()
+                            = config.getExec_params()
                             .get("sql_str");
                     result = testFlowManager.queryDataBase(config.getLabel(),
                             sqlStr);
@@ -77,10 +77,10 @@ public class CaseServiceImpl implements CaseService {
                 }
                 case Constants.PARSE: {
                     String convertMethodSource
-                            = config.getParams()
+                            = config.getExec_params()
                             .get("cvt_method_source");
                     String params
-                            = config.getParams()
+                            = config.getExec_params()
                             .get("parameters");
                     result = testFlowManager.sourceParse(config.getLabel(),
                             convertMethodSource,
@@ -89,10 +89,10 @@ public class CaseServiceImpl implements CaseService {
                 }
                 case Constants.VERIFICATION: {
                     String verificationType
-                            = config.getParams()
+                            = config.getExec_params()
                             .get("verification_type");
                     String params
-                            = config.getParams()
+                            = config.getExec_params()
                             .get("parameters");
                     List<String> parameters = Utils.toListStr(params);
                     if (Constants.COMPARE.equals(verificationType)) {

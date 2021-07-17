@@ -4,8 +4,9 @@ server:
 spring:
   datasource:
     username: root
-    password: 123
+    password: QQQQWord1.
     url: jdbc:mysql://127.0.0.1:3306/testflow_service?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
+    #url: jdbc:mysql://120.77.254.161:3306/testflow_service?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
@@ -13,7 +14,7 @@ mybatis:
   type-aliases-package: com.github.qingquanlv.testflow_service_api.entity.testflow_service_db
 
 mybatis-plus:
-    #扫描xml的位置
+  #扫描xml的位置
   mapper-locations: classpath:testflow_service/*.xml
   configuration:
     # 这个配置会将执行的sql打印出来，在开发或测试的时候可以用
