@@ -22,10 +22,10 @@ public class Verify {
                         expObj, atlObj));
         if (null == expObj && null == atlObj) { }
         else if (null == expObj ||  null == atlObj) {
-            errMsg = String.format("expected: \"%s\" not equals with actual: \"%s\".", expStr, atlStr);
+            errMsg = String.format("expected: \"%s\" not equals with actual: \"%s\".", expObj, atlObj);
         }
         else if (!expObj.equals(atlObj)) {
-            errMsg = String.format("expected value: \"%s\" not equals with actual: \"%s\".", expStr, atlStr);
+            errMsg = String.format("expected value: \"%s\" not equals with actual: \"%s\".", expObj, atlObj);
         }
         return errMsg;
     }
@@ -61,9 +61,9 @@ public class Verify {
                 String.format("expValue:%s, atlValue:%s, primaryKey:%s, noCompareItem:%s" ,
                         exp, atl, pkMapStr, noCompareItemMapStr));
         //primary key map
-        Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(BufferManager.getBufferByKey(pkMapStr));
+        Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(pkMapStr);
         //no compare map
-        Map<String, List<String>> noCompareItemMap = ParamUtil.parseVerifyParam(BufferManager.getBufferByKey(noCompareItemMapStr));
+        Map<String, List<String>> noCompareItemMap = ParamUtil.parseVerifyParam(noCompareItemMapStr);
         VerifyUtil compareUtil = new VerifyUtil();
         return compareUtil.compareObj(exp, atl, pkMap, noCompareItemMap);
     }

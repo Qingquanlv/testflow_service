@@ -99,12 +99,12 @@ public class TestFlowManager {
      * @param sql 查询sql
      * @return
      */
-    public String queryDataBase(String caseName, String sql) {
+    public String queryDataBase(String caseName, String env, String sql) {
         Database database= new Database();
         String str;
         try {
             LogHelper.stepExecLog("queryDataBase", caseName, sql);
-            str = database.queryDataBase(caseName, sql);
+            str = database.queryDataBase(caseName, env, sql);
         }
         catch (Exception ex) {
             deposed();
@@ -125,7 +125,7 @@ public class TestFlowManager {
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj);
-            errorMsg = verify.verify(caseName, expObj, atlObj);
+            errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim());
         }
         catch (Exception ex) {
             deposed();
@@ -147,7 +147,7 @@ public class TestFlowManager {
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
-            errorMsg = verify.verify(caseName, expObj, atlObj, pkMapStr, noCompareItemMapStr);
+            errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim(), pkMapStr, noCompareItemMapStr);
             //deposed();
         }
         catch (Exception ex) {
@@ -169,7 +169,7 @@ public class TestFlowManager {
         String errorMsg = "";
         try {
             LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
-            errorMsg = verify.verify(caseName, atlObj, JsonFilter, expValue);
+            errorMsg = verify.verify(caseName, atlObj.trim(), JsonFilter.trim(), expValue.trim());
             //deposed();
         }
         catch (Exception ex) {

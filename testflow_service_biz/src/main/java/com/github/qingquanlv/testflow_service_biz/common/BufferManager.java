@@ -81,7 +81,7 @@ public class BufferManager {
         jedisUtil.set(String.format("%s:%s", pattern, bufferKey), bufferVal);
     }
 
-    public static void addConfigByKey(String bufferKey, String bufferVal) throws Exception {
+     public static void addConfigByKey(String bufferKey, String bufferVal) throws Exception {
         jedisUtil.set(String.format("%s:%s$%s", pattern, "config", bufferKey), bufferVal);
     }
 

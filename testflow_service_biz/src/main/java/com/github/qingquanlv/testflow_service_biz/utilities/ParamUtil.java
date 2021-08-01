@@ -6,7 +6,6 @@ import com.zf.zson.ZSON;
 import com.zf.zson.result.ZsonResult;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
 import org.dom4j.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,7 +267,7 @@ public class ParamUtil {
     {
         ZsonResult zr = ZSON.parseJson(jsonStr);
         zr.getClassTypes();
-        List<Object> names = zr.getValues(mapKey);
+        List<Object> names = zr.getValues(mapKey.trim());
         return names;
     }
 

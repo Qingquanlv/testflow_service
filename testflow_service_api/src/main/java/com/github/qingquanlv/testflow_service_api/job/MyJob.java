@@ -25,6 +25,6 @@ public class MyJob implements Job {
         System.out.println("定时任务开始"+now.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         System.out.println(jobExecutionContext.getJobDetail().getKey());
         System.out.println("执行task" + jobExecutionContext.getJobDetail().getKey());
-        //jobService.execJob(Long.valueOf(jobExecutionContext.getJobDetail().getKey().getName()));
+        jobService.execJob(Long.valueOf(jobExecutionContext.getJobDetail().getKey().getName()));
     }
 }

@@ -12,6 +12,7 @@ import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -69,18 +70,31 @@ public class CaseServiceImpl implements CaseService {
                 }
                 case Constants.DATABASE: {
                     String sqlStr
-                            = config.getExec_params()
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
                             .get("sql_str");
-                    result = testFlowManager.queryDataBase(config.getLabel(),
+                    String env
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                            .get("env");
+                    result = testFlowManager.queryDataBase(
+                            config.getLabel(),
+                            env,
                             sqlStr);
                     break;
                 }
                 case Constants.PARSE: {
                     String convertMethodSource
-                            = config.getExec_params()
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
                             .get("cvt_method_source");
                     String params
-                            = config.getExec_params()
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
                             .get("parameters");
                     result = testFlowManager.sourceParse(config.getLabel(),
                             convertMethodSource,
@@ -89,24 +103,24 @@ public class CaseServiceImpl implements CaseService {
                 }
                 case Constants.VERIFICATION: {
                     String verificationType
-                            = config.getExec_params()
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
                             .get("verification_type");
                     String params
-                            = config.getExec_params()
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
                             .get("parameters");
                     List<String> parameters = Utils.toListStr(params);
-                    if (Constants.COMPARE.equals(verificationType)) {
-                        result =
-                                testFlowManager.verify(config.getLabel(),
-                                        parameters.get(0),
-                                        parameters.get(1));
-                    }
-                    else if (Constants.XPATHCOMPARE.equals(verificationType)) {
+                    if (Constants.XPATHCOMPARE.equals(verificationType)) {
                         result =
                                 testFlowManager.verify(config.getLabel(),
                                         parameters.get(0),
                                         parameters.get(1),
                                         parameters.get(2));
+                        result = StringUtils.isEmpty(result) ?
+                                "Pass" : result;
                     }
                     else if (Constants.OBJCOMPARE.equals(verificationType)) {
                         result =
@@ -115,6 +129,16 @@ public class CaseServiceImpl implements CaseService {
                                         parameters.get(1),
                                         parameters.get(2),
                                         parameters.get(3));
+                        result = StringUtils.isEmpty(result) ?
+                                "Pass" : result;
+                    }
+                    else {
+                        result =
+                                testFlowManager.verify(config.getLabel(),
+                                        parameters.get(0),
+                                        parameters.get(1));
+                        result = StringUtils.isEmpty(result) ?
+                                "Pass" : result;
                     }
                     break;
                 }

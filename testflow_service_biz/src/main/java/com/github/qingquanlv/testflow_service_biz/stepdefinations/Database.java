@@ -18,23 +18,28 @@ public class Database {
 
 
     /**
-     * 根据Map查询DB
+     * 根据sql查询数据
      *
-     * @param sql mybatis parame
-     * @return 查询结果序列化Json
+     * @param caseName
+     * @param env
+     * @param sql
+     * @return
      * @throws Exception
      */
-    public String queryDataBase(String caseName, String sql) throws Exception{
+    public String queryDataBase(String caseName, String env, String sql) throws Exception{
         sql = ParamUtil.parseParam(sql);
         BufferManager.addConfigByKey(caseName,
-                String.format("sql:%s",
-                        sql));
+                String.format("env:%s, sql:%s", env, sql));
         System.out.print("Start To Load Session");
         InputStream inputStream = Resources.getResourceAsStream(resource);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+        SqlSessionFactory sqlSessionFactory
+                = "".equals(env) || null == env ?
+                new SqlSessionFactoryBuilder().build(inputStream) :
+                new SqlSessionFactoryBuilder().build(inputStream, env);
         SqlSession session = sqlSessionFactory.openSession();
         System.out.print("Session is" + session);
-        List<LinkedHashMap<String, Object>> value = session.selectList("select", sql);
+        List<LinkedHashMap<String, Object>> value
+                = session.selectList("select", sql);
         session.close();
         return FastJsonUtil.toJson(value);
     }
@@ -47,14 +52,14 @@ public class Database {
      * @return 查询结果序列化Json
      * @throws Exception
      */
-    public String queryDataBase(String caseName, String queryKey, String param) throws Exception{
+    public String queryDataBase(String caseName, String env, String queryKey, String param) throws Exception{
         param = ParamUtil.parseParam(param);
         Map<String, String> map = ParamUtil.parseMapParam(param);
         BufferManager.addConfigByKey(caseName,
-                String.format("sql:%s",
-                        param));
+                String.format("sql:%s", param));
         InputStream inputStream = Resources.getResourceAsStream(resource);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+        SqlSessionFactory sqlSessionFactory
+                = new SqlSessionFactoryBuilder().build(inputStream);
         SqlSession session = sqlSessionFactory.openSession();
         Object blog = session.selectList(queryKey, map);
         session.close();

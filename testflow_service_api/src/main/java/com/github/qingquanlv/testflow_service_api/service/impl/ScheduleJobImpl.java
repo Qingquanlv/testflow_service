@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -75,8 +76,11 @@ public class ScheduleJobImpl implements IScheduleJobService {
                 Wrappers.<Task>lambdaQuery()
                         .eq(Task::getId, taskId));
         //ParamIndex 格式转为 list<Long>
-        List<String> index = new ArrayList<>(
-                Arrays.asList(task.getParamIndexId().split(",")));
+        List<String> index = new ArrayList<>();
+        if (null != task.getParamIndexId()) {
+            index = new ArrayList<>(
+                    Arrays.asList(task.getParamIndexId().split(",")));
+        }
         List<Long> indexLong
                 = index.stream().map(Long::parseLong)
                 .collect(Collectors.toList());
@@ -88,11 +92,14 @@ public class ScheduleJobImpl implements IScheduleJobService {
 
         //构建参数
         List<Parameter> list = new ArrayList<>();
-        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters =
-                parameterMapper.selectList(
-                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, task.getParam_name())
-                                .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, indexLong));
+        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(indexLong)) {
+            parameters =
+                    parameterMapper.selectList(
+                            Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
+                                    .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, task.getParam_name())
+                                    .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, indexLong));
+        }
         for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : parameters) {
             Parameter parameter = new Parameter();
             parameter.setParameter_value(item.getParameterValue());

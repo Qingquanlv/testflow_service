@@ -606,7 +606,9 @@ public class FeatureServiceImpl implements FeatureService {
                                 .eq(DatabaseCaseConfig::getCaseId, featureCase.getId()));
                 testFlowManager.addBuffer(
                         featureCase.getLabel(),
-                        testFlowManager.queryDataBase(featureCase.getLabel(),
+                        testFlowManager.queryDataBase(
+                                featureCase.getLabel(),
+                                "",
                                 databaseCaseConfig.getSqlStr())
                 );
                 break;
