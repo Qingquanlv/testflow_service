@@ -409,7 +409,7 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->parseCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("parameters", parseCaseConfig.getParameters());
+                    params.put("parameters", Utils.listToStr(FastJsonUtil.toList(parseCaseConfig.getParameters())));
                     params.put("cvt_method_source", parseCaseConfig.getCvtMethodSource());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
@@ -430,8 +430,10 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->verificationCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("verification_type", verificationCaseConfig.getVerificationType());
-                    params.put("parameters", verificationCaseConfig.getParameters());
+                    params.put("verification_type",
+                            verificationCaseConfig.getVerificationType());
+                    params.put("parameters",
+                            Utils.listToStr(FastJsonUtil.toList(verificationCaseConfig.getParameters())));
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())

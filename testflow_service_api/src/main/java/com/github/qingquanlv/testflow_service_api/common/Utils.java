@@ -1,5 +1,8 @@
 package com.github.qingquanlv.testflow_service_api.common;
 
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -21,6 +24,21 @@ public class Utils {
             list = Stream.of(arrays).collect(Collectors.toList());
         }
         return list;
+    }
+
+    public static String listToStr(List<String> list) {
+        String str = "";
+        if (!CollectionUtils.isEmpty(list)) {
+            for (String item : list) {
+                if (!StringUtils.isEmpty(str)) {
+                    str = String.format("%s,%s", str, item);
+                }
+                else {
+                    str = item;
+                }
+            }
+         }
+        return str;
     }
 
     public static String hashKeyForDisk(String key) {
