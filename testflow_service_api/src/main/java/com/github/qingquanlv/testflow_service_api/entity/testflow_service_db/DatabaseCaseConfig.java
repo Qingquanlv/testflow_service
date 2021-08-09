@@ -25,6 +25,8 @@ public class DatabaseCaseConfig {
         @TableField(value = "case_id")
         private Long caseId;
 
+        private String env;
+
         private String sqlStr;
 
         private Timestamp datachangedLasttime;

@@ -68,7 +68,7 @@ public class CaseServiceImpl implements CaseService {
                     );
                     break;
                 }
-                case Constants.DATABASE: {
+                case Constants.TIDB: {
                     String sqlStr
                             = null == config.getExec_params() ?
                             "" :
@@ -79,7 +79,24 @@ public class CaseServiceImpl implements CaseService {
                             "" :
                             config.getExec_params()
                             .get("env");
-                    result = testFlowManager.queryDataBase(
+                    result = testFlowManager.queryTIDB(
+                            config.getLabel(),
+                            env,
+                            sqlStr);
+                    break;
+                }
+                case Constants.DRUID: {
+                    String sqlStr
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("sql_str");
+                    String env
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("env");
+                    result = testFlowManager.queryDruid(
                             config.getLabel(),
                             env,
                             sqlStr);
@@ -152,6 +169,9 @@ public class CaseServiceImpl implements CaseService {
                         config.getLabel())));
         caseInfo.setData(result);
         caseInfo.setLabel(config.getLabel());
+        caseInfo.setStatus(Integer.valueOf(testFlowManager
+                .getBuffer(String.format("status$%s",
+                        config.getLabel()))));
         rsp.setInfo(caseInfo);
         testFlowManager.deposed();
         return rsp;

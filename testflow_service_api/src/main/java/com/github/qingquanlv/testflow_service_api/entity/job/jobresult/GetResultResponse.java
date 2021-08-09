@@ -19,8 +19,6 @@ public class GetResultResponse {
          */
         private Status status;
 
-        private Long taskId;
-
         private List<TaskResults> taskResults;
 
 

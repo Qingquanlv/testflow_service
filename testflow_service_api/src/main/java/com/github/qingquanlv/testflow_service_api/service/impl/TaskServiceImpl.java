@@ -1,17 +1,20 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.task.gettaskresults.GetTaskResultResponse;
-import com.github.qingquanlv.testflow_service_api.entity.task.gettaskresults.TaskStepResult;
-import com.github.qingquanlv.testflow_service_api.entity.task.gettaskstepresult.GetTaskStepResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.cases_v2.CaseInfo;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.QueryJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.TaskDetails;
+import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.GetTaskResultResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.IndexResult;
+import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.StepResult;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.FeatureResult;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
-import com.github.qingquanlv.testflow_service_api.mapper.FeatureMapper;
-import com.github.qingquanlv.testflow_service_api.mapper.FeatureResultMapper;
-import com.github.qingquanlv.testflow_service_api.mapper.TaskMapper;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Jobb;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskResult;
+import com.github.qingquanlv.testflow_service_api.mapper.*;
 import com.github.qingquanlv.testflow_service_api.service.TaskService;
-import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
+import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -20,6 +23,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @Author: qingquan.lv
@@ -30,16 +35,78 @@ import java.util.List;
 public class TaskServiceImpl implements TaskService {
 
         @Autowired
-        FeatureResultMapper featureResultMapper;
-
-        @Autowired
         FeatureMapper featureMapper;
 
         @Autowired
-        TaskMapper taskMapper;
+        private JobMapper jobMapper;
+
+        @Autowired
+        private TaskResultMapper taskResultMapper;
 
         /**
+         * Get Task By Job Id
          *
+         * @param jobId
+         * @return
+         */
+        @Override
+        public QueryJobResponse getTaskByJobId(Long jobId) {
+                Status status = new Status();
+                status.setSuccess(true);
+                Jobb job = jobMapper.selectById(jobId);
+                Feature feature = featureMapper.selectById(job.getFeatureId());
+                List<TaskResult> taskResultList
+                        = taskResultMapper.selectList(
+                        Wrappers.<TaskResult>lambdaQuery()
+                                .eq(TaskResult::getTaskId, jobId)
+                                .in(TaskResult::getParameter_value_index, Utils.toListLong(job.getParamIndexId())));
+                //赋值taskResult
+                List<TaskDetails> list = new ArrayList<>();
+                List<Long> indexList
+                        = Utils.toListLong(job.getParamIndexId());
+                if (!CollectionUtils.isEmpty(indexList)) {
+                        for (Long index : indexList) {
+                                List<TaskResult> taskList = taskResultList.stream()
+                                        .filter(item -> index.equals(item.getParameter_value_index()))
+                                        .collect(Collectors.toList());
+                                if (!CollectionUtils.isEmpty(taskList)) {
+                                        Integer taskStatus = 1;
+                                        TaskDetails taskDetails
+                                                = TaskDetails.builder()
+                                                .jobId(jobId)
+                                                .jobName(job.getName())
+                                                .featureId(job.getFeatureId())
+                                                .featureName(feature.getFeature_name())
+                                                .paramName(job.getParam_name())
+                                                .paramIndex(job.getParamIndexId()).build();
+                                        for (TaskResult item : taskList) {
+                                                taskDetails.setId(item.getTaskId());
+                                                taskDetails.setStartTime(
+                                                        null == taskDetails.getStartTime() ||
+                                                                item.getStarttime().after(taskDetails.getStartTime()) ?
+                                                                taskDetails.getStartTime() :
+                                                                item.getStarttime());
+                                                taskDetails.setEndTime(
+                                                        null == taskDetails.getEndTime() ||
+                                                                item.getEndtime().before(taskDetails.getEndTime()) ?
+                                                                taskDetails.getEndTime() :
+                                                                item.getEndtime());
+                                                taskDetails.setStatus(
+                                                        taskStatus & taskDetails.getStatus());
+                                        }
+                                        list.add(taskDetails);
+                                }
+                        }
+                }
+                QueryJobResponse rsp
+                        = QueryJobResponse.builder()
+                        .status(status)
+                        .jobDetails(list).build();
+                return rsp;
+        }
+
+        /**
+         * Get Task Result
          *
          * @param taskId
          * @return
@@ -49,57 +116,52 @@ public class TaskServiceImpl implements TaskService {
                 Status status = new Status();
                 status.setSuccess(true);
                 GetTaskResultResponse rsp = new GetTaskResultResponse();
-                List<TaskStepResult> taskStepResults = new ArrayList<>();
-                List<FeatureResult> featureResults = featureResultMapper.selByTid(taskId);
-                rsp.setStatus(status);
-                if  (!CollectionUtils.isEmpty(featureResults)) {
-                        //获取feature name
-                        Feature feature = featureMapper.selectById(featureResults.get(0).getFeature_id());
-                        rsp.setFeatureName(null != feature ? feature.getFeature_name() : "");
-                        rsp.setTaskId(featureResults.get(0).getTask_id());
-                        //获取task name
-                        Task task = taskMapper.selectById(featureResults.get(0).getTask_id());
-                        rsp.setTaskName(null != task ? task.getName() : "");
-                        rsp.setFeatureId(featureResults.get(0).getFeature_id());
-                        // set step result
-                        for (FeatureResult featureResult : featureResults) {
-                                TaskStepResult taskStepResult = new TaskStepResult();
-                                taskStepResult.setStepId(featureResult.getParameter_value_index());
-                                taskStepResult.setAssertions(featureResult.getAssertions());
-                                taskStepResult.setLogs(featureResult.getLogs());
-                                taskStepResults.add(taskStepResult);
+                List<TaskResult> taskResults = taskResultMapper.selectList(
+                        Wrappers.<TaskResult>lambdaQuery()
+                                .eq(TaskResult::getTaskId, taskId));
+                List<IndexResult> indexResults = new ArrayList<>();
+                if (!CollectionUtils.isEmpty(taskResults)) {
+                        Set<Long> indexList
+                                = taskResults.stream().map(TaskResult::getParameter_value_index)
+                                .collect(Collectors.toSet());
+                        if (!CollectionUtils.isEmpty(indexList)) {
+                                for (Long index : indexList) {
+                                        IndexResult indexResult = new IndexResult();
+                                        TaskResult taskResult
+                                                = taskResults
+                                                .stream()
+                                                .filter(item->
+                                                        index.equals(item.getParameter_value_index()))
+                                                .findFirst().orElse(null);
+                                        indexResult.setIndex(index);
+                                        indexResult.setStartTime(taskResult.getStarttime());
+                                        indexResult.setEndTime(taskResult.getEndtime());
+                                        if (null != taskResult) {
+                                                List<StepResult> stepResults = new ArrayList<>();
+                                                List<CaseInfo> caseInfos
+                                                        = FastJsonUtil.toListBean(
+                                                        taskResult.getLogs(), CaseInfo.class);
+                                                Long id = 0L;
+                                                for (CaseInfo result : caseInfos) {
+                                                        StepResult stepResult
+                                                                = StepResult.builder()
+                                                                .id(id)
+                                                                .label(result.getLabel())
+                                                                .clazz(result.getClazz())
+                                                                .status(result.getStatus())
+                                                                .config(result.getConfig())
+                                                                .data(result.getData()).build();
+                                                        stepResults.add(stepResult);
+                                                        id ++;
+                                                }
+                                                indexResult.setStepResults(stepResults);
+                                        }
+                                        indexResults.add(indexResult);
+                                }
                         }
                 }
-                rsp.setTaskStepResults(taskStepResults);
-                return rsp;
-        }
-
-        /**
-         * 获取task step结果
-         *
-         * @param taskId
-         * @param stepId
-         * @return
-         */
-        @Override
-        public GetTaskStepResultResponse getTaskStepResult(Long taskId, Long stepId) {
-                TestFlowManager testFlowManager = new TestFlowManager();
-                Status status = new Status();
-                status.setSuccess(true);
-                GetTaskStepResultResponse rsp = new GetTaskStepResultResponse();
-                FeatureResult featureResult = featureResultMapper.selByTidSid(taskId, stepId);
                 rsp.setStatus(status);
-                rsp.setFeatureId(featureResult.getFeature_id());
-                //获取feature name
-                Feature feature = featureMapper.selectById(featureResult.getFeature_id());
-                rsp.setFeatureName(null != feature ? feature.getFeature_name() : "");
-                rsp.setTaskId(featureResult.getTask_id());
-                //获取task name
-                Task task = taskMapper.selectById(featureResult.getTask_id());
-                rsp.setTaskName(null != feature ? task.getName() : "");
-                rsp.setStepId(stepId);
-                rsp.setAssertions(featureResult.getAssertions());
-                rsp.setLogs(featureResult.getLogs());
+                rsp.setIndexResults(indexResults);
                 return rsp;
         }
 }

@@ -1,6 +1,17 @@
 package com.github.qingquanlv.testflow_service_biz.common;
 
 public class Constants {
+    public static final String MYSQL= "mysql";
+    public static final String TIDB= "tidb";
+    public static final String DRUID= "druid";
+    public static final String PARSE = "parse";
+    public static final String REQUEST = "request";
+    public static final String COMPARE_VAL = "compare_val";
+    public static final String COMPARE_PATH = "compare_path";
+    public static final String COMPARE_OBJ = "compare_obj";
+    public static final String STATUS_PASS = "0";
+    public static final String STATUS_FAIL = "1";
+
     //Static value
     public static final String ENTITY_ROOT= "ROOT_NODE";
 

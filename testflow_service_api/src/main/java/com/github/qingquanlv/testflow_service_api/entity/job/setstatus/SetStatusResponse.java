@@ -1,22 +1,19 @@
-package com.github.qingquanlv.testflow_service_api.entity.job.queryalljob;
+package com.github.qingquanlv.testflow_service_api.entity.job.setstatus;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/17 18:12
+ * @Date: 2021/8/1 下午4:29
  */
 @Data
 @Builder
-public class QueryAllJobResponse {
+public class SetStatusResponse {
+
         /**
          * status
          */
         private Status status;
-
-        private List<JobDetails> jobDetails;
 }

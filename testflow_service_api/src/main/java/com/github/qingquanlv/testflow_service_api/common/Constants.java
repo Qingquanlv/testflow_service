@@ -9,6 +9,8 @@ public class Constants {
 
     //Static value
     public static final String DATABASE= "database";
+    public static final String TIDB= "tidb";
+    public static final String DRUID= "druid";
     public static final String PARSE = "parse";
     public static final String REQUEST = "request";
     public static final String VERIFICATION = "verification";

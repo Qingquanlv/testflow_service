@@ -19,16 +19,18 @@ import java.util.regex.Pattern;
 public class Parser {
 
 
-
     /**
-     * 根据Buffer中保存的实体，构建实体Json
+     * 根据代码片执行函数
      *
+     * @param caseName
+     * @param convertMethodSource
+     * @param paramList
+     * @return
      */
-    public String parseValueVidStr(String caseName, String convertMethodSource, List<String> paramList) throws Exception
-    {
+    public String parseValueVidStr(String caseName, String convertMethodSource, List<String> paramList) throws Exception {
         //方法参数
         String parameterStr = "";
-        for (int i=0;i<paramList.size();i++) {
+        for (int i = 0; i < paramList.size(); i++) {
             String parameterType = "String";
             String parameterName = paramList.get(i);
             String js = "parameterType parameterName = (parameterType)JSON.parse(BufferManager.getBufferByKey(sourceData.get(index)));";
@@ -43,16 +45,14 @@ public class Parser {
                 } else if (object instanceof JSONArray) {
                     parameterType = Constants.JSON_ARRAY_TYPE;
                     js = js.replace(Constants.PARAMETER_TYPE, parameterType);
-                }
-                else {
+                } else {
                     js = jss.replace(Constants.PARAMETER_TYPE, parameterType);
                 }
                 js = js.replace(Constants.INDEX, String.valueOf(i));
 
                 js = js.replace(Constants.PARAMETER_NAME, parameterName);
                 parameterStr += js;
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 s = s.replace(Constants.INDEX, String.valueOf(i));
                 s = s.replace(Constants.PARAMETER_NAME, parameterName);
                 parameterStr += s;
@@ -65,19 +65,15 @@ public class Parser {
         //获取需要转化的类名和函数名
         String className = Constants.PARSE_VALUE_FILE_NAME;
 
-        try {
-            String convertFileSource = Constants.PARSE_VALUE_FILE_SOURCE.replace(Constants.PARAMETER, parameterStr)
-                    .replace(Constants.METHOD, convertMethodSource);
-            BufferManager.addConfigByKey(caseName,
-                    String.format("method:%s",
-                            convertFileSource));
-            Map<String, byte[]> results = compiler.compile(className, convertFileSource);
-            Class<?> clazz = compiler.loadClass(Constants.SERVICES_CLASS_PATH, results);
-            Method fieldGetMet =  ServiceAccess.reflectMethod(clazz, Constants.METHOD_NAME, List.class);
-            destJson = String.valueOf(fieldGetMet.invoke(clazz.newInstance(), paramList));
-        } catch (Exception e) {
-            System.out.println("执行Convert方法错误" + e);
-        }
+        String convertFileSource = Constants.PARSE_VALUE_FILE_SOURCE.replace(Constants.PARAMETER, parameterStr)
+                .replace(Constants.METHOD, convertMethodSource);
+        BufferManager.addConfigByKey(caseName,
+                String.format("method:%s",
+                        convertFileSource));
+        Map<String, byte[]> results = compiler.compile(className, convertFileSource);
+        Class<?> clazz = compiler.loadClass(Constants.SERVICES_CLASS_PATH, results);
+        Method fieldGetMet = ServiceAccess.reflectMethod(clazz, Constants.METHOD_NAME, List.class);
+        destJson = String.valueOf(fieldGetMet.invoke(clazz.newInstance(), paramList));
         return destJson;
     }
 

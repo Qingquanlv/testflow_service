@@ -23,13 +23,21 @@ public class TaskResult  {
     @TableId(value = "id",type = IdType.AUTO)
     private Integer id;
 
+    private Integer jobId;
+
     private Long taskId;
+
+    private String parameter_name;
+
+    private Long parameter_value_index;
 
     private Timestamp starttime;
 
     private Timestamp endtime;
 
     private String logs;
+
+    private Integer status;
 
     private Timestamp datachangedLasttime;
 

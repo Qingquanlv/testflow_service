@@ -9,11 +9,11 @@ import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/2 20:07
+ * @Date: 2021/8/7 下午5:59
  */
 @Data
 @Builder
-public class Task {
+public class Jobb {
 
         private static final long serialVersionUID = 1L;
 
@@ -33,4 +33,3 @@ public class Task {
         private Timestamp datachangedLasttime;
 
 }
-

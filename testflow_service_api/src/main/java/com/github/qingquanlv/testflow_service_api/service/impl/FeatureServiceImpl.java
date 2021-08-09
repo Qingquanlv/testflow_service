@@ -62,8 +62,6 @@ public class FeatureServiceImpl implements FeatureService {
     @Autowired
     ParameterMapper parameterMapper;
 
-    @Autowired
-    TaskMapper taskMapper;
 
     /**
      * 创建feature
@@ -90,11 +88,11 @@ public class FeatureServiceImpl implements FeatureService {
             featureMapper.insert(feature);
         }
         List<Caze> cases = new ArrayList<>();
-        //遍历node节点，如果存在id和type相同节点则更新
+        //遍历node信息，先删除在插入node和config信息
         if (!CollectionUtils.isEmpty(request.getNodes())) {
             List<Caze> CaseList = caseMapper.selectList(
                     Wrappers.<Caze>lambdaQuery()
-                    .in(Caze::getFeatureId, feature.getFeature_id()));
+                            .in(Caze::getFeatureId, feature.getFeature_id()));
             if (!CollectionUtils.isEmpty(CaseList)) {
                 List<Long> caseIds = CaseList
                         .stream()
@@ -112,7 +110,19 @@ public class FeatureServiceImpl implements FeatureService {
                 verificationCaseConfigMapper.delete(
                         Wrappers.<VerificationCaseConfig>lambdaQuery()
                                 .in(VerificationCaseConfig::getCaseId, caseIds));
-                //case 数据全删全插
+                //case的连线信息，直接删除
+                List<Caze> cazes = caseMapper.selectList(Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId, feature.getFeature_id()));
+                Set<Long> cazesIds = cazes
+                        .stream()
+                        .map(Caze::getId)
+                        .collect(Collectors.toSet());
+                featureCaseNextCaseMapper.delete(
+                        Wrappers.<FeatureCaseNextCase>lambdaQuery()
+                                .in(FeatureCaseNextCase::getSourceCaseId, cazesIds)
+                                .or()
+                                .in(FeatureCaseNextCase::getTargetCaseId, cazesIds));
+                //case数据全删全插
                 caseMapper.delete(Wrappers.<Caze>lambdaQuery()
                         .eq(Caze::getFeatureId, feature.getFeature_id()));
             }
@@ -131,39 +141,36 @@ public class FeatureServiceImpl implements FeatureService {
                         featureCase.getId(),
                         featureCase.getLabel());
                 cases.add(featureCase);
-                //case的下一节点，直接删除并且重新insert
-                featureCaseNextCaseMapper.delete(
-                        Wrappers.<FeatureCaseNextCase>lambdaQuery()
-                                .eq(FeatureCaseNextCase::getSourceCaseId, featureCase.getId()));
             }
-        }
-        if (!CollectionUtils.isEmpty(request.getEdges())) {
-            for (Edges edge : request.getEdges()) {
-                //判断当前线的源节点和目标节点存在
-                if (!CollectionUtils.isEmpty(request.getNodes())
-                        && cases
-                        .stream()
-                        .anyMatch(item ->
-                                item.getLabel().equals(edge.getSource()))
-                        && cases
-                        .stream()
-                        .anyMatch(item ->
-                                item.getLabel().equals(edge.getSource()))) {
-                    Caze sourceCase = cases.stream()
-                            .filter(item->edge.getSource().equals(item.getLabel()))
-                            .findFirst().orElse(null);
-                    Caze targetCase = cases.stream()
-                            .filter(item->edge.getTarget().equals(item.getLabel()))
-                            .findFirst().orElse(null);
-                    FeatureCaseNextCase featureCaseNextCase =
-                            FeatureCaseNextCase
-                                    .builder()
-                                    .sourceCaseId(sourceCase.getId())
-                                    .targetCaseId(targetCase.getId())
-                                    .sourceanchor(edge.getSourceAnchor())
-                                    .targetanchor(edge.getTargetAnchor())
-                                    .build();
-                    featureCaseNextCaseMapper.insert(featureCaseNextCase);
+            //插入连线信息
+            if (!CollectionUtils.isEmpty(request.getEdges())) {
+                for (Edges edge : request.getEdges()) {
+                    //判断当前线的源节点和目标节点存在
+                    if (!CollectionUtils.isEmpty(request.getNodes())
+                            && cases
+                            .stream()
+                            .anyMatch(item ->
+                                    item.getLabel().equals(edge.getSource()))
+                            && cases
+                            .stream()
+                            .anyMatch(item ->
+                                    item.getLabel().equals(edge.getSource()))) {
+                        Caze sourceCase = cases.stream()
+                                .filter(item -> edge.getSource().equals(item.getLabel()))
+                                .findFirst().orElse(null);
+                        Caze targetCase = cases.stream()
+                                .filter(item -> edge.getTarget().equals(item.getLabel()))
+                                .findFirst().orElse(null);
+                        FeatureCaseNextCase featureCaseNextCase =
+                                FeatureCaseNextCase
+                                        .builder()
+                                        .sourceCaseId(sourceCase.getId())
+                                        .targetCaseId(targetCase.getId())
+                                        .sourceanchor(edge.getSourceAnchor())
+                                        .targetanchor(edge.getTargetAnchor())
+                                        .build();
+                        featureCaseNextCaseMapper.insert(featureCaseNextCase);
+                    }
                 }
             }
         }
@@ -220,6 +227,8 @@ public class FeatureServiceImpl implements FeatureService {
                 DatabaseCaseConfig databaseCaseConfig =
                         DatabaseCaseConfig.builder(
                         ).caseId(caseId
+                        ).env(config.getExec_params()
+                                .get("env")
                         ).sqlStr(config.getExec_params()
                                 .get("sql_str")
                         ).build();
@@ -345,14 +354,14 @@ public class FeatureServiceImpl implements FeatureService {
                 nodes.add(node);
             }
         }
-        List<Long> caseIds = nodes
+        Set<Long> caseIds = nodes
                 .stream()
-                .map(Nodes::getId).collect(Collectors.toList());
+                .map(Nodes::getId).collect(Collectors.toSet());
         List<Config> configs = new ArrayList<>();
         List<Edges> edges = new ArrayList<>();
 
         if (!CollectionUtils.isEmpty(caseIds)) {
-            //根据featureId查询所有caseConfig
+            //根据caseId查询所有caseConfig
             List<RequestCaseConfig> requestCaseConfigs
                     = requestCaseConfigMapper.selectList(
                     Wrappers.<RequestCaseConfig>lambdaQuery()
@@ -389,6 +398,7 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->databaseCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
+                    params.put("env", databaseCaseConfig.getEnv());
                     params.put("sql_str", databaseCaseConfig.getSqlStr());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
@@ -551,19 +561,27 @@ public class FeatureServiceImpl implements FeatureService {
                 }
             }
         }
+        Integer featureStatus = 1;
         List<CaseInfo> caseInfoList = new ArrayList<>();
         for (Caze caze : featureCaseList) {
             CaseInfo caseInfo = new CaseInfo();
             caseInfo.setClazz(caze.getCaseType());
             caseInfo.setConfig(testFlowManager
-                            .getBuffer(String.format("config$%s",caze.getLabel())));
+                            .getBuffer(String.format("config$%s",
+                                    caze.getLabel())));
             caseInfo.setLabel(caze.getLabel());
             caseInfo.setData(testFlowManager
                             .getBuffer(caze.getLabel()));
+            caseInfo.setStatus(Integer.valueOf(testFlowManager
+                    .getBuffer(String.format("status$%s",
+                            caze.getLabel()))));
+            featureStatus = caseInfo.getStatus()
+                    & featureStatus;
             caseInfoList.add(caseInfo);
         }
         TaskResult taskResult
                 = TaskResult.builder()
+                .status(featureStatus)
                 .logs(FastJsonUtil.toJson(caseInfoList))
                 .build();
         testFlowManager.deposed();
@@ -606,13 +624,32 @@ public class FeatureServiceImpl implements FeatureService {
                         = databaseCaseConfigMapper.selectOne(
                                 Wrappers.<DatabaseCaseConfig>lambdaQuery()
                                 .eq(DatabaseCaseConfig::getCaseId, featureCase.getId()));
-                testFlowManager.addBuffer(
+                testFlowManager.queryDataBase(
                         featureCase.getLabel(),
-                        testFlowManager.queryDataBase(
-                                featureCase.getLabel(),
-                                "",
-                                databaseCaseConfig.getSqlStr())
-                );
+                        databaseCaseConfig.getEnv(),
+                        databaseCaseConfig.getSqlStr());
+                break;
+            }
+            case Constants.TIDB: {
+                DatabaseCaseConfig databaseCaseConfig
+                        = databaseCaseConfigMapper.selectOne(
+                        Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                                .eq(DatabaseCaseConfig::getCaseId, featureCase.getId()));
+                testFlowManager.queryTIDB(
+                        featureCase.getLabel(),
+                        databaseCaseConfig.getEnv(),
+                        databaseCaseConfig.getSqlStr());
+                break;
+            }
+            case Constants.DRUID: {
+                DatabaseCaseConfig databaseCaseConfig
+                        = databaseCaseConfigMapper.selectOne(
+                        Wrappers.<DatabaseCaseConfig>lambdaQuery()
+                                .eq(DatabaseCaseConfig::getCaseId, featureCase.getId()));
+                testFlowManager.queryDruid(
+                        featureCase.getLabel(),
+                        databaseCaseConfig.getEnv(),
+                        databaseCaseConfig.getSqlStr());
                 break;
             }
             case Constants.PARSE: {
@@ -620,13 +657,9 @@ public class FeatureServiceImpl implements FeatureService {
                         = parseCaseConfigMapper.selectOne(
                         Wrappers.<ParseCaseConfig>lambdaQuery()
                                 .eq(ParseCaseConfig::getCaseId, featureCase.getId()));
-                testFlowManager.addBuffer(
-                        featureCase.getLabel(),
-                        testFlowManager.sourceParse(featureCase.getLabel(),
-                                parseCaseConfig.getCvtMethodSource(),
-                                FastJsonUtil.toList(parseCaseConfig.getParameters())
-                        )
-                );
+                testFlowManager.sourceParse(featureCase.getLabel(),
+                        parseCaseConfig.getCvtMethodSource(),
+                        FastJsonUtil.toList(parseCaseConfig.getParameters()));
                 break;
             }
             case Constants.REQUEST: {
@@ -634,17 +667,13 @@ public class FeatureServiceImpl implements FeatureService {
                         = requestCaseConfigMapper.selectOne(
                         Wrappers.<RequestCaseConfig>lambdaQuery()
                                 .eq(RequestCaseConfig::getCaseId, featureCase.getId()));
-                testFlowManager.addBuffer(
-                        featureCase.getLabel(),
-                        testFlowManager.sendRequest(featureCase.getLabel(),
-                                "null".equals(requestCaseConfig.getRequestBody())|| null == requestCaseConfig.getRequestBody() ? null : requestCaseConfig.getRequestBody(),
-                                "null".equals(requestCaseConfig.getRequestConfigs())|| null == requestCaseConfig.getRequestConfigs() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestConfigs()),
-                                "null".equals(requestCaseConfig.getRequestHeaders())|| null == requestCaseConfig.getRequestHeaders() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestHeaders()),
-                                requestCaseConfig.getRequestType(),
-                                requestCaseConfig.getContentType(),
-                                requestCaseConfig.getUrl()
-                        )
-                );
+                testFlowManager.sendRequest(featureCase.getLabel(),
+                        "null".equals(requestCaseConfig.getRequestBody()) || null == requestCaseConfig.getRequestBody() ? null : requestCaseConfig.getRequestBody(),
+                        "null".equals(requestCaseConfig.getRequestConfigs()) || null == requestCaseConfig.getRequestConfigs() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestConfigs()),
+                        "null".equals(requestCaseConfig.getRequestHeaders()) || null == requestCaseConfig.getRequestHeaders() ? null : FastJsonUtil.toMap(requestCaseConfig.getRequestHeaders()),
+                        requestCaseConfig.getRequestType(),
+                        requestCaseConfig.getContentType(),
+                        requestCaseConfig.getUrl());
                 break;
             }
             case Constants.VERIFICATION: {

@@ -1,26 +1,22 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.feature_v2.CaseInfo;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
-import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.GetResultResponse;
-import com.github.qingquanlv.testflow_service_api.entity.job.jobresult.TaskResults;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.JobDetails;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusRequest;
+import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Caze;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskConfig;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskResult;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
 import com.github.qingquanlv.testflow_service_api.mapper.*;
 import com.github.qingquanlv.testflow_service_api.service.IScheduleJobService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
-import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +25,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,13 +41,14 @@ import java.util.stream.Collectors;
 @Service
 @Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ScheduleJobImpl implements IScheduleJobService {
+
     private static Logger log = LoggerFactory.getLogger(TestFlowManager.class);
 
     @Autowired
-    private TaskConfigMapper taskConfigMapper;
+    private JobConfigMapper jobConfigMapper;
 
     @Autowired
-    private TaskMapper taskMapper;
+    private JobMapper jobMapper;
 
     @Autowired
     private TaskResultMapper taskResultMapper;
@@ -69,202 +65,297 @@ public class ScheduleJobImpl implements IScheduleJobService {
     @Autowired
     CazeMapper caseMapper;
 
-    @Async("taskExecutor")
-    @Override
-    public void execJob(Long taskId) {
-        Task task = taskMapper.selectOne(
-                Wrappers.<Task>lambdaQuery()
-                        .eq(Task::getId, taskId));
-        //ParamIndex 格式转为 list<Long>
-        List<String> index = new ArrayList<>();
-        if (null != task.getParamIndexId()) {
-            index = new ArrayList<>(
-                    Arrays.asList(task.getParamIndexId().split(",")));
-        }
-        List<Long> indexLong
-                = index.stream().map(Long::parseLong)
-                .collect(Collectors.toList());
+    @Autowired
+    FeatureMapper featureMapper;
 
-        List<Caze> featureCases
-                = caseMapper.selectList(
-                Wrappers.<Caze>lambdaQuery()
-                        .eq(Caze::getFeatureId, task.getFeatureId()));
-
-        //构建参数
-        List<Parameter> list = new ArrayList<>();
-        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(indexLong)) {
-            parameters =
-                    parameterMapper.selectList(
-                            Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                                    .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, task.getParam_name())
-                                    .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, indexLong));
-        }
-        for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : parameters) {
-            Parameter parameter = new Parameter();
-            parameter.setParameter_value(item.getParameterValue());
-            parameter.setParameter_key(item.getParameterKey());
-            list.add(parameter);
-        }
-        Timestamp startTime = new Timestamp(System.currentTimeMillis());
-        //执行feature
-        TaskResult taskResult
-                = featureService.execFeature(
-                    list, featureCases);
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
-        taskResult.setTaskId(taskId);
-        taskResult.setStarttime(startTime);
-        taskResult.setEndtime(endTime);
-        taskResultMapper.insert(taskResult);
-    }
-
+    /**
+     * 创建Job
+     *
+     * @param request
+     * @return
+     */
     @Override
     public CreateJobResponse createJob(CreateJobRequest request) {
         Status status = new Status();
         status.setSuccess(true);
         CreateJobResponse createJobResponse = new CreateJobResponse();
-        Task task
-                = Task.builder()
+        Jobb job
+                = Jobb.builder()
                 .name(request.getName())
                 .featureId(request.getFeatureId())
                 .param_name(request.getParamName())
-                .paramIndexId(request.getParamIndexId())
+                .paramIndexId(request.getParamIndex())
                 .build();
-        taskMapper.insert(task);
-        TaskConfig taskConfig
-                = TaskConfig.builder()
-                .taskId(String.valueOf(task.getId()))
+        jobMapper.insert(job);
+        JobConfig jobConfig
+                = JobConfig.builder()
+                .jobId(job.getId())
+                //默认执行类
                 .className("com.github.qingquanlv.testflow_service_api.job.MyJob")
                 .description(request.getDescription())
                 .cron(request.getCron())
+                //新创建Job status为0
+                .status(0)
                 .build();
-        taskConfigMapper.insert(taskConfig);
+        jobConfigMapper.insert(jobConfig);
         createJobResponse.setStatus(status);
         return createJobResponse;
     }
 
+    /**
+     * 删除Job
+     *
+     * @param jobId
+     * @return
+     */
     @Override
-    public DeleteJobResponse deleteJob(Long taskId) {
+    public DeleteJobResponse deleteJob(Long jobId) {
         Status status = new Status();
         status.setSuccess(true);
         DeleteJobResponse createJobResponse = new DeleteJobResponse();
-        taskMapper.deleteById(taskId);
-        taskConfigMapper.delete(
-                Wrappers.<TaskConfig>lambdaQuery()
-                        .eq(TaskConfig::getTaskId, taskId));
+        try {
+            unloadJob(String.valueOf(jobId));
+        }
+        catch (Exception ex) {
+            status.setSuccess(false);
+            status.setMessage("Unload Job Failed");
+        }
+        jobMapper.deleteById(jobId);
+        jobConfigMapper.delete(
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getJobId, jobId));
         createJobResponse.setStatus(status);
         return createJobResponse;
     }
 
+    /**
+     * 通过JobId更新Job
+     *
+     * @param request
+     * @return
+     */
     @Override
     public UpdateJobResponse updateJob(UpdateJobRequest request) {
         Status status = new Status();
         status.setSuccess(true);
         UpdateJobResponse updateJobResponse = new UpdateJobResponse();
-        Task task
-                = Task.builder()
-                .id(request.getTaskId())
+        Jobb job
+                = Jobb.builder()
+                .id(request.getJobId())
                 .name(request.getName())
                 .featureId(request.getFeatureId())
                 .param_name(request.getParamName())
-                .paramIndexId(request.getParamIndexId())
+                .paramIndexId(request.getParamIndex())
                 .build();
-        TaskConfig taskConfig
-                = TaskConfig.builder()
-                .taskId(String.valueOf(task.getId()))
+        JobConfig jobConfig
+                = JobConfig.builder()
+                .jobId(job.getId())
                 .cron(request.getCron())
+                //默认执行类
                 .className("com.github.qingquanlv.testflow_service_api.job.MyJob")
+                .description(request.getDescription())
                 .build();
-        taskMapper.updateById(task);
-        taskConfigMapper.update(
-                taskConfig,
-                Wrappers.<TaskConfig>lambdaQuery()
-                        .eq(TaskConfig::getTaskId, task.getId()));
+        jobMapper.updateById(job);
+        jobConfigMapper.update(
+                jobConfig,
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getJobId, job.getId()));
         updateJobResponse.setStatus(status);
         return updateJobResponse;
     }
 
+    /**
+     * 获取所有Job信息
+     *
+     * @return
+     */
     @Override
     public QueryAllJobResponse queryAllJob() {
         Status status = new Status();
         status.setSuccess(true);
-        QueryAllJobResponse rsp = new QueryAllJobResponse();
-        List<Task> tasks = taskMapper.selectList(Wrappers.emptyWrapper());
-        List<TaskConfig> taskConfigs = taskConfigMapper.selectList(Wrappers.emptyWrapper());
+        //query all feature
+        List<Feature> features = featureMapper.selectList(Wrappers.emptyWrapper());
+        //query all job
+        List<Jobb> jobs = jobMapper.selectList(Wrappers.emptyWrapper());
+        //query all job config
+        List<JobConfig> jobConfigs = jobConfigMapper.selectList(Wrappers.emptyWrapper());
         List<JobDetails> jobDetailsList = new ArrayList<>();
-        for (Task item : tasks) {
-            TaskConfig taskConfig = taskConfigs.stream()
-                    .filter(i->String.valueOf(item.getId()).equals(i.getTaskId()))
+        for (Jobb item : jobs) {
+            Feature feature = features.stream()
+                    .filter(i->item.getFeatureId().equals(i.getFeature_id()))
+                    .findFirst().orElse(null);
+            JobConfig jobConfig = jobConfigs.stream()
+                    .filter(i->item.getId().equals(i.getJobId()))
                     .findFirst().orElse(null);
             JobDetails jobDetails
                     = JobDetails.builder()
                     .id(item.getId())
                     .name(item.getName())
                     .featureId(item.getFeatureId())
+                    .featureName(null == feature ? "" : feature.getFeature_name())
                     .paramName(item.getParam_name())
-                    .paramIndexId(item.getParamIndexId()).build();
-            if (null != taskConfig) {
-                jobDetails.setCron(taskConfig.getCron());
-                jobDetails.setClass_name(taskConfig.getClassName());
-                jobDetails.setDescription(taskConfig.getDescription());
-            }
+                    .paramIndex(item.getParamIndexId())
+                    .cron(null == jobConfig ? "" : jobConfig.getCron())
+                    .status(null == jobConfig ? 0 : jobConfig.getStatus())
+                    .dataChangedLastTime(item.getDatachangedLasttime())
+                    .description(null == jobConfig ? "" : jobConfig.getDescription()
+                    ).build();
             jobDetailsList.add(jobDetails);
         }
-        rsp.setJobDetails(jobDetailsList);
-        rsp.setStatus(status);
-        return rsp;
-    }
-
-    @Override
-    public GetResultResponse getResult(Long taskId) {
-        Status status = new Status();
-        status.setSuccess(true);
-        List<TaskResult> taskResultList
-                = taskResultMapper.selectList(
-                Wrappers.<TaskResult>lambdaQuery()
-                        .eq(TaskResult::getTaskId, taskId));
-        //赋值taskResult
-        List<TaskResults> list = new ArrayList<>();
-        for (TaskResult item : taskResultList) {
-            TaskResults taskResults
-                    = TaskResults.builder()
-                    .starttime(item.getStarttime())
-                    .endtime(item.getEndtime())
-                    .info(FastJsonUtil.toListBean(
-                        item.getLogs(),
-                        CaseInfo.class)).build();
-            list.add(taskResults);
-        }
-        GetResultResponse rsp
-                = GetResultResponse.builder()
+        QueryAllJobResponse rsp
+                = QueryAllJobResponse.builder()
+                .jobDetails(jobDetailsList)
                 .status(status)
-                .taskId(taskId)
-                .taskResults(list).build();
+                .build();
         return rsp;
     }
 
     /**
-     * 程序启动开始加载定时任务
+     * 更新任务Status
+     *
+     * @param request
+     * @throws SchedulerException
+     */
+    @Override
+    public SetStatusResponse updateStatus(SetStatusRequest request) {
+        Status status = new Status();
+        status.setSuccess(true);
+        JobConfig taskConfigEntity = jobConfigMapper.selectOne(
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getJobId, request.getJobId()));
+        //不存在job返回error
+        if (taskConfigEntity == null){
+            status.setSuccess(false);
+            status.setMessage("cannot find job config");
+        }
+        //更新status为开启状态
+        else if (1 == request.getStatus()) {
+            //update job status
+            taskConfigEntity.setStatus(1);
+            jobConfigMapper.update(
+                    taskConfigEntity,
+                    Wrappers.<JobConfig>lambdaQuery()
+                            .eq(JobConfig::getJobId, request.getJobId()));
+            try {
+                JobDetail jobDetail = getJobDetail(taskConfigEntity);
+                CronTrigger cronTrigger = getCronTrigger(taskConfigEntity);
+                scheduler.scheduleJob(jobDetail, cronTrigger);
+            } catch (Exception e) {
+                log.error("加载定时任务异常",e);
+                status.setSuccess(false);
+                status.setMessage(String.format("%s %s", "load scheduler failed", e));
+            }
+        }
+        //更新status为关闭状态
+        else {
+            try {
+                //update job status
+                taskConfigEntity.setStatus(0);
+                jobConfigMapper.update(
+                        taskConfigEntity,
+                        Wrappers.<JobConfig>lambdaQuery()
+                                .eq(JobConfig::getJobId, request.getJobId()));
+                // 停止触发器
+                scheduler.pauseTrigger(TriggerKey.triggerKey(String.valueOf(request.getJobId())));
+                // 卸载定时任务
+                scheduler.unscheduleJob(TriggerKey.triggerKey(String.valueOf(request.getJobId())));
+                // 删除原来的job
+                scheduler.deleteJob(JobKey.jobKey(String.valueOf(request.getJobId())));
+            } catch (Exception e) {
+                log.error("卸载定时任务异常",e);
+                status.setSuccess(false);
+                status.setMessage(String.format("%s %s", "unload scheduler failed", e));
+            }
+        }
+        SetStatusResponse rsp
+                = SetStatusResponse.builder()
+                .status(status).build();
+        return rsp;
+    }
+
+
+    /**
+     * 手动异步执行Job
+     *
+     * @param jobId
+     */
+    @Async("taskExecutor")
+    @Override
+    public void execJob(Long jobId) {
+        Jobb job = jobMapper.selectOne(
+                Wrappers.<Jobb>lambdaQuery()
+                        .eq(Jobb::getId, jobId));
+        //ParamIndex 格式转为 list<Long>
+        List<Long> index
+                = Utils.toListLong(job.getParamIndexId());
+        List<Caze> cazes
+                = caseMapper.selectList(
+                Wrappers.<Caze>lambdaQuery()
+                        .eq(Caze::getFeatureId,
+                                job.getFeatureId()));
+        //过滤获取Parameter中存在的Index
+        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters
+                = parameterMapper.selectList(
+                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
+                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, job.getParam_name()));
+        parameters.stream().filter(item->index.equals(item.getParameterValueIndex())).collect(Collectors.toList());
+        Set<Long> parameterIndex
+                = parameters.stream()
+                .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex)
+                .collect(Collectors.toSet());
+        //根据Index遍历执行Case
+        for (Long i : parameterIndex) {
+            //构建参数
+            List<Parameter> parameterList = new ArrayList<>();
+            parameters =
+                    parameters
+                            .stream()
+                            .filter(item->i.equals(item.getParameterValueIndex()))
+                            .collect(Collectors.toList());
+            for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : parameters) {
+                Parameter parameter = new Parameter();
+                parameter.setParameter_value(item.getParameterValue());
+                parameter.setParameter_key(item.getParameterKey());
+                parameterList.add(parameter);
+            }
+            Timestamp startTime = new Timestamp(System.currentTimeMillis());
+            //执行feature
+            TaskResult taskResult
+                    = featureService.execFeature(
+                    parameterList, cazes);
+            Timestamp endTime
+                    = new Timestamp(System.currentTimeMillis());
+            taskResult.setParameter_name(job.getParam_name());
+            taskResult.setParameter_value_index(i);
+            taskResult.setTaskId(jobId);
+            taskResult.setStarttime(startTime);
+            taskResult.setEndtime(endTime);
+            taskResultMapper.insert(taskResult);
+        }
+    }
+
+    /**
+     * 加载所有status为1的定时任务
      */
     @Override
     public void startJob(){
-        List<TaskConfig> taskConfigEntities = taskConfigMapper.selectList(
-                Wrappers.<TaskConfig>lambdaQuery()
-                        .eq(TaskConfig::getStatus, 1));
+        List<JobConfig> taskConfigEntities = jobConfigMapper.selectList(
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getStatus, 1));
         if (taskConfigEntities == null || taskConfigEntities.size() == 0){
             log.error("定时任务加载数据为空");
             return;
         }
-        for (TaskConfig configEntity : taskConfigEntities) {
+        for (JobConfig configEntity : taskConfigEntities) {
             CronTrigger cronTrigger = null;
             JobDetail jobDetail = null;
             try {
                 cronTrigger = getCronTrigger(configEntity);
                 jobDetail = getJobDetail(configEntity);
                 scheduler.scheduleJob(jobDetail,cronTrigger);
-                log.info("编号：{}定时任务加载成功",configEntity.getTaskId());
+                log.info("编号：{}定时任务加载成功",configEntity.getJobId());
             }catch (Exception e){
-                log.error("编号：{}定时任务加载失败",configEntity.getTaskId());
+                log.error("编号：{}定时任务加载失败",configEntity.getJobId());
             }
 
         }
@@ -296,15 +387,15 @@ public class ScheduleJobImpl implements IScheduleJobService {
 
     /**
      * 添加新的job
-     * @param taskId
+     * @param jobId
      * @throws SchedulerConfigException
      */
     @Override
-    public void loadJob(String taskId) throws SchedulerConfigException {
-        TaskConfig taskConfigEntity = taskConfigMapper.selectOne(
-                Wrappers.<TaskConfig>lambdaQuery()
-                        .eq(TaskConfig::getTaskId, taskId)
-                        .eq(TaskConfig::getStatus, 1));
+    public void loadJob(String jobId) throws SchedulerConfigException {
+        JobConfig taskConfigEntity = jobConfigMapper.selectOne(
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getJobId, jobId)
+                        .eq(JobConfig::getStatus, 1));
         if (taskConfigEntity == null){
             throw new SchedulerConfigException("未找到相关Job配置");
         }
@@ -319,13 +410,13 @@ public class ScheduleJobImpl implements IScheduleJobService {
     }
 
     @Override
-    public void unloadJob(String taskId) throws SchedulerException {
+    public void unloadJob(String jobId) throws SchedulerException {
         // 停止触发器
-        scheduler.pauseTrigger(TriggerKey.triggerKey(taskId));
+        scheduler.pauseTrigger(TriggerKey.triggerKey(jobId));
         // 卸载定时任务
-        scheduler.unscheduleJob(TriggerKey.triggerKey(taskId));
+        scheduler.unscheduleJob(TriggerKey.triggerKey(jobId));
         // 删除原来的job
-        scheduler.deleteJob(JobKey.jobKey(taskId));
+        scheduler.deleteJob(JobKey.jobKey(jobId));
     }
 
     /**
@@ -333,43 +424,44 @@ public class ScheduleJobImpl implements IScheduleJobService {
      * @throws Exception
      */
     @Override
-    public void reload(String taskId) throws Exception {
-        TaskConfig taskConfigEntity = taskConfigMapper.selectOne(
-                Wrappers.<TaskConfig>lambdaQuery()
-                        .eq(TaskConfig::getTaskId, taskId)
-                        .eq(TaskConfig::getStatus, 1));
+    public void reload(String jobId) throws Exception {
+        JobConfig taskConfigEntity = jobConfigMapper.selectOne(
+                Wrappers.<JobConfig>lambdaQuery()
+                        .eq(JobConfig::getJobId, jobId)
+                        .eq(JobConfig::getStatus, 1));
 
-        String jobCode = taskConfigEntity.getTaskId();
+        Long jobCode = taskConfigEntity.getJobId();
         // 获取以前的触发器
-        TriggerKey triggerKey = TriggerKey.triggerKey(jobCode);
+        TriggerKey triggerKey = TriggerKey.triggerKey(String.valueOf(jobCode));
         // 停止触发器
         scheduler.pauseTrigger(triggerKey);
         // 删除触发器
         scheduler.unscheduleJob(triggerKey);
         // 删除原来的job
-        scheduler.deleteJob(JobKey.jobKey(jobCode));
-
+        scheduler.deleteJob(JobKey.jobKey(String.valueOf(jobCode)));
         JobDetail jobDetail = getJobDetail(taskConfigEntity);
         CronTrigger cronTrigger = getCronTrigger(taskConfigEntity);
         // 重新加载job
         scheduler.scheduleJob(jobDetail, cronTrigger);
     }
+
     //组装JobDetail
-    private JobDetail getJobDetail(TaskConfig configEntity) throws ClassNotFoundException {
+    private JobDetail getJobDetail(JobConfig configEntity) throws ClassNotFoundException {
 
         Class<? extends Job> aClass = Class.forName(configEntity.getClassName()).asSubclass(Job.class);
 
         return JobBuilder.newJob()
-                .withIdentity(JobKey.jobKey(configEntity.getTaskId()))
+                .withIdentity(JobKey.jobKey(String.valueOf(configEntity.getJobId())))
                 .withDescription(configEntity.getDescription())
                 .ofType(aClass).build();
     }
+
     //组装CronTrigger
-    private CronTrigger getCronTrigger(TaskConfig configEntity){
+    private CronTrigger getCronTrigger(JobConfig configEntity){
         CronTrigger cronTrigger = null;
         CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(configEntity.getCron());
         cronTrigger = TriggerBuilder.newTrigger()
-                .withIdentity(TriggerKey.triggerKey(configEntity.getTaskId()))
+                .withIdentity(TriggerKey.triggerKey(String.valueOf(configEntity.getJobId())))
                 .withSchedule(cronScheduleBuilder)
                 .build();
         return cronTrigger;

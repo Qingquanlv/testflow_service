@@ -6,6 +6,7 @@ import org.springframework.util.StringUtils;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,6 +23,16 @@ public class Utils {
         if (null != key) {
             String[] arrays = key.split(",");
             list = Stream.of(arrays).collect(Collectors.toList());
+        }
+        return list;
+    }
+
+    public static List<Long> toListLong(String key) {
+        List<Long> list = new ArrayList<>();
+        if (null != key) {
+            String[] arrays = key.split(",");
+            list = Arrays.stream(arrays)
+                    .map(s ->Long.parseLong(s.trim())).collect(Collectors.toList());
         }
         return list;
     }

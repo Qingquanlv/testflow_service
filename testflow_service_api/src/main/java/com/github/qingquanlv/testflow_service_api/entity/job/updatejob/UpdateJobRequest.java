@@ -12,11 +12,11 @@ import lombok.Data;
 public class UpdateJobRequest {
 
         private String requestId;;
-        private Long taskId;
+        private Long jobId;
         private String name;
         private Long featureId;
         private String paramName;
-        private String paramIndexId;
+        private String paramIndex;
         private String cron;
         private String description;
 }

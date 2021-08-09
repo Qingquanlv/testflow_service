@@ -73,19 +73,27 @@ public class BufferManager {
         }
     }
 
-    public static String getBufferByKey(String bufferKey) throws Exception {
+    public static String getBufferByKey(String bufferKey) {
         return jedisUtil.get(String.format("%s:%s", pattern, bufferKey));
     }
 
-    public static void addBufferByKey(String bufferKey, String bufferVal) throws Exception {
+    public static void addBufferByKey(String bufferKey, String bufferVal) {
         jedisUtil.set(String.format("%s:%s", pattern, bufferKey), bufferVal);
     }
 
-     public static void addConfigByKey(String bufferKey, String bufferVal) throws Exception {
+    public static void addClazzByKey(String bufferKey, String bufferVal) {
+        jedisUtil.set(String.format("%s:%s$%s", pattern, "clazz", bufferKey), bufferVal);
+    }
+
+    public static void addConfigByKey(String bufferKey, String bufferVal) {
         jedisUtil.set(String.format("%s:%s$%s", pattern, "config", bufferKey), bufferVal);
     }
 
-    public static void appendBufferByKey(String bufferKey, String bufferVal) throws Exception {
+    public static void addStatusByKey(String bufferKey, String bufferVal) {
+        jedisUtil.set(String.format("%s:%s$%s", pattern, "status", bufferKey), bufferVal);
+    }
+
+    public static void appendBufferByKey(String bufferKey, String bufferVal) {
         jedisUtil.append(String.format("%s:%s", pattern, bufferKey), bufferVal);
     }
 

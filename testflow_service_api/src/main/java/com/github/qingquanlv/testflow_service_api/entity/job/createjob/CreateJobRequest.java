@@ -15,7 +15,7 @@ public class CreateJobRequest {
         private String name;
         private Long featureId;
         private String paramName;
-        private String paramIndexId;
+        private String paramIndex;
         private String cron;
         private String description;
 }
