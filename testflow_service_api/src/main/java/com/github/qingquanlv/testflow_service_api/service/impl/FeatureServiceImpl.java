@@ -25,7 +25,6 @@ import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,10 +56,19 @@ public class FeatureServiceImpl implements FeatureService {
     ParseCaseConfigMapper parseCaseConfigMapper;
 
     @Autowired
-    VerificationCaseConfigMapper verificationCaseConfigMapper;
+    ComparevalCaseConfigMapper comparevalCaseConfigMapper;
 
     @Autowired
-    ParameterMapper parameterMapper;
+    CompareobjCaseConfigMapper compareobjCaseConfigMapper;
+
+    @Autowired
+    ComparepathCaseConfigMapper comparepathCaseConfigMapper;
+
+    @Autowired
+    DruidCaseConfigMapper druidCaseConfigMapper;
+
+    @Autowired
+    TidbCaseConfigMapper tidbCaseConfigMapper;
 
 
     /**
@@ -107,9 +115,21 @@ public class FeatureServiceImpl implements FeatureService {
                 databaseCaseConfigMapper.delete(
                         Wrappers.<DatabaseCaseConfig>lambdaQuery()
                                 .in(DatabaseCaseConfig::getCaseId, caseIds));
-                verificationCaseConfigMapper.delete(
-                        Wrappers.<VerificationCaseConfig>lambdaQuery()
-                                .in(VerificationCaseConfig::getCaseId, caseIds));
+                compareobjCaseConfigMapper.delete(
+                        Wrappers.<CompareobjCaseConfig>lambdaQuery()
+                                .in(CompareobjCaseConfig::getCaseId, caseIds));
+                comparepathCaseConfigMapper.delete(
+                        Wrappers.<ComparepathCaseConfig>lambdaQuery()
+                                .in(ComparepathCaseConfig::getCaseId, caseIds));
+                comparevalCaseConfigMapper.delete(
+                        Wrappers.<ComparevalCaseConfig>lambdaQuery()
+                                .in(ComparevalCaseConfig::getCaseId, caseIds));
+                druidCaseConfigMapper.delete(
+                        Wrappers.<DruidCaseConfig>lambdaQuery()
+                                .in(DruidCaseConfig::getCaseId, caseIds));
+                tidbCaseConfigMapper.delete(
+                        Wrappers.<TidbCaseConfig>lambdaQuery()
+                                .in(TidbCaseConfig::getCaseId, caseIds));
                 //case的连线信息，直接删除
                 List<Caze> cazes = caseMapper.selectList(Wrappers.<Caze>lambdaQuery()
                         .eq(Caze::getFeatureId, feature.getFeature_id()));
@@ -191,7 +211,7 @@ public class FeatureServiceImpl implements FeatureService {
                     .stream()
                     .filter(item -> caseLabel.equals(item.getLabel()))
                     .findFirst().orElse(null);
-            if ("request".equals(type)) {
+            if (Constants.REQUEST.equals(type)) {
                 RequestCaseConfig requestCaseConfig =
                         RequestCaseConfig.builder(
                         ).caseId(caseId
@@ -210,7 +230,7 @@ public class FeatureServiceImpl implements FeatureService {
                         ).build();
                 requestCaseConfigMapper.insert(requestCaseConfig);
             }
-            else if ("parse".equals(type)) {
+            else if (Constants.PARSE.equals(type)) {
                 ParseCaseConfig parseCaseConfig =
                         ParseCaseConfig.builder(
                         ).caseId(caseId
@@ -223,7 +243,7 @@ public class FeatureServiceImpl implements FeatureService {
                         ).build();
                 parseCaseConfigMapper.insert(parseCaseConfig);
             }
-            else if ("database".equals(type)) {
+            else if (Constants.DATABASE.equals(type)) {
                 DatabaseCaseConfig databaseCaseConfig =
                         DatabaseCaseConfig.builder(
                         ).caseId(caseId
@@ -234,18 +254,66 @@ public class FeatureServiceImpl implements FeatureService {
                         ).build();
                 databaseCaseConfigMapper.insert(databaseCaseConfig);
             }
-            else if ("verification".equals(type)) {
-                VerificationCaseConfig verificationCaseConfig =
-                        VerificationCaseConfig.builder(
+            else if (Constants.TIDB.equals(type)) {
+                TidbCaseConfig tidbCaseConfig =
+                        TidbCaseConfig.builder(
                         ).caseId(caseId
-                        ).verificationType(config.getExec_params()
-                                .get("verification_type")
-                        ).parameters(FastJsonUtil.toJson(
-                                Utils.toListStr(
-                                        config.getExec_params()
-                                                .get("parameters")))
+                        ).env(config.getExec_params()
+                                .get("env")
+                        ).sqlStr(config.getExec_params()
+                                .get("sql_str")
                         ).build();
-                verificationCaseConfigMapper.insert(verificationCaseConfig);
+                tidbCaseConfigMapper.insert(tidbCaseConfig);
+            }
+            else if (Constants.DRUID.equals(type)) {
+                DruidCaseConfig druidCaseConfig =
+                        DruidCaseConfig.builder(
+                        ).caseId(caseId
+                        ).env(config.getExec_params()
+                                .get("env")
+                        ).sqlStr(config.getExec_params()
+                                .get("sql_str")
+                        ).build();
+                druidCaseConfigMapper.insert(druidCaseConfig);
+            }
+            else if (Constants.COMPARE_VAL.equals(type)) {
+                ComparevalCaseConfig comparepathCaseConfig =
+                        ComparevalCaseConfig.builder(
+                        ).caseId(caseId
+                        ).expVal(config.getExec_params()
+                                .get("exp_val")
+                        ).atlVal(config.getExec_params()
+                                .get("atl_val")
+                        ).build();
+                comparevalCaseConfigMapper.insert(comparepathCaseConfig);
+            }
+            else if (Constants.COMPARE_PATH.equals(type)) {
+                ComparepathCaseConfig comparepathCaseConfig =
+                        ComparepathCaseConfig.builder(
+                        ).caseId(caseId
+                        ).atlObj(config.getExec_params()
+                                .get("atlObj")
+                        ).JsonFilter(config.getExec_params()
+                                .get("JsonFilter")
+                        ).expVal(config.getExec_params()
+                                .get("exp_val")
+                        ).build();
+                comparepathCaseConfigMapper.insert(comparepathCaseConfig);
+            }
+            else if (Constants.COMPARE_OBJ.equals(type)) {
+                CompareobjCaseConfig compareobjCaseConfig =
+                        CompareobjCaseConfig.builder(
+                        ).caseId(caseId
+                        ).expObj(config.getExec_params()
+                                .get("expObj")
+                        ).atlObj(config.getExec_params()
+                                .get("atlObj")
+                        ).pkMap(config.getExec_params()
+                                .get("pkMap")
+                        ).noCompareItemMap(config.getExec_params()
+                                .get("noCompareItemMap")
+                        ).build();
+                compareobjCaseConfigMapper.insert(compareobjCaseConfig);
             }
         }
     }
@@ -277,9 +345,21 @@ public class FeatureServiceImpl implements FeatureService {
             databaseCaseConfigMapper.delete(
                     Wrappers.<DatabaseCaseConfig>lambdaQuery()
                             .in(DatabaseCaseConfig::getCaseId, caseIds));
-            verificationCaseConfigMapper.delete(
-                    Wrappers.<VerificationCaseConfig>lambdaQuery()
-                            .in(VerificationCaseConfig::getCaseId, caseIds));
+            compareobjCaseConfigMapper.delete(
+                    Wrappers.<CompareobjCaseConfig>lambdaQuery()
+                            .in(CompareobjCaseConfig::getCaseId, caseIds));
+            comparepathCaseConfigMapper.delete(
+                    Wrappers.<ComparepathCaseConfig>lambdaQuery()
+                            .in(ComparepathCaseConfig::getCaseId, caseIds));
+            comparevalCaseConfigMapper.delete(
+                    Wrappers.<ComparevalCaseConfig>lambdaQuery()
+                            .in(ComparevalCaseConfig::getCaseId, caseIds));
+            druidCaseConfigMapper.delete(
+                    Wrappers.<DruidCaseConfig>lambdaQuery()
+                            .in(DruidCaseConfig::getCaseId, caseIds));
+            tidbCaseConfigMapper.delete(
+                    Wrappers.<TidbCaseConfig>lambdaQuery()
+                            .in(TidbCaseConfig::getCaseId, caseIds));
             featureCaseNextCaseMapper.delete(
                     Wrappers.<FeatureCaseNextCase>lambdaQuery()
                             .in(FeatureCaseNextCase::getSourceCaseId, caseIds));
@@ -429,21 +509,106 @@ public class FeatureServiceImpl implements FeatureService {
                     configs.add(config);
                 }
             }
-            List<VerificationCaseConfig> verificationCaseConfigs
-                    = verificationCaseConfigMapper.selectList(
-                    Wrappers.<VerificationCaseConfig>lambdaQuery()
-                            .in(VerificationCaseConfig::getCaseId, caseIds));
-            if (!CollectionUtils.isEmpty(verificationCaseConfigs)) {
-                for (VerificationCaseConfig verificationCaseConfig : verificationCaseConfigs) {
+            List<TidbCaseConfig> tidbCaseConfigs
+                    = tidbCaseConfigMapper.selectList(
+                    Wrappers.<TidbCaseConfig>lambdaQuery()
+                            .in(TidbCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(tidbCaseConfigs)) {
+                for (TidbCaseConfig tidbCaseConfig : tidbCaseConfigs) {
                     HashMap<String, String> params = new HashMap<>();
                     Nodes node = nodes
                             .stream()
-                            .filter(item->verificationCaseConfig.getCaseId().equals(item.getId()))
+                            .filter(item->tidbCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("verification_type",
-                            verificationCaseConfig.getVerificationType());
-                    params.put("parameters",
-                            Utils.listToStr(FastJsonUtil.toList(verificationCaseConfig.getParameters())));
+                    params.put("env", tidbCaseConfig.getEnv());
+                    params.put("sql_str", tidbCaseConfig.getSqlStr());
+                    Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
+                            .label(null == node ? "" : node.getLabel())
+                            .exec_params(params)
+                            .build();
+                    configs.add(config);
+                }
+            }
+            List<DruidCaseConfig> druidCaseConfigs
+                    = druidCaseConfigMapper.selectList(
+                    Wrappers.<DruidCaseConfig>lambdaQuery()
+                            .in(DruidCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(druidCaseConfigs)) {
+                for (DruidCaseConfig druidCaseConfig : druidCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->druidCaseConfig.getCaseId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("env", druidCaseConfig.getEnv());
+                    params.put("sql_str", druidCaseConfig.getSqlStr());
+                    Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
+                            .label(null == node ? "" : node.getLabel())
+                            .exec_params(params)
+                            .build();
+                    configs.add(config);
+                }
+            }
+            List<ComparevalCaseConfig> comparevalCaseConfigs
+                    = comparevalCaseConfigMapper.selectList(
+                    Wrappers.<ComparevalCaseConfig>lambdaQuery()
+                            .in(ComparevalCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(comparevalCaseConfigs)) {
+                for (ComparevalCaseConfig comparevalCaseConfig : comparevalCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->comparevalCaseConfig.getCaseId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("ExpVal", comparevalCaseConfig.getExpVal());
+                    params.put("AtlVal", comparevalCaseConfig.getAtlVal());
+                    Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
+                            .label(null == node ? "" : node.getLabel())
+                            .exec_params(params)
+                            .build();
+                    configs.add(config);
+                }
+            }
+            List<ComparepathCaseConfig> comparepathCaseConfigs
+                    = comparepathCaseConfigMapper.selectList(
+                    Wrappers.<ComparepathCaseConfig>lambdaQuery()
+                            .in(ComparepathCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(comparepathCaseConfigs)) {
+                for (ComparepathCaseConfig comparepathCaseConfig : comparepathCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->comparepathCaseConfig.getCaseId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("AtlObj", comparepathCaseConfig.getAtlObj());
+                    params.put("AtlVal", comparepathCaseConfig.getJsonFilter());
+                    params.put("ExpVal", comparepathCaseConfig.getExpVal());
+                    Config config = Config.builder()
+                            .id(null == node ? null : node.getId())
+                            .label(null == node ? "" : node.getLabel())
+                            .exec_params(params)
+                            .build();
+                    configs.add(config);
+                }
+            }
+            List<CompareobjCaseConfig> compareobjCaseConfigs
+                    = compareobjCaseConfigMapper.selectList(
+                    Wrappers.<CompareobjCaseConfig>lambdaQuery()
+                            .in(CompareobjCaseConfig::getCaseId, caseIds));
+            if (!CollectionUtils.isEmpty(compareobjCaseConfigs)) {
+                for (CompareobjCaseConfig compareobjCaseConfig : compareobjCaseConfigs) {
+                    HashMap<String, String> params = new HashMap<>();
+                    Nodes node = nodes
+                            .stream()
+                            .filter(item->compareobjCaseConfig.getCaseId().equals(item.getId()))
+                            .findFirst().orElse(null);
+                    params.put("ExpObj", compareobjCaseConfig.getExpObj());
+                    params.put("AtlObj", compareobjCaseConfig.getAtlObj());
+                    params.put("PkMap", compareobjCaseConfig.getPkMap());
+                    params.put("NoCompareItemMap", compareobjCaseConfig.getNoCompareItemMap());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
@@ -676,38 +841,38 @@ public class FeatureServiceImpl implements FeatureService {
                         requestCaseConfig.getUrl());
                 break;
             }
-            case Constants.VERIFICATION: {
-                String errorMsg = "";
-                VerificationCaseConfig verificationCaseConfig
-                        = verificationCaseConfigMapper.selectOne(
-                        Wrappers.<VerificationCaseConfig>lambdaQuery()
-                                .eq(VerificationCaseConfig::getCaseId, featureCase.getId()));
-                List<String> parameters = FastJsonUtil.toList(verificationCaseConfig.getParameters());
-                if (Constants.COMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    errorMsg =
-                        testFlowManager.verify(featureCase.getLabel(),
-                                parameters.get(0),
-                                parameters.get(1));
-                }
-                else if (Constants.XPATHCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    errorMsg =
-                        testFlowManager.verify(featureCase.getLabel(),
-                                parameters.get(0),
-                                parameters.get(1),
-                                parameters.get(2));
-                }
-                else if (Constants.OBJCOMPARE.equals(verificationCaseConfig.getVerificationType())) {
-                    errorMsg =
-                        testFlowManager.verify(featureCase.getLabel(),
-                                parameters.get(0),
-                                parameters.get(1),
-                                parameters.get(2),
-                                parameters.get(3));
-                }
-                testFlowManager.appendBuffer(featureCase.getLabel(),
-                        StringUtils.isEmpty(errorMsg)
-                                ? "passed"
-                                : errorMsg);
+            case Constants.COMPARE_VAL: {
+                ComparevalCaseConfig comparevalCaseConfig
+                        = comparevalCaseConfigMapper.selectOne(
+                        Wrappers.<ComparevalCaseConfig>lambdaQuery()
+                                .eq(ComparevalCaseConfig::getCaseId, featureCase.getId()));
+
+                testFlowManager.verify(featureCase.getLabel(),
+                        comparevalCaseConfig.getExpVal(),
+                        comparevalCaseConfig.getAtlVal());
+                break;
+            }
+            case Constants.COMPARE_PATH: {
+                ComparepathCaseConfig comparepathCaseConfig
+                        = comparepathCaseConfigMapper.selectOne(
+                        Wrappers.<ComparepathCaseConfig>lambdaQuery()
+                                .eq(ComparepathCaseConfig::getCaseId, featureCase.getId()));
+                testFlowManager.verify(featureCase.getLabel(),
+                        comparepathCaseConfig.getAtlObj(),
+                        comparepathCaseConfig.getJsonFilter(),
+                        comparepathCaseConfig.getExpVal());
+                break;
+            }
+            case Constants.COMPARE_OBJ: {
+                CompareobjCaseConfig compareobjCaseConfig
+                        = compareobjCaseConfigMapper.selectOne(
+                        Wrappers.<CompareobjCaseConfig>lambdaQuery()
+                                .eq(CompareobjCaseConfig::getCaseId, featureCase.getId()));
+                testFlowManager.verify(featureCase.getLabel(),
+                        compareobjCaseConfig.getExpObj(),
+                        compareobjCaseConfig.getAtlObj(),
+                        compareobjCaseConfig.getPkMap(),
+                        compareobjCaseConfig.getNoCompareItemMap());
                 break;
             }
             default: {}

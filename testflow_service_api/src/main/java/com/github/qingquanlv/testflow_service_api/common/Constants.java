@@ -14,7 +14,7 @@ public class Constants {
     public static final String PARSE = "parse";
     public static final String REQUEST = "request";
     public static final String VERIFICATION = "verification";
-    public static final String COMPARE = "compare";
-    public static final String XPATHCOMPARE = "xpathcompare";
-    public static final String OBJCOMPARE = "objcompare";
+    public static final String COMPARE_VAL = "compare_val";
+    public static final String COMPARE_PATH = "compare_path";
+    public static final String COMPARE_OBJ = "compare_obj";
 }

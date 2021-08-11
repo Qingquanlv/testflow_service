@@ -12,9 +12,7 @@ import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -59,13 +57,13 @@ public class CaseServiceImpl implements CaseService {
                 case Constants.REQUEST: {
                     result =
                             testFlowManager.sendRequest(config.getLabel(),
-                                "null".equals(config.getExec_params().get("request_body")) || null == config.getExec_params().get("request_body") ? null : config.getExec_params().get("request_body"),
-                                "null".equals(config.getExec_params().get("request_configs")) || null == config.getExec_params().get("request_configs") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_configs")),
-                                "null".equals(config.getExec_params().get("request_headers")) || null == config.getExec_params().get("request_headers") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_headers")),
-                                config.getExec_params().get("request_type"),
-                                config.getExec_params().get("content_type"),
-                                config.getExec_params().get("url")
-                    );
+                                    "null".equals(config.getExec_params().get("request_body")) || null == config.getExec_params().get("request_body") ? null : config.getExec_params().get("request_body"),
+                                    "null".equals(config.getExec_params().get("request_configs")) || null == config.getExec_params().get("request_configs") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_configs")),
+                                    "null".equals(config.getExec_params().get("request_headers")) || null == config.getExec_params().get("request_headers") ? null : FastJsonUtil.toMap(config.getExec_params().get("request_headers")),
+                                    config.getExec_params().get("request_type"),
+                                    config.getExec_params().get("content_type"),
+                                    config.getExec_params().get("url")
+                            );
                     break;
                 }
                 case Constants.TIDB: {
@@ -73,12 +71,12 @@ public class CaseServiceImpl implements CaseService {
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("sql_str");
+                                    .get("sql_str");
                     String env
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("env");
+                                    .get("env");
                     result = testFlowManager.queryTIDB(
                             config.getLabel(),
                             env,
@@ -107,59 +105,89 @@ public class CaseServiceImpl implements CaseService {
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("cvt_method_source");
+                                    .get("cvt_method_source");
                     String params
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("parameters");
+                                    .get("parameters");
                     result = testFlowManager.sourceParse(config.getLabel(),
                             convertMethodSource,
                             Utils.toListStr(params));
                     break;
                 }
-                case Constants.VERIFICATION: {
-                    String verificationType
+                case Constants.COMPARE_VAL: {
+                    String expVal
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("verification_type");
-                    String params
+                                    .get("expVal");
+                    String atlVal
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                            .get("parameters");
-                    List<String> parameters = Utils.toListStr(params);
-                    if (Constants.XPATHCOMPARE.equals(verificationType)) {
-                        result =
-                                testFlowManager.verify(config.getLabel(),
-                                        parameters.get(0),
-                                        parameters.get(1),
-                                        parameters.get(2));
-                        result = StringUtils.isEmpty(result) ?
-                                "Pass" : result;
-                    }
-                    else if (Constants.OBJCOMPARE.equals(verificationType)) {
-                        result =
-                                testFlowManager.verify(config.getLabel(),
-                                        parameters.get(0),
-                                        parameters.get(1),
-                                        parameters.get(2),
-                                        parameters.get(3));
-                        result = StringUtils.isEmpty(result) ?
-                                "Pass" : result;
-                    }
-                    else {
-                        result =
-                                testFlowManager.verify(config.getLabel(),
-                                        parameters.get(0),
-                                        parameters.get(1));
-                        result = StringUtils.isEmpty(result) ?
-                                "Pass" : result;
-                    }
+                                    .get("atlVal");
+                    result =
+                            testFlowManager.verify(config.getLabel(),
+                                    expVal,
+                                    atlVal);
+
                     break;
                 }
-                default: {}
+                case Constants.COMPARE_PATH: {
+                    String atlObj
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("atlObj");
+                    String JsonFilter
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("JsonFilter");
+                    String expVal
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("expVal");
+                    result =
+                            testFlowManager.verify(config.getLabel(),
+                                    atlObj,
+                                    JsonFilter,
+                                    expVal);
+                    break;
+                }
+                case Constants.COMPARE_OBJ: {
+                    String expObj
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("expObj");
+                    String atlObj
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("atlObj");
+                    String pkMap
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("pkMap");
+                    String noCompareItemMap
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("noCompareItemMap");
+                    result =
+                            testFlowManager.verify(config.getLabel(),
+                                    expObj,
+                                    atlObj,
+                                    pkMap,
+                                    noCompareItemMap);
+                    break;
+                }
+                default: {
+                }
             }
         }
         CaseInfo caseInfo = new CaseInfo();
