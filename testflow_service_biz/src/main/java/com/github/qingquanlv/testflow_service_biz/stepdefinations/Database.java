@@ -1,6 +1,7 @@
 package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
+import com.github.qingquanlv.testflow_service_biz.common.Constants;
 import com.github.qingquanlv.testflow_service_biz.serviceaccess.HttpClientUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
@@ -16,6 +17,8 @@ import java.util.Map;
 
 public class Database {
     public final String resource = "mybatis-config.xml";
+    public static final String CONTENT_TYPE_JSON = "application/json;charset=utf-8";
+
 
 
     /**
@@ -82,8 +85,13 @@ public class Database {
      * @throws Exception
      */
     public String queryDruid(String caseName, String env, String sql) throws Exception{
-        String requestStr = ParamUtil.parseParam(sql);
-        return HttpClientUtil.sendHttpPost(env, requestStr, null, null, null);
+        String sqlStr = ParamUtil.parseParam(sql);
+        BufferManager.addConfigByKey(caseName,
+                String.format("env:%s, sql:%s", env, sql));
+        String jsonStr
+                = Constants.DRUID_TEMPLATE
+                .replace(Constants.DRUID_TEMPLATE_PARAME, sqlStr);
+        return HttpClientUtil.sendHttpPost(env, jsonStr, null, null, CONTENT_TYPE_JSON);
     }
 
     /**

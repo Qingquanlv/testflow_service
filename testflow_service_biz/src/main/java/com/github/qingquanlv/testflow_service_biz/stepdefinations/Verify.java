@@ -18,8 +18,8 @@ public class Verify {
         String expObj = BufferManager.getBufferByKey(expStr);
         String atlObj = BufferManager.getBufferByKey(atlStr);
         BufferManager.addConfigByKey(caseName,
-                String.format("expValue:%s, atlValue:%s",
-                        expObj, atlObj));
+                String.format("expKey:%s，expValue:%s, atlKey:%s, atlValue:%s",
+                        expStr, expObj, atlStr, atlObj));
         if (null == expObj && null == atlObj) { }
         else if (null == expObj ||  null == atlObj) {
             errMsg = String.format("expected: \"%s\" not equals with actual: \"%s\".", expObj, atlObj);
@@ -38,14 +38,14 @@ public class Verify {
         String errMsg = "";
         String atlStr = BufferManager.getBufferByKey(atlObj);
         BufferManager.addConfigByKey(caseName,
-                String.format("expValue:%s, jsonFilter:%s, atlValue:%s",
-                        expValue, JsonFilter, atlStr));
-        List<Object> objList = ParamUtil.getMapValFromJson(atlStr, JsonFilter);
-        if (objList == null || objList.isEmpty()) {
-            throw new Exception(String.format("No matiched value for key \"%s\" Json string \"%s\" .", atlStr, JsonFilter));
+                String.format("expValue:%s, jsonFilter:%s, atlKey:%s, atlObject:%s",
+                        expValue, JsonFilter, atlObj, atlStr));
+        String str = ParamUtil.getMapValFromJson(atlStr, JsonFilter);
+        if (str == null || str.isEmpty()) {
+            throw new Exception(String.format("No matched value for key \"%s\" Json string \"%s\" .", atlStr, JsonFilter));
         }
-        if (!objList.get(0).toString().equals(expValue)) {
-            errMsg =  String.format("expected value: \"%s\" is not equal with actual: \"%s\".", expValue, objList.get(0).toString());
+        if (!str.equals(expValue)) {
+            errMsg =  String.format("expected value: \"%s\" is not equal with actual: \"%s\".", expValue, str);
         }
         return errMsg;
     }
@@ -58,8 +58,8 @@ public class Verify {
         String exp = BufferManager.getBufferByKey(expStr);
         String atl = BufferManager.getBufferByKey(atlStr);
         BufferManager.addConfigByKey(caseName,
-                String.format("expValue:%s, atlValue:%s, primaryKey:%s, noCompareItem:%s" ,
-                        exp, atl, pkMapStr, noCompareItemMapStr));
+                String.format("expKey:%s，expValue:%s, expKey:%s, atlValue:%s, primaryKey:%s, noCompareItem:%s" ,
+                        expStr, exp, atlStr, atl, pkMapStr, noCompareItemMapStr));
         //primary key map
         Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(pkMapStr);
         //no compare map

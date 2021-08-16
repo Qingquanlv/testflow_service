@@ -9,8 +9,8 @@ public class Constants {
     public static final String COMPARE_VAL = "compare_val";
     public static final String COMPARE_PATH = "compare_path";
     public static final String COMPARE_OBJ = "compare_obj";
-    public static final String STATUS_PASS = "0";
-    public static final String STATUS_FAIL = "1";
+    public static final String STATUS_PASS = "1";
+    public static final String STATUS_FAIL = "0";
 
     //Static value
     public static final String ENTITY_ROOT= "ROOT_NODE";
@@ -59,9 +59,16 @@ public class Constants {
                     "        sql123\n" +
                     "    </select>\n" +
                     "</mapper>";
-    public static final String SQL = "sql123";
-    public static final String KEY = "key123";
-    public static final String TYPE = "type123";
+
+    public static final String DRUID_TEMPLATE = "{\n" +
+            "    \"query\": \"$$${TP}\",\n" +
+            "    \"context\": {\n" +
+            "        \"sqlTimeZone\": \"Asia/Sinapore\"\n" +
+            "    },\n" +
+            "    \"resultFormat\": \"objectLines\",\n" +
+            "    \"header\": false\n" +
+            "}";
+    public static final String DRUID_TEMPLATE_PARAME = "$$${TP}";
 
 
 }

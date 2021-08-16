@@ -196,7 +196,7 @@ public class TestFlowManager {
             errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim());
         }
         catch (Exception ex) {
-            deposed();
+            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             errorMsg = String.format("Verify object failed: " + ex);
         }
@@ -286,7 +286,7 @@ public class TestFlowManager {
             BufferManager.appendBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
-            deposed();
+            //deposed();
             throw new AssertionError(String.format("append Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
         }
         return this;
@@ -305,7 +305,7 @@ public class TestFlowManager {
             BufferManager.addBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
-            deposed();
+            //deposed();
             throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
         }
         return this;
@@ -324,7 +324,7 @@ public class TestFlowManager {
             str = BufferManager.getBufferByKey(bufferKey);
         }
         catch (Exception ex) {
-            deposed();
+            //deposed();
             throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey));
         }
         return str;

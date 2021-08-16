@@ -68,8 +68,8 @@ public class Parser {
         String convertFileSource = Constants.PARSE_VALUE_FILE_SOURCE.replace(Constants.PARAMETER, parameterStr)
                 .replace(Constants.METHOD, convertMethodSource);
         BufferManager.addConfigByKey(caseName,
-                String.format("method:%s",
-                        convertFileSource));
+                String.format("parameter:%s, method:%s",
+                        paramList, convertFileSource));
         Map<String, byte[]> results = compiler.compile(className, convertFileSource);
         Class<?> clazz = compiler.loadClass(Constants.SERVICES_CLASS_PATH, results);
         Method fieldGetMet = ServiceAccess.reflectMethod(clazz, Constants.METHOD_NAME, List.class);

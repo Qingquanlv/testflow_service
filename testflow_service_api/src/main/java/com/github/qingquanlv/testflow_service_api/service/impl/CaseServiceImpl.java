@@ -66,6 +66,23 @@ public class CaseServiceImpl implements CaseService {
                             );
                     break;
                 }
+                case Constants.DATABASE: {
+                    String sqlStr
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("sql_str");
+                    String env
+                            = null == config.getExec_params() ?
+                            "" :
+                            config.getExec_params()
+                                    .get("env");
+                    result = testFlowManager.queryDataBase(
+                            config.getLabel(),
+                            env,
+                            sqlStr);
+                    break;
+                }
                 case Constants.TIDB: {
                     String sqlStr
                             = null == config.getExec_params() ?
@@ -144,7 +161,7 @@ public class CaseServiceImpl implements CaseService {
                             = null == config.getExec_params() ?
                             "" :
                             config.getExec_params()
-                                    .get("JsonFilter");
+                                    .get("jsonFilter");
                     String expVal
                             = null == config.getExec_params() ?
                             "" :
@@ -197,7 +214,11 @@ public class CaseServiceImpl implements CaseService {
                         config.getLabel())));
         caseInfo.setData(result);
         caseInfo.setLabel(config.getLabel());
-        caseInfo.setStatus(Integer.valueOf(testFlowManager
+        caseInfo.setStatus(null == testFlowManager
+                .getBuffer(String.format("status$%s",
+                        config.getLabel()))
+                ? 0
+                : Integer.parseInt(testFlowManager
                 .getBuffer(String.format("status$%s",
                         config.getLabel()))));
         rsp.setInfo(caseInfo);

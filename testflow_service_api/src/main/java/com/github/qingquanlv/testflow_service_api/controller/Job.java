@@ -36,7 +36,7 @@ public class Job {
     }
 
     @RequestMapping("/delete")
-    public DeleteJobResponse deleteJob(@RequestParam(name = "taskId") Long taskId){
+    public DeleteJobResponse deleteJob(@RequestParam(name = "jobId") Long taskId){
         DeleteJobResponse rsp =  jobService.deleteJob(taskId);
         return rsp;
     }
@@ -60,7 +60,7 @@ public class Job {
     }
 
     @RequestMapping("/execute")
-    public ExecJobResponse executeJob(@RequestParam(name = "taskId") Long taskId){
+    public ExecJobResponse executeJob(@RequestParam(name = "jobId") Long taskId){
         ExecJobResponse rsp = new ExecJobResponse();
         Status status = new Status();
         status.setSuccess(true);

@@ -1,18 +1,22 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
 import com.github.qingquanlv.testflow_service_api.entity.cases_v2.CaseInfo;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.QueryJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.QueryJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.TaskDetails;
 import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.GetTaskResultResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.IndexResult;
 import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.StepResult;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Feature;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Jobb;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Job;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.TaskResult;
-import com.github.qingquanlv.testflow_service_api.mapper.*;
+import com.github.qingquanlv.testflow_service_api.mapper.FeatureMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.JobMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.TaskMapper;
+import com.github.qingquanlv.testflow_service_api.mapper.TaskResultMapper;
 import com.github.qingquanlv.testflow_service_api.service.TaskService;
 import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,61 +45,54 @@ public class TaskServiceImpl implements TaskService {
         private JobMapper jobMapper;
 
         @Autowired
+        TaskMapper taskMapper;
+
+        @Autowired
         private TaskResultMapper taskResultMapper;
+
 
         /**
          * Get Task By Job Id
          *
-         * @param jobId
+         * @param request
          * @return
          */
         @Override
-        public QueryJobResponse getTaskByJobId(Long jobId) {
+        public QueryJobResponse getTask(QueryJobRequest request) {
                 Status status = new Status();
                 status.setSuccess(true);
-                Jobb job = jobMapper.selectById(jobId);
-                Feature feature = featureMapper.selectById(job.getFeatureId());
-                List<TaskResult> taskResultList
-                        = taskResultMapper.selectList(
-                        Wrappers.<TaskResult>lambdaQuery()
-                                .eq(TaskResult::getTaskId, jobId)
-                                .in(TaskResult::getParameter_value_index, Utils.toListLong(job.getParamIndexId())));
+                List<Task> taskList = new ArrayList<>();
+                if (null == request.getJobId()) {
+                        taskList
+                                = taskMapper.selectList(Wrappers.emptyWrapper());
+                }
+                else {
+                        taskList
+                                = taskMapper.selectList(
+                                Wrappers.<Task>lambdaQuery()
+                                        .eq(Task::getJobId, request.getJobId()));
+
+                }
+
                 //赋值taskResult
                 List<TaskDetails> list = new ArrayList<>();
-                List<Long> indexList
-                        = Utils.toListLong(job.getParamIndexId());
-                if (!CollectionUtils.isEmpty(indexList)) {
-                        for (Long index : indexList) {
-                                List<TaskResult> taskList = taskResultList.stream()
-                                        .filter(item -> index.equals(item.getParameter_value_index()))
-                                        .collect(Collectors.toList());
-                                if (!CollectionUtils.isEmpty(taskList)) {
-                                        Integer taskStatus = 1;
-                                        TaskDetails taskDetails
-                                                = TaskDetails.builder()
-                                                .jobId(jobId)
-                                                .jobName(job.getName())
-                                                .featureId(job.getFeatureId())
-                                                .featureName(feature.getFeature_name())
-                                                .paramName(job.getParam_name())
-                                                .paramIndex(job.getParamIndexId()).build();
-                                        for (TaskResult item : taskList) {
-                                                taskDetails.setId(item.getTaskId());
-                                                taskDetails.setStartTime(
-                                                        null == taskDetails.getStartTime() ||
-                                                                item.getStarttime().after(taskDetails.getStartTime()) ?
-                                                                taskDetails.getStartTime() :
-                                                                item.getStarttime());
-                                                taskDetails.setEndTime(
-                                                        null == taskDetails.getEndTime() ||
-                                                                item.getEndtime().before(taskDetails.getEndTime()) ?
-                                                                taskDetails.getEndTime() :
-                                                                item.getEndtime());
-                                                taskDetails.setStatus(
-                                                        taskStatus & taskDetails.getStatus());
-                                        }
-                                        list.add(taskDetails);
-                                }
+                if (!CollectionUtils.isEmpty(taskList)) {
+                        for (Task task : taskList) {
+                                Job job = jobMapper.selectById(task.getJobId());
+                                Feature feature = featureMapper.selectById(job.getFeatureId());
+                                TaskDetails taskDetails
+                                        = TaskDetails.builder()
+                                        .id(task.getId())
+                                        .jobId(task.getJobId())
+                                        .jobName(job.getName())
+                                        .featureId(job.getFeatureId())
+                                        .featureName(feature.getFeature_name())
+                                        .startTime(task.getStarttime())
+                                        .endTime(task.getEndtime())
+                                        .status(task.getStatus())
+                                        .paramName(job.getParam_name())
+                                        .paramIndex(job.getParamIndexId()).build();
+                                list.add(taskDetails);
                         }
                 }
                 QueryJobResponse rsp
@@ -133,7 +130,10 @@ public class TaskServiceImpl implements TaskService {
                                                 .filter(item->
                                                         index.equals(item.getParameter_value_index()))
                                                 .findFirst().orElse(null);
-                                        indexResult.setIndex(index);
+                                        indexResult.setParamIndex(index);
+                                        indexResult.setParamValue(taskResult.getParameter_value());
+                                        indexResult.setParamName(taskResult.getParameter_name());
+                                        indexResult.setStatus(taskResult.getStatus());
                                         indexResult.setStartTime(taskResult.getStarttime());
                                         indexResult.setEndTime(taskResult.getEndtime());
                                         if (null != taskResult) {

@@ -9,11 +9,8 @@ public class LogHelper {
     public static Integer index;
     private static Logger logger = LoggerFactory.getLogger(TestFlowManager.class);
 
-    public static void initLog()
-    {
-        if(index == null) {
-            index = 0;
-        }
+    public static void initLog() {
+        index = 0;
     }
 
     public static void deposeLog() {

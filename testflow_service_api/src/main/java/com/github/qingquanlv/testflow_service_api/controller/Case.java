@@ -21,9 +21,9 @@ public class Case {
     private CaseServiceImpl caseService;
 
     @RequestMapping("/exec")
-    public ExecCaseResponse execCase(@RequestBody ExecCaseRequest request){
+    public String execCase(@RequestBody ExecCaseRequest request){
         ExecCaseResponse rsp = caseService.execCase(request);
-        return rsp;
+        return rsp.getInfo().getData();
     }
 
 }

@@ -1,9 +1,12 @@
 package com.github.qingquanlv.testflow_service_biz.utilities;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.serviceaccess.ServiceAccess;
-import com.zf.zson.ZSON;
-import com.zf.zson.result.ZsonResult;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Node;
@@ -31,45 +34,6 @@ public class ParamUtil {
     public static String listPatternStr = ".*\\$L\\{(.*?)\\}.*";
     public static String patternStrNoXPath = ".*\\$P\\{(.*?)\\}.*";
 
-    /**
-     * 根据匹配Josn，构建多个的请求
-     *
-     * @param val : 请求参数模板
-     * @return String ：返回请求List
-     */
-    public static List<String> parseParamList(String val) throws Exception
-    {
-        val = parseEnter(val);
-        //List情况requst只能存在一个参数, 若为多个默认取第一个
-        List<String> paramList = catchParamList(listParamPattern, val);
-        List<String> reqList = new ArrayList<>();
-        for (String param : paramList) {
-            if (!paramList.isEmpty()) {
-                //去掉参数中的大括号
-                String paramCoverted = convertParam(listPatternStr, param);
-                String[] bufferKeyAndValue = getBufferKeyAndValue(paramCoverted);
-                //从缓存中获取数据
-                String str = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
-                List<Object> objList = getMapValFromStr(str, bufferKeyAndValue[1]);
-                if (null == objList || objList.isEmpty()) {
-                    System.out.println(String.format("No matiched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], str));
-                }
-                else {
-                    int i = 0;
-                    for (Object value : objList) {
-                        if (reqList.size() > i) {
-                            reqList.set(i, updateParameStr(reqList.get(i), param, value.toString()));
-                        }
-                        else {
-                            reqList.add(updateParameStr(val, param, objList.get(i).toString()));
-                        }
-                        i++;
-                    }
-                }
-            }
-        }
-        return reqList;
-    }
 
     /**
      * 转化字符串中参数
@@ -100,16 +64,16 @@ public class ParamUtil {
         for(String param : paramList)
         {
             //转化参数为某缓存内的实体的属性值
-            String paramCoverted = convertParam(patternStr, param);
-            String[] bufferKeyAndValue = getBufferKeyAndValue(paramCoverted);
+            String paramConverted = convertParam(patternStr, param);
+            String[] bufferKeyAndValue = getBufferKeyAndValue(paramConverted);
             //从缓存中获取数据
-            String str = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
-            List<Object> objList = getMapValFromStr(str, bufferKeyAndValue[1]);
-            if (null == objList || objList.isEmpty()) {
-                throw new Exception(String.format("No matiched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], str));
+            String key = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
+            String mapVal = getMapValFromJson(key, bufferKeyAndValue[1]);
+            if (null == mapVal || mapVal.isEmpty()) {
+                throw new Exception(String.format("No matched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], key));
             }
             else {
-                val = updateParameStr(val, param, objList.get(0).toString());
+                val = updateParameStr(val, param, mapVal);
             }
         }
         return val;
@@ -129,13 +93,13 @@ public class ParamUtil {
         for(String param : paramList)
         {
             //转化参数为某缓存内的实体的属性值
-            String paramCoverted = convertParam(patternStrNoXPath, param);
-            String str = BufferManager.getBufferByKey(paramCoverted);
-            if (paramCoverted==null || paramCoverted.length() == 0) {
-                throw new Exception(String.format("No matiched value for key \"%s\"  string \"%s\" .", param, str));
+            String key = convertParam(patternStrNoXPath, param);
+            String mapVal = BufferManager.getBufferByKey(key);
+            if (mapVal==null || mapVal.length() == 0) {
+                throw new Exception(String.format("No matched value for key \"%s\"  string \"%s\" .", param, key));
             }
             else {
-                val = updateParameStr(val, param, str);
+                val = updateParameStr(val, param, mapVal);
             }
         }
         return val;
@@ -214,6 +178,35 @@ public class ParamUtil {
     }
 
     /**
+     * 通过JsonPath匹配获取Json串
+     *
+     * @param jsonStr : 要匹配的Json字符串
+     * @param mapKey : 匹配的xpath字符串
+     * @return String ：返回匹配后的Json串（1，2，3）
+     */
+    public static String getMapValFromJson(String jsonStr, String mapKey)
+    {
+        String str = "";
+        Configuration conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider())
+                .options(Option.ALWAYS_RETURN_LIST, Option.SUPPRESS_EXCEPTIONS).build();
+
+        ArrayNode node = JsonPath.using(conf).parse(jsonStr).read(mapKey);
+        if (null != node) {
+            for (Object item : node) {
+                if (null != str && !"".equals(str)) {
+                    str = String.format("%s,%s", str, item);
+                }
+                else {
+                    if (null != str) {
+                        str = item.toString();
+                    }
+                }
+            }
+        }
+        return str;
+    }
+
+    /**
      * 更新字符串中的参数字符串
      *
      * @param sourceStr
@@ -223,8 +216,7 @@ public class ParamUtil {
      */
     private static String updateParameStr(String sourceStr, String matchMapKey, String matchMapVal)
     {
-        sourceStr = sourceStr.replace(matchMapKey, matchMapVal);
-        return sourceStr;
+        return sourceStr.replace(matchMapKey, matchMapVal);
     }
 
     /**
@@ -233,7 +225,7 @@ public class ParamUtil {
      * @param str
      * @param mapKey
      * @return
-     */
+
     public static List<Object> getMapValFromStr(String str, String mapKey)
     {
         List<Object> objlist;
@@ -254,6 +246,7 @@ public class ParamUtil {
         }
         return objlist;
     }
+    */
 
 
     /**
@@ -262,7 +255,7 @@ public class ParamUtil {
      * @param jsonStr : 要匹配的Json字符串
      * @param mapKey : 匹配的xpath字符串
      * @return String ：返回匹配后的Json串
-     */
+
     public static List<Object> getMapValFromJson(String jsonStr, String mapKey)
     {
         ZsonResult zr = ZSON.parseJson(jsonStr);
@@ -270,6 +263,72 @@ public class ParamUtil {
         List<Object> names = zr.getValues(mapKey.trim());
         return names;
     }
+    */
+
+    /**
+     * 根据匹配Josn，构建多个的请求
+     *
+     * @param val : 请求参数模板
+     * @return String ：返回请求List
+     */
+    public static List<String> parseParamList(String val) throws Exception
+    {
+        val = parseEnter(val);
+        //List情况requst只能存在一个参数, 若为多个默认取第一个
+        List<String> paramList = catchParamList(listParamPattern, val);
+        List<String> reqList = new ArrayList<>();
+        for (String param : paramList) {
+            if (!paramList.isEmpty()) {
+                //去掉参数中的大括号
+                String paramCoverted = convertParam(listPatternStr, param);
+                String[] bufferKeyAndValue = getBufferKeyAndValue(paramCoverted);
+                //从缓存中获取数据
+                String str = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
+                List<Object> objList = getMapValFromStr(str, bufferKeyAndValue[1]);
+                if (null == objList || objList.isEmpty()) {
+                    System.out.println(String.format("No matiched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], str));
+                }
+                else {
+                    int i = 0;
+                    for (Object value : objList) {
+                        if (reqList.size() > i) {
+                            reqList.set(i, updateParameStr(reqList.get(i), param, value.toString()));
+                        }
+                        else {
+                            reqList.add(updateParameStr(val, param, objList.get(i).toString()));
+                        }
+                        i++;
+                    }
+                }
+            }
+        }
+        return reqList;
+    }
+
+
+    /**
+     * 通过JsonPath匹配获取Json串
+     *
+     * @param jsonStr : 要匹配的Json字符串
+     * @param mapKey : 匹配的xpath字符串
+     * @return String ：返回匹配后的Json串（List<Object>）
+     */
+    public static List<Object> getMapValFromStr(String jsonStr, String mapKey)
+    {
+        List<Object> objList = new ArrayList<>();
+        Configuration conf = Configuration.builder().jsonProvider(new JacksonJsonNodeJsonProvider())
+                .options(Option.ALWAYS_RETURN_LIST, Option.SUPPRESS_EXCEPTIONS).build();
+
+        ArrayNode node = JsonPath.using(conf).parse(jsonStr).read(mapKey);
+        if (null != node) {
+            for (Object item : node) {
+                objList.add(item);
+            }
+        }
+        return objList;
+    }
+
+
 
     /**
      * 通过Dom4J匹配获取XML串

@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 @Builder
 public class QueryJobResponse {
+
         //status
         private Status status;
 

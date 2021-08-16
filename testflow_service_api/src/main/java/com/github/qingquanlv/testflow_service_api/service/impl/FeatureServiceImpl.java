@@ -281,9 +281,9 @@ public class FeatureServiceImpl implements FeatureService {
                         ComparevalCaseConfig.builder(
                         ).caseId(caseId
                         ).expVal(config.getExec_params()
-                                .get("exp_val")
+                                .get("expVal")
                         ).atlVal(config.getExec_params()
-                                .get("atl_val")
+                                .get("atlVal")
                         ).build();
                 comparevalCaseConfigMapper.insert(comparepathCaseConfig);
             }
@@ -294,9 +294,9 @@ public class FeatureServiceImpl implements FeatureService {
                         ).atlObj(config.getExec_params()
                                 .get("atlObj")
                         ).JsonFilter(config.getExec_params()
-                                .get("JsonFilter")
+                                .get("jsonFilter")
                         ).expVal(config.getExec_params()
-                                .get("exp_val")
+                                .get("expVal")
                         ).build();
                 comparepathCaseConfigMapper.insert(comparepathCaseConfig);
             }
@@ -562,8 +562,8 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->comparevalCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("ExpVal", comparevalCaseConfig.getExpVal());
-                    params.put("AtlVal", comparevalCaseConfig.getAtlVal());
+                    params.put("expVal", comparevalCaseConfig.getExpVal());
+                    params.put("atlVal", comparevalCaseConfig.getAtlVal());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
@@ -583,9 +583,9 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->comparepathCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("AtlObj", comparepathCaseConfig.getAtlObj());
-                    params.put("AtlVal", comparepathCaseConfig.getJsonFilter());
-                    params.put("ExpVal", comparepathCaseConfig.getExpVal());
+                    params.put("atlObj", comparepathCaseConfig.getAtlObj());
+                    params.put("jsonFilter", comparepathCaseConfig.getJsonFilter());
+                    params.put("expVal", comparepathCaseConfig.getExpVal());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
@@ -605,10 +605,10 @@ public class FeatureServiceImpl implements FeatureService {
                             .stream()
                             .filter(item->compareobjCaseConfig.getCaseId().equals(item.getId()))
                             .findFirst().orElse(null);
-                    params.put("ExpObj", compareobjCaseConfig.getExpObj());
-                    params.put("AtlObj", compareobjCaseConfig.getAtlObj());
-                    params.put("PkMap", compareobjCaseConfig.getPkMap());
-                    params.put("NoCompareItemMap", compareobjCaseConfig.getNoCompareItemMap());
+                    params.put("expObj", compareobjCaseConfig.getExpObj());
+                    params.put("atlObj", compareobjCaseConfig.getAtlObj());
+                    params.put("pkMap", compareobjCaseConfig.getPkMap());
+                    params.put("noCompareItemMap", compareobjCaseConfig.getNoCompareItemMap());
                     Config config = Config.builder()
                             .id(null == node ? null : node.getId())
                             .label(null == node ? "" : node.getLabel())
@@ -737,7 +737,11 @@ public class FeatureServiceImpl implements FeatureService {
             caseInfo.setLabel(caze.getLabel());
             caseInfo.setData(testFlowManager
                             .getBuffer(caze.getLabel()));
-            caseInfo.setStatus(Integer.valueOf(testFlowManager
+            caseInfo.setStatus(null == testFlowManager
+                    .getBuffer(String.format("status$%s",
+                            caze.getLabel()))
+                    ? 0
+                    : Integer.parseInt(testFlowManager
                     .getBuffer(String.format("status$%s",
                             caze.getLabel()))));
             featureStatus = caseInfo.getStatus()

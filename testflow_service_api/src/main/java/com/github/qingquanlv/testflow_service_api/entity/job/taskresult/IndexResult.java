@@ -12,7 +12,13 @@ import java.util.List;
 @Data
 public class IndexResult {
 
-        private Long index;
+        private String paramName;
+
+        private Long paramIndex;
+
+        private String paramValue;
+
+        private Integer status;
 
         private Timestamp startTime;
 

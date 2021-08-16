@@ -13,10 +13,12 @@ import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatus
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Job;
 import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.*;
 import com.github.qingquanlv.testflow_service_api.mapper.*;
 import com.github.qingquanlv.testflow_service_api.service.IScheduleJobService;
 import com.github.qingquanlv.testflow_service_biz.TestFlowManager;
+import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +29,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +68,9 @@ public class ScheduleJobImpl implements IScheduleJobService {
     @Autowired
     FeatureMapper featureMapper;
 
+    @Autowired
+    TaskMapper taskMapper;
+
     /**
      * 创建Job
      *
@@ -79,8 +82,8 @@ public class ScheduleJobImpl implements IScheduleJobService {
         Status status = new Status();
         status.setSuccess(true);
         CreateJobResponse createJobResponse = new CreateJobResponse();
-        Jobb job
-                = Jobb.builder()
+        Job job
+                = Job.builder()
                 .name(request.getName())
                 .featureId(request.getFeatureId())
                 .param_name(request.getParamName())
@@ -139,8 +142,8 @@ public class ScheduleJobImpl implements IScheduleJobService {
         Status status = new Status();
         status.setSuccess(true);
         UpdateJobResponse updateJobResponse = new UpdateJobResponse();
-        Jobb job
-                = Jobb.builder()
+        Job job
+                = Job.builder()
                 .id(request.getJobId())
                 .name(request.getName())
                 .featureId(request.getFeatureId())
@@ -176,11 +179,11 @@ public class ScheduleJobImpl implements IScheduleJobService {
         //query all feature
         List<Feature> features = featureMapper.selectList(Wrappers.emptyWrapper());
         //query all job
-        List<Jobb> jobs = jobMapper.selectList(Wrappers.emptyWrapper());
+        List<Job> jobs = jobMapper.selectList(Wrappers.emptyWrapper());
         //query all job config
         List<JobConfig> jobConfigs = jobConfigMapper.selectList(Wrappers.emptyWrapper());
         List<JobDetails> jobDetailsList = new ArrayList<>();
-        for (Jobb item : jobs) {
+        for (Job item : jobs) {
             Feature feature = features.stream()
                     .filter(i->item.getFeatureId().equals(i.getFeature_id()))
                     .findFirst().orElse(null);
@@ -282,9 +285,10 @@ public class ScheduleJobImpl implements IScheduleJobService {
     @Async("taskExecutor")
     @Override
     public void execJob(Long jobId) {
-        Jobb job = jobMapper.selectOne(
-                Wrappers.<Jobb>lambdaQuery()
-                        .eq(Jobb::getId, jobId));
+        Integer taskStatus = 1;
+        Job job = jobMapper.selectOne(
+                Wrappers.<Job>lambdaQuery()
+                        .eq(Job::getId, jobId));
         //ParamIndex 格式转为 list<Long>
         List<Long> index
                 = Utils.toListLong(job.getParamIndexId());
@@ -297,25 +301,37 @@ public class ScheduleJobImpl implements IScheduleJobService {
         List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters
                 = parameterMapper.selectList(
                         Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, job.getParam_name()));
-        parameters.stream().filter(item->index.equals(item.getParameterValueIndex())).collect(Collectors.toList());
+                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, job.getParam_name())
+                                .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, index));
         Set<Long> parameterIndex
                 = parameters.stream()
                 .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex)
                 .collect(Collectors.toSet());
         //根据Index遍历执行Case
+        Timestamp taskStartTime = new Timestamp(System.currentTimeMillis());
+        //插入task
+        Task task
+                = Task.builder()
+                .jobId(jobId)
+                .parameter_name(job.getParam_name())
+                .parameter_value_index(job.getParamIndexId())
+                .starttime(taskStartTime)
+                .build();
+        taskMapper.insert(task);
         for (Long i : parameterIndex) {
             //构建参数
             List<Parameter> parameterList = new ArrayList<>();
-            parameters =
+            Map<String, String> pMap = new HashMap<>();
+            List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> plist =
                     parameters
                             .stream()
                             .filter(item->i.equals(item.getParameterValueIndex()))
                             .collect(Collectors.toList());
-            for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : parameters) {
+            for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : plist) {
                 Parameter parameter = new Parameter();
                 parameter.setParameter_value(item.getParameterValue());
                 parameter.setParameter_key(item.getParameterKey());
+                pMap.put(item.getParameterKey(), item.getParameterValue());
                 parameterList.add(parameter);
             }
             Timestamp startTime = new Timestamp(System.currentTimeMillis());
@@ -325,13 +341,26 @@ public class ScheduleJobImpl implements IScheduleJobService {
                     parameterList, cazes);
             Timestamp endTime
                     = new Timestamp(System.currentTimeMillis());
+            taskStatus
+                    = taskStatus
+                    & (null == task.getStatus()
+                    ? 0
+                    : task.getStatus());
+            taskResult.setTaskId(task.getId());
             taskResult.setParameter_name(job.getParam_name());
             taskResult.setParameter_value_index(i);
-            taskResult.setTaskId(jobId);
+            taskResult.setParameter_value(FastJsonUtil.toJson(pMap));
             taskResult.setStarttime(startTime);
             taskResult.setEndtime(endTime);
             taskResultMapper.insert(taskResult);
         }
+        Timestamp taskEndTime = new Timestamp(System.currentTimeMillis());
+        task.setEndtime(taskEndTime);
+        task.setStatus(taskStatus);
+        taskMapper.update(
+                task,
+                Wrappers.<Task>lambdaQuery()
+                        .eq(Task::getId, task.getId()));
     }
 
     /**
@@ -448,7 +477,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
     //组装JobDetail
     private JobDetail getJobDetail(JobConfig configEntity) throws ClassNotFoundException {
 
-        Class<? extends Job> aClass = Class.forName(configEntity.getClassName()).asSubclass(Job.class);
+        Class<? extends org.quartz.Job> aClass = Class.forName(configEntity.getClassName()).asSubclass(org.quartz.Job.class);
 
         return JobBuilder.newJob()
                 .withIdentity(JobKey.jobKey(String.valueOf(configEntity.getJobId())))

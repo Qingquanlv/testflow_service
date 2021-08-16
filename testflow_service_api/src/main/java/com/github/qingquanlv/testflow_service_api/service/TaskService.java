@@ -1,5 +1,6 @@
 package com.github.qingquanlv.testflow_service_api.service;
 
+import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.QueryJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryjob.QueryJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.GetTaskResultResponse;
 
@@ -11,7 +12,7 @@ import com.github.qingquanlv.testflow_service_api.entity.job.taskresult.GetTaskR
 public interface TaskService {
 
 
-        QueryJobResponse getTaskByJobId(Long jobId);
+        QueryJobResponse getTask(QueryJobRequest request);
 
         GetTaskResultResponse getTaskResult(Long taskId);
 }
