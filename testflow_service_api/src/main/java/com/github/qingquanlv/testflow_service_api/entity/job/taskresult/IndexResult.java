@@ -1,15 +1,18 @@
 package com.github.qingquanlv.testflow_service_api.entity.job.taskresult;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.util.List;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/7 下午9:58
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class IndexResult {
 
         private String paramName;

@@ -7,7 +7,6 @@ import java.util.List;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/14 下午3:06
  */
 public class QueryAllTaskResponse {
 
@@ -15,4 +14,5 @@ public class QueryAllTaskResponse {
         private Status status;
 
         private List<TaskDetails> jobDetails;
+
 }

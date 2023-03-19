@@ -1,19 +1,22 @@
 package com.github.qingquanlv.testflow_service_api.entity.feature_v2;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/10 21:40
  */
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Config {
 
         private Long id;
         private String label;
-        private HashMap<String, String> exec_params;
+        private Map<String,String> exec_params;
 }

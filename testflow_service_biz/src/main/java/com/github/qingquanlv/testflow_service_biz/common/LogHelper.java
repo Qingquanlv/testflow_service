@@ -6,34 +6,34 @@ import org.slf4j.LoggerFactory;
 
 public class LogHelper {
 
-    public static Integer index;
+    public static ThreadLocal<Integer> index = new ThreadLocal<>();
     private static Logger logger = LoggerFactory.getLogger(TestFlowManager.class);
 
     public static void initLog() {
-        index = 0;
+        index.set(0);
     }
 
     public static void deposeLog() {
-        index = 0;
+        index.set(0);
     }
 
     public static void stepExecLog(String stepName, String...stepParam) throws Exception {
-        index++;
+        index.set(index.get() + 1);
         String param = "";
         for (int i=0;i<stepParam.length;i++) {
             param +=stepParam[i] + ",";
         }
         logger.info(String.format("*********************************************************************************************************************************************************************************************************"));
-        String log = String.format("Start execute %s step: step Name \'%s\' step Param \'%s\'.", index, stepName, param);
+        String log = String.format("Start execute %s step: step Name \'%s\' step Param \'%s\'.", index.get(), stepName, param);
         logger.info(log);
-        //BufferManager.appendBufferByKey("tf_log", log);
+        BufferManager.appendBufferByKey("tf_log", log);
     }
 
     public static void stepAfterLog(String stepName, String buffer) {
-        String log = String.format("Step %s Passed: buffer key\'%s\' buffer \'%s\'.", index, stepName, buffer);
+        String log = String.format("Step %s Passed: buffer key\'%s\' buffer \'%s\'.", index.get(), stepName, buffer);
         logger.info(log);
         try {
-            //BufferManager.appendBufferByKey("tf_log", log);F
+            BufferManager.appendBufferByKey("tf_log", log);
         }
         catch (Exception ex)
         {

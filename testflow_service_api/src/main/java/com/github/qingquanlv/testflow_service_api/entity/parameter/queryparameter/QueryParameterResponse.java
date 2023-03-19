@@ -1,15 +1,12 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/3 7:01
  * @Version 1.0
  */
 public class QueryParameterResponse {

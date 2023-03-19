@@ -1,13 +1,16 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/10 11:15
  * @Version 1.0
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Parameter {
 
     /**

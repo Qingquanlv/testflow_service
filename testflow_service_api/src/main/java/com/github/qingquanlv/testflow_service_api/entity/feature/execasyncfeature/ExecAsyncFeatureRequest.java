@@ -1,10 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.feature.execasyncfeature;
 
-import java.util.List;
-
 /**
  * @Author: qingquan.lv
- * @Date: 2021/4/7 11:23
  */
 public class ExecAsyncFeatureRequest {
         /**

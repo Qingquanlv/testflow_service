@@ -4,7 +4,6 @@ import com.github.qingquanlv.testflow_service_api.entity.Status;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/3 6:54
  * @Version 1.0
  */
 public class CreateParameterResponse {

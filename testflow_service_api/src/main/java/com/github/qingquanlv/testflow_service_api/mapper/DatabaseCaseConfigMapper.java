@@ -5,7 +5,6 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Dat
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/13 18:53
  */
 public interface DatabaseCaseConfigMapper extends BaseMapper<DatabaseCaseConfig> {
 

@@ -5,10 +5,12 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
 
 public class JavaStringCompiler {
+
     JavaCompiler compiler;
     StandardJavaFileManager stdManager;
 
@@ -30,15 +32,20 @@ public class JavaStringCompiler {
      *             If compile error.
      */
     public Map<String, byte[]> compile(String fileName, String source) throws IOException {
-        try (MemoryJavaFileManager manager = new MemoryJavaFileManager(stdManager)) {
+        try (MemoryJavaFileManager manager = new MemoryJavaFileManager(stdManager, Thread.currentThread().getContextClassLoader())) {
             JavaFileObject javaFileObject = manager.makeStringSource(fileName, source);
-            JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, null, null, Arrays.asList(javaFileObject));
+            List<String> options = new ArrayList<>(Arrays.asList("-classpath", System.getProperty("java.class.path")));
+            JavaCompiler.CompilationTask task = compiler.getTask(null, manager, null, options, null, Arrays.asList(javaFileObject));
             Boolean result = task.call();
-            if (result == null || !result.booleanValue()) {
+            if (result == null || !result) {
                 throw new RuntimeException("Compilation failed.");
             }
             return manager.getClassBytes();
         }
+    }
+
+    private String buildClassPath() {
+        return null;
     }
 
     /**
@@ -58,5 +65,30 @@ public class JavaStringCompiler {
         try (MemoryClassLoader classLoader = new MemoryClassLoader(classBytes)) {
             return classLoader.loadClass(name);
         }
+    }
+
+    private class MemoryClassLoader extends URLClassLoader {
+
+        // class name to class bytes:
+        private Map<String, byte[]> classBytes = new HashMap<String, byte[]>();
+
+        private URLClassLoader parent;
+
+
+        private MemoryClassLoader(Map<String, byte[]> classBytes) {
+            super(new URL[0], MemoryClassLoader.class.getClassLoader());
+            this.classBytes.putAll(classBytes);
+        }
+
+        @Override
+        protected Class<?> findClass(String name) throws ClassNotFoundException {
+            byte[] buf = classBytes.get(name);
+            if (buf == null) {
+                return super.findClass(name);
+            }
+            classBytes.remove(name);
+            return defineClass(name, buf, 0, buf.length);
+        }
+
     }
 }

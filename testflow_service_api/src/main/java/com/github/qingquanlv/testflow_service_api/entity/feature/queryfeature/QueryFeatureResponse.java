@@ -9,7 +9,6 @@ import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/1/26 21:39
  * @Version 1.0
  */
 public class QueryFeatureResponse {

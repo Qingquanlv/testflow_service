@@ -3,17 +3,20 @@ package com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeatu
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Config;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Edges;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.Nodes;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/10 21:37
  */
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CreateFeatureRequest {
 
         private String requestId;

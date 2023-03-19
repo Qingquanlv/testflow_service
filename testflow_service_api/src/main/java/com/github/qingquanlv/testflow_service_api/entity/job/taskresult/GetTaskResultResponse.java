@@ -1,15 +1,18 @@
 package com.github.qingquanlv.testflow_service_api.entity.job.taskresult;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/7 下午8:46
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class GetTaskResultResponse {
 
         /**
@@ -19,5 +22,19 @@ public class GetTaskResultResponse {
 
         private List<IndexResult> indexResults;
 
+        /**
+         * pass
+         */
+        private Integer pass;
+
+        /**
+         * pass
+         */
+        private Integer fail;
+
+        /**
+         * total
+         */
+        private Integer total;
 
 }

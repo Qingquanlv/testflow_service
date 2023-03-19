@@ -1,16 +1,19 @@
 package com.github.qingquanlv.testflow_service_api.entity.job.queryalltask;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/14 下午3:06
  */
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class TaskDetails {
 
         private Long id;

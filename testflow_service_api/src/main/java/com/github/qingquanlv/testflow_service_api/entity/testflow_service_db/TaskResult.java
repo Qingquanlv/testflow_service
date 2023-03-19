@@ -10,12 +10,7 @@ import lombok.Data;
 import java.sql.Timestamp;
 
 /**
- * <p>
- * 
- * </p>
- *
- * @author jobob
- * @since 2021-06-17
+ * @Author: qingquan.lv
  */
 @Data
 @Builder
@@ -39,8 +34,6 @@ public class TaskResult  {
     private Timestamp starttime;
 
     private Timestamp endtime;
-
-    private String logs;
 
     private Integer status;
 

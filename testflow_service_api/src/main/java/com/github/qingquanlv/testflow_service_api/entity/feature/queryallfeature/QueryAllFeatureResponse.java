@@ -6,7 +6,6 @@ import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/3/9 22:19
  * @Version 1.0
  */
 public class QueryAllFeatureResponse {

@@ -1,16 +1,18 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
-import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
-import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.deleteparameter.DeleteParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryParameter;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter.QueryParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterResponse;
-import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterTab;
+import com.github.qingquanlv.testflow_service_api.mapper.ParameterDetailsMapper;
 import com.github.qingquanlv.testflow_service_api.mapper.ParameterMapper;
 import com.github.qingquanlv.testflow_service_api.service.ParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,53 +27,16 @@ import java.util.stream.Collectors;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/3 7:12
  * @Version 1.0
  */
 @Service
 public class ParameterServiceImpl implements ParameterService {
 
     @Autowired
-    ParameterMapper parameterMapper;
+    ParameterDetailsMapper parameterDetailsMapper;
 
-    /**
-     * 创建Paramete
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public CreateParameterResponse createParameter(CreateParameterRequest request) {
-        CreateParameterResponse rsp = new CreateParameterResponse();
-        Status status = new Status();
-        status.setSuccess(true);
-        rsp.setStatus(status);
-        List<Parameter> parameterCaseList = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(request.getParameters())) {
-            //parameter index
-            Long index = 0L;
-            for (HashMap<String, String> map : request.getParameters()) {
-                if (!map.isEmpty()) {
-                    for (String key : map.keySet()) {
-                        Parameter parameterCase = new Parameter();
-                        parameterCase.setParameterValueIndex(index);
-                        parameterCase.setParameterName(request.getParameter_name());
-                        parameterCase.setParameterKey(key);
-                        parameterCase.setParameterKey(map.get(key));
-                        parameterCaseList.add(parameterCase);
-                    }
-                    index++;
-                }
-            }
-        }
-        if (!CollectionUtils.isEmpty(parameterCaseList)) {
-            for (Parameter item : parameterCaseList)
-            {
-                parameterMapper.insert(item);
-            }
-        }
-        return rsp;
-    }
+    @Autowired
+    ParameterMapper parameterMapper;
 
     /**
      * 获取所有Paramete
@@ -79,93 +44,84 @@ public class ParameterServiceImpl implements ParameterService {
      * @return
      */
     @Override
-    public QueryAllParameterResponse getParameterAll() {
-        QueryAllParameterResponse rsp = new QueryAllParameterResponse();
+    public QueryAllParameterResponse getParameterAll(QueryAllParameterRequest request) {
         Status status = new Status();
         status.setSuccess(true);
-        rsp.setStatus(status);
-        List<QueryParameter> queryParameterList = new ArrayList<>();
-        //查询Database所有parameter
-        List<Parameter> parameterCases
-                = parameterMapper.selectList(Wrappers.emptyWrapper());
-        if (!CollectionUtils.isEmpty(parameterCases)) {
-            //获取Parameter List
-            Set<String> parameterList = parameterCases
-                    .stream().map(Parameter::getParameterName)
-                    .collect(Collectors.toSet());
-            if (!CollectionUtils.isEmpty(parameterList)) {
-                //插入Parameter List
-                for (String parameter : parameterList) {
-                    QueryParameter queryParameter = new QueryParameter();
-                    queryParameter.setParameter_name(parameter);
-                    List<Parameter> hashMapList = parameterCases
-                            .stream().filter(item->parameter.equals(item.getParameterName()))
-                            .collect(Collectors.toList());
-                    if (!CollectionUtils.isEmpty(hashMapList)) {
-                        List<HashMap<String, String>> listMap = new ArrayList<>();
-                        //获取Parameter Index List
-                        Set<Long> parameterIndexList = hashMapList
-                                .stream().map(Parameter::getParameterValueIndex)
-                                .collect(Collectors.toSet());
-                        if (!CollectionUtils.isEmpty(parameterIndexList)) {
-                            //插入Map
-                            for (Long index : parameterIndexList) {
-                                HashMap<String, String> map = new HashMap<>();
-                                List<Parameter> parameterCaseIndexList = hashMapList
-                                        .stream().filter(item -> index.equals(item.getParameterValueIndex()))
-                                        .collect(Collectors.toList());
-                                for (Parameter item : parameterCaseIndexList) {
-                                    map.put(item.getParameterKey(), item.getParameterValue());
-                                }
-                                listMap.add(map);
-                            }
-                        }
-                        queryParameter.setParameters(listMap);
-                    }
-                    queryParameterList.add(queryParameter);
-                }
+        String filter
+                = null == request.getFilter() ? "" : request.getFilter();
+        long pageNum
+                = null == request.getPageNum() ? 1L : request.getPageNum();
+        long pageSize
+                = null == request.getPageSize() ? 28L : request.getPageSize();
+        Page<ParameterTab> parameterList
+                = parameterMapper.selectPage(new Page<>(pageNum, pageSize),
+                Wrappers.<ParameterTab>lambdaQuery()
+                        .like(ParameterTab::getParameterName, filter)
+                        .orderByDesc(ParameterTab::getId));
+        //赋值taskResult
+        List<QueryParameter> list = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(parameterList.getRecords())) {
+            for (ParameterTab item : parameterList.getRecords()) {
+                QueryParameter parameter
+                        = QueryParameter
+                        .builder()
+                        .id(item.getId())
+                        .parameter_name(item.getParameterName())
+                        .build();
+                list.add(parameter);
             }
         }
-        rsp.setParameters(queryParameterList);
+        QueryAllParameterResponse rsp =
+                QueryAllParameterResponse.builder()
+                        .status(status)
+                        .parameters(list)
+                        .total(parameterList.getTotal()).build();
         return rsp;
     }
 
     /**
      * 获取Paramete
      *
-     * @param name
+     * @param id
      * @return
      */
     @Override
-    public QueryParameterResponse getParameter(String name) {
+    public QueryParameterResponse getParameter(Long id) {
         QueryParameterResponse rsp = new QueryParameterResponse();
         Status status = new Status();
         status.setSuccess(true);
         rsp.setStatus(status);
-        List<Parameter> list
-                = parameterMapper.selectList(
-                        Wrappers.<Parameter>lambdaQuery()
-                        .eq(Parameter::getParameterName, name));
-        rsp.setParameter_name(name);
-        List<HashMap<String, String>> parameterList = new ArrayList<>();
-        //获取parameter index set
-        Set<Long> indexList = list.stream().map(Parameter::getParameterValueIndex).collect(Collectors.toSet());
-        if (!CollectionUtils.isEmpty(indexList)) {
-            for (Long index : indexList) {
-                HashMap<String, String> parameterMap = new HashMap<>();
-                List<Parameter> parameterCases = list.stream()
-                        .filter(item->index.equals(item.getParameterValueIndex()))
-                        .collect(Collectors.toList());
-                for (Parameter parameterCase : parameterCases) {
-                    if (!parameterMap.containsKey(parameterCase.getParameterKey())) {
-                        parameterMap.put(parameterCase.getParameterKey(),
-                                parameterCase.getParameterKey());
+
+        ParameterTab parameterName
+                = parameterMapper.selectById(id);
+        if (null != parameterName) {
+            List<ParameterDetailsTab> list
+                    = parameterDetailsMapper.selectList(
+                    Wrappers.<ParameterDetailsTab>lambdaQuery()
+                            .eq(ParameterDetailsTab::getParameterId, id));
+            rsp.setParameter_name(parameterName.getParameterName());
+            List<HashMap<String, String>> parameterList = new ArrayList<>();
+            //get parameter index set
+            Set<Long> indexList = list.stream()
+                    .map(ParameterDetailsTab::getParameterValueIndex)
+                    .collect(Collectors.toSet());
+            if (!CollectionUtils.isEmpty(indexList)) {
+                for (Long index : indexList) {
+                    HashMap<String, String> parameterMap = new HashMap<>();
+                    List<ParameterDetailsTab> parameterCases = list.stream()
+                            .filter(item -> index.equals(item.getParameterValueIndex()))
+                            .collect(Collectors.toList());
+                    for (ParameterDetailsTab parameterCase : parameterCases) {
+                        if (!parameterMap.containsKey(parameterCase.getParameterKey())) {
+                            parameterMap.put(parameterCase.getParameterKey(),
+                                    parameterCase.getParameterValue());
+                        }
                     }
+                    parameterList.add(parameterMap);
                 }
-                parameterList.add(parameterMap);
             }
-         }
-        rsp.setParameters(parameterList);
+            rsp.setParameters(parameterList);
+        }
         return rsp;
     }
 
@@ -177,54 +133,77 @@ public class ParameterServiceImpl implements ParameterService {
      */
     @Override
     public UpdateParameterResponse updateParameter(UpdateParameterRequest request) {
-        UpdateParameterResponse rsp = new UpdateParameterResponse();
         Status status = new Status();
         status.setSuccess(true);
-        rsp.setStatus(status);
-        List<Parameter> parameterCaseList = new ArrayList<>();
+
+        ParameterTab parameterName
+                = ParameterTab
+                .builder()
+                .parameterName(request.getParameterName())
+                .build();
+        if (null == request.getParameterId()) {
+            parameterMapper.insert(parameterName);
+        }
+        else {
+            parameterName.setId(request.getParameterId());
+            parameterMapper.updateById(parameterName);
+            parameterDetailsMapper.delete(
+                    Wrappers.<ParameterDetailsTab>lambdaQuery()
+                            .eq(ParameterDetailsTab::getParameterId,
+                                    request.getParameterId()));
+            parameterName.setId(request.getParameterId());
+
+        }
+        List<ParameterDetailsTab> parameterCaseList = new ArrayList<>();
         //parameter index
         Long index = 0L;
         for (HashMap<String, String> map : request.getParameters()) {
             if (!map.isEmpty()) {
                 for (String key : map.keySet()) {
-                    Parameter parameterCase = new Parameter();
-                    parameterCase.setParameterValueIndex(index);
-                    parameterCase.setParameterName(request.getParameter_name());
-                    parameterCase.setParameterKey(key);
-                    parameterCase.setParameterValue(map.get(key));
+                    ParameterDetailsTab parameterCase
+                            = ParameterDetailsTab.builder()
+                            .appid(0L)
+                            .parameterValueIndex(index)
+                            .parameterName(request.getParameterName())
+                            .parameterId(parameterName.getId())
+                            .parameterKey(key)
+                            .parameterValue(map.get(key))
+                            .build();
                     parameterCaseList.add(parameterCase);
                 }
                 index++;
             }
         }
-        parameterMapper.delete(
-                Wrappers.<Parameter>lambdaQuery()
-                        .eq(Parameter::getParameterName,
-                                request.getParameter_name()));
         if (!CollectionUtils.isEmpty(parameterCaseList)) {
-            for (Parameter item : parameterCaseList)
-            {
-                parameterMapper.insert(item);
-            }
+            parameterDetailsMapper.saveBatchByNative(parameterCaseList);
         }
+        UpdateParameterResponse rsp
+                = UpdateParameterResponse
+                .builder()
+                .status(status)
+                .parameterId(parameterName.getId())
+                .build();
         return rsp;
     }
 
     /**
      * 删除Paramete
      *
-     * @param name
+     * @param id
      * @return
      */
     @Override
-    public DeleteParameterResponse deleteParameter(String name) {
+    public DeleteParameterResponse deleteParameter(Long id) {
         DeleteParameterResponse rsp = new DeleteParameterResponse();
         Status status = new Status();
         status.setSuccess(true);
         rsp.setStatus(status);
         parameterMapper.delete(
-                Wrappers.<Parameter>lambdaQuery()
-                        .eq(Parameter::getParameterName, name));
+                Wrappers.<ParameterTab>lambdaQuery()
+                        .eq(ParameterTab::getId, id));
+        parameterDetailsMapper.delete(
+                Wrappers.<ParameterDetailsTab>lambdaQuery()
+                        .eq(ParameterDetailsTab::getParameterId, id));
         return rsp;
     }
 

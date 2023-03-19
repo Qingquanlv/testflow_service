@@ -1,21 +1,20 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter;
 
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
-import org.springframework.validation.annotation.Validated;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/3 6:53
  * @Version 1.0
  */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CreateParameterRequest {
 
     /**
@@ -31,28 +30,4 @@ public class CreateParameterRequest {
     private String parameter_name;
 
     private List<HashMap<String, String>> parameters;
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getParameter_name() {
-        return parameter_name;
-    }
-
-    public void setParameter_name(String parameter_name) {
-        this.parameter_name = parameter_name;
-    }
-
-    public List<HashMap<String, String>> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<HashMap<String, String>> parameters) {
-        this.parameters = parameters;
-    }
 }

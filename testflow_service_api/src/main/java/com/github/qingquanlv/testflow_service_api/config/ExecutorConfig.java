@@ -10,18 +10,39 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/6/6 14:04
  * @Version 1.0
  */
 @Configuration
 public class ExecutorConfig {
+
     @Bean(name = "taskExecutor")
     public Executor getAsyncExecutor() throws InterruptedException{
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(1024);
-        executor.setKeepAliveSeconds(4);
-        executor.setQueueCapacity(0);
+        executor.setCorePoolSize(3);
+        executor.setMaxPoolSize(5);
+        executor.setKeepAliveSeconds(10);
+        executor.setQueueCapacity(200);
+        executor.setRejectedExecutionHandler((Runnable r, ThreadPoolExecutor exe) -> {
+            // 利用BlockingQueue的特性，任务队列满时等待放入
+            try {
+                if (!exe.getQueue().offer(r, 30, TimeUnit.SECONDS)) {
+                    throw new Exception("Task offer failed after 30 sec");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return executor;
+    }
+
+
+    @Bean(name = "opsTaskExecutor")
+    public Executor getOpsAsyncExecutor() throws InterruptedException{
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(3);
+        executor.setMaxPoolSize(5);
+        executor.setKeepAliveSeconds(10);
+        executor.setQueueCapacity(200);
         executor.setRejectedExecutionHandler((Runnable r, ThreadPoolExecutor exe) -> {
             // 利用BlockingQueue的特性，任务队列满时等待放入
             try {

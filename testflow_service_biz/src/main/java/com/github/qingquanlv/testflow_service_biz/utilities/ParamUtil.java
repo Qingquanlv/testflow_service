@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,14 +26,27 @@ import java.util.regex.Pattern;
  */
 public class ParamUtil {
     private static Logger logger = LoggerFactory.getLogger(ParamUtil.class);
+
     public static Pattern paramPattern = Pattern.compile("\\$\\{.*?\\}");
+    public static Pattern ConfigPattern = Pattern.compile("\\{\\{.*?\\}\\}");
     public static Pattern paramPatternNoXPath = Pattern.compile("\\$P\\{.*?\\}");
     public static Pattern listParamPattern = Pattern.compile("\\$L\\{.*?\\}");
-    public static Pattern mapPatternStr = Pattern.compile("^\\{(.*?)\\}$");
+    public static Pattern TimeDayPattern = Pattern.compile("(?i)\\{\\{CURRENTDAY(.*?)\\}\\}");
+    public static Pattern TimeStampPattern = Pattern.compile("(?i)\\{\\{CURRENTDAYTIMESTAMP(.*?)\\}\\}");
+    public static Pattern TimeStampMillisPattern = Pattern.compile("(?i)\\{\\{CURRENTDAYTIMESTAMPMILLIS(.*?)\\}\\}");
+    public static Pattern TimeStampPatternDay = Pattern.compile("(?i)((?:\\-|\\+?)\\s*?\\d+)\\s*?DAY");
+    public static Pattern TimeStampPatternHour = Pattern.compile("(?i)((?:\\-|\\+?)\\s*?\\d+)\\s*?HOUR");
+    public static Pattern TimeStampPatternMinute = Pattern.compile("(?i)((?:\\-|\\+?)\\s*?\\d+)\\s*?MINUTE");
+    public static Pattern TimeStampPatternSecond = Pattern.compile("(?i)((?:\\-|\\+?)\\s*?\\d+)\\s*?SECOUND");
+    public static Pattern TimeStampPatternTimeZone = Pattern.compile("(?i)((?:\\-|\\+?)\\s*?\\d+)\\s*?TIMEZONE");
+    public static Pattern TimeStampPatternTimeFormat = Pattern.compile("\\,\\s*(\\.+)\\s*\\}");
 
+    public static Pattern mapPatternStr = Pattern.compile("^\\{(.*?)\\}$");
     public static String patternStr = ".*\\$\\{(.*?)\\}.*";
+    public static String configPatternStr = ".*\\{\\{(.*?)\\}\\}.*";
     public static String listPatternStr = ".*\\$L\\{(.*?)\\}.*";
     public static String patternStrNoXPath = ".*\\$P\\{(.*?)\\}.*";
+
 
 
     /**
@@ -46,8 +60,45 @@ public class ParamUtil {
     {
         val = parseParamXpath(val);
         val = parseParamNoXpath(val);
+        val = parseTimeStampMillis(val);
+        val = parseTimeStamp(val);
+        val = parseTime(val);
         val = parseEnter(val);
         return val;
+    }
+
+    /**
+     * 转化字符串中配置
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseConfig(String caseType, String val) throws Exception
+    {
+        val = parseParamConfig(caseType, val);
+        return val;
+    }
+
+    /**
+     * 根据path获取value
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseParamPath(String val) throws Exception {
+        String mapVal = "";
+        String[] bufferKeyAndValue = getBufferKeyAndValue(val);
+        if (bufferKeyAndValue.length >= 2) {
+            //从缓存中获取数据
+            String key = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
+            mapVal = getMapValFromJson(key, bufferKeyAndValue[1]);
+            if (null == mapVal || mapVal.isEmpty()) {
+                throw new Exception(String.format("No matched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], key));
+            }
+        }
+        return mapVal;
     }
 
     /**
@@ -66,6 +117,7 @@ public class ParamUtil {
             //转化参数为某缓存内的实体的属性值
             String paramConverted = convertParam(patternStr, param);
             String[] bufferKeyAndValue = getBufferKeyAndValue(paramConverted);
+            if (bufferKeyAndValue.length < 2) { break; }
             //从缓存中获取数据
             String key = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
             String mapVal = getMapValFromJson(key, bufferKeyAndValue[1]);
@@ -89,20 +141,249 @@ public class ParamUtil {
     public static String parseParamNoXpath(String val) throws Exception
     {
         //获取字符串中所有参数
-        List<String> paramList = catchParamList(paramPatternNoXPath, val);
+        List<String> paramList = catchParamList(paramPattern, val);
         for(String param : paramList)
         {
             //转化参数为某缓存内的实体的属性值
-            String key = convertParam(patternStrNoXPath, param);
+            String key = convertParam(patternStr, param);
             String mapVal = BufferManager.getBufferByKey(key);
-            if (mapVal==null || mapVal.length() == 0) {
-                throw new Exception(String.format("No matched value for key \"%s\"  string \"%s\" .", param, key));
+            if (null == mapVal) {
+                throw new Exception(String.format("No matched value for key \"%s\" string \"%s\".", param, key));
             }
             else {
                 val = updateParameStr(val, param, mapVal);
             }
         }
         return val;
+    }
+
+    /**
+     * 转化字符串中配置类型参数
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseParamConfig(String caseType, String val) throws Exception
+    {
+        val = parseParam(caseType, val);
+        return val;
+    }
+
+    /**
+     * 转化字符串中配置类型参数
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseParam(String caseType, String val) throws Exception
+    {
+        //获取字符串中所有参数
+        List<String> paramList = catchParamList(ConfigPattern, val);
+        for(String param : paramList)
+        {
+            //转化参数为某缓存内的实体的属性值
+            String key = convertParam(configPatternStr, param);
+            String mapVal = BufferManager.getBufferByKey(
+                    String.format("env$$config$$%s$$%s",
+                            caseType, key));
+            //判断时间参数
+            if (null != mapVal) {
+                val = updateParameStr(val, param, mapVal);
+            }
+        }
+        return val;
+    }
+
+    /**
+     * 转化字符串中时间戳
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseTime(String val) throws Exception {
+
+        //获取字符串中所有参数
+        List<String> timeStamps = catchParamList(TimeDayPattern, val);
+        for (String time : timeStamps) {
+            //处理format string
+            List<String> timeFormatList = catchParamList(TimeStampPatternTimeFormat, time);
+            String timeFormat
+                    = timeFormatList.size() > 0
+                    ? parseSpace(convertParam(TimeStampPatternTimeZone,timeFormatList.get(0)))
+                    : "YYYY-MM-DD";
+            //处理时区
+            List<String> timeZoneList = catchParamList(TimeStampPatternTimeZone, time);
+            Long timeZone
+                    = timeZoneList.size() > 0
+                    ? Long.parseLong(parseSpace(convertParam(TimeStampPatternTimeZone,timeZoneList.get(0))))
+                    : 0L;
+            long now = System.currentTimeMillis() / 1000L;
+            long daySecond = 60 * 60 * 24;
+            long dayTime = now - (now + timeZone * 3600) % daySecond;
+            //转化参数为某缓存内的实体的属性值
+            List<String> hours = catchParamList(TimeStampPatternHour, time);
+            List<String> minutes = catchParamList(TimeStampPatternMinute, time);
+            List<String> days = catchParamList(TimeStampPatternDay, time);
+            List<String> seconds = catchParamList(TimeStampPatternSecond, time);
+
+            for (String day : days) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternDay, day);
+                Long hourNum = Long.valueOf(parseSpace(key));
+                Long mapVal = hourNum * 60 * 60 * 24;
+                dayTime = dayTime + mapVal;
+            }
+            for (String hour : hours) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternHour, hour);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60 * 60;
+                dayTime = dayTime + mapVal;
+            }
+            for (String minute : minutes) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternMinute, minute);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60;
+                dayTime = dayTime + mapVal;
+            }
+            for (String second : seconds) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternSecond, second);
+                Long SecondNum = Long.valueOf(parseSpace(key));
+                Long mapVal = SecondNum;
+                dayTime = dayTime + mapVal;
+            }
+            SimpleDateFormat formatYYYY = new SimpleDateFormat(timeFormat);
+            String result = formatYYYY.format(new Date(dayTime * 1000));
+            val = updateParameStr(val, time, result);
+        }
+        return val;
+    }
+
+
+
+    /**
+     * 转化字符串中时间戳
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseTimeStampMillis(String val) throws Exception {
+        //获取字符串中所有参数
+        List<String> timeStamps = catchParamList(TimeStampMillisPattern, val);
+
+        for (String time : timeStamps) {
+            List<String> timeZoneList = catchParamList(TimeStampPatternTimeZone, time);
+            Long timeZone
+                    = timeZoneList.size() > 0
+                    ? Long.parseLong(parseSpace(convertParam(TimeStampPatternTimeZone,timeZoneList.get(0))))
+                    : 0L;
+            long now = System.currentTimeMillis();
+            long daySecond = 60 * 60 * 24 * 1000;
+            long dayTime = now - (now + timeZone * 3600 * 1000) % daySecond;
+            //转化参数为某缓存内的实体的属性值
+            List<String> hours = catchParamList(TimeStampPatternHour, time);
+            List<String> minutes = catchParamList(TimeStampPatternMinute, time);
+            List<String> days = catchParamList(TimeStampPatternDay, time);
+            List<String> seconds = catchParamList(TimeStampPatternSecond, time);
+
+            for (String day : days) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternDay, day);
+                Long hourNum = Long.valueOf(parseSpace(key));
+                Long mapVal = hourNum * 60 * 60 * 24 * 1000;
+                dayTime = dayTime + mapVal;
+            }
+            for (String hour : hours) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternHour, hour);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60 * 60 * 1000;
+                dayTime = dayTime + mapVal;
+            }
+            for (String minute : minutes) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternMinute, minute);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60 * 1000;
+                dayTime = dayTime + mapVal;
+            }
+            for (String second : seconds) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternSecond, second);
+                Long SecondNum = Long.valueOf(parseSpace(key));
+                Long mapVal = SecondNum * 1000;
+                dayTime = dayTime + mapVal;
+            }
+            val = updateParameStr(val, time, String.valueOf(dayTime));
+        }
+        return val;
+
+    }
+
+    /**
+     * 转化字符串中时间戳
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseTimeStamp(String val) throws Exception {
+        //获取字符串中所有参数
+        List<String> timeStamps = catchParamList(TimeStampPattern, val);
+
+        for (String time : timeStamps) {
+            List<String> timeZoneList = catchParamList(TimeStampPatternTimeZone, time);
+            Long timeZone
+                    = timeZoneList.size() > 0
+                    ? Long.parseLong(parseSpace(convertParam(TimeStampPatternTimeZone,timeZoneList.get(0))))
+                    : 0L;
+            long now = System.currentTimeMillis() / 1000L;
+            long daySecond = 60 * 60 * 24;
+            long dayTime = now - (now + timeZone * 3600) % daySecond;
+            //转化参数为某缓存内的实体的属性值
+            List<String> hours = catchParamList(TimeStampPatternHour, time);
+            List<String> minutes = catchParamList(TimeStampPatternMinute, time);
+            List<String> days = catchParamList(TimeStampPatternDay, time);
+            List<String> seconds = catchParamList(TimeStampPatternSecond, time);
+
+            for (String day : days) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternDay, day);
+                Long hourNum = Long.valueOf(parseSpace(key));
+                Long mapVal = hourNum * 60 * 60 * 24;
+                dayTime = dayTime + mapVal;
+            }
+            for (String hour : hours) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternHour, hour);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60 * 60;
+                dayTime = dayTime + mapVal;
+            }
+            for (String minute : minutes) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternMinute, minute);
+                Long minuteNum = Long.valueOf(parseSpace(key));
+                Long mapVal = minuteNum * 60;
+                dayTime = dayTime + mapVal;
+            }
+            for (String second : seconds) {
+                //转化参数为某缓存内的实体的属性值
+                String key = convertParam(TimeStampPatternSecond, second);
+                Long SecondNum = Long.valueOf(parseSpace(key));
+                Long mapVal = SecondNum;
+                dayTime = dayTime + mapVal;
+            }
+            val = updateParameStr(val, time, String.valueOf(dayTime));
+        }
+        return val;
+
     }
 
     /**
@@ -115,6 +396,18 @@ public class ParamUtil {
     public static String parseEnter(String val) throws Exception
     {
         return val.replace("\n", "").replace("\r", "").replace("\t", "");
+    }
+
+    /**
+     * 去除字符串中的空格
+     *
+     * @param val
+     * @return
+     * @throws Exception
+     */
+    public static String parseSpace(String val) throws Exception
+    {
+        return val.replace(" ", "");
     }
 
     /**
@@ -135,6 +428,20 @@ public class ParamUtil {
     }
 
     /**
+     * 获取字符串中的参数值
+     *
+     * @param value : 参数字符串
+     * @return List<String> ：返回匹配的所有参数
+     */
+    private static String convertParam(Pattern pattern, String value){
+        Matcher matcher = pattern.matcher(value);
+        if (matcher.find()) {
+            value = matcher.group(1);
+        }
+        return value;
+    }
+
+    /**
      * 根据字符串格式XX：XX，拆分出XX，XX
      *
      * @param param : 参数字符串
@@ -145,7 +452,7 @@ public class ParamUtil {
         String[] bufferKeyAndValue = param.split(":");
         if(bufferKeyAndValue.length != 2)
         {
-            System.out.print(String.format("param \"%s\" type is not invalid.", param));
+            //System.out.println(String.format("param \"%s\" type is not invalid.", param));
         }
         return bufferKeyAndValue;
     }
@@ -194,11 +501,11 @@ public class ParamUtil {
         if (null != node) {
             for (Object item : node) {
                 if (null != str && !"".equals(str)) {
-                    str = String.format("%s,%s", str, item);
+                    str = String.format("%s,%s", str, item.toString().replaceAll("\"",""));
                 }
                 else {
                     if (null != str) {
-                        str = item.toString();
+                        str = item.toString().replaceAll("\"","");
                     }
                 }
             }
@@ -274,18 +581,18 @@ public class ParamUtil {
     public static List<String> parseParamList(String val) throws Exception
     {
         val = parseEnter(val);
-        //List情况requst只能存在一个参数, 若为多个默认取第一个
+        //List情况request只能存在一个参数, 若为多个默认取第一个
         List<String> paramList = catchParamList(listParamPattern, val);
         List<String> reqList = new ArrayList<>();
         for (String param : paramList) {
             if (!paramList.isEmpty()) {
                 //去掉参数中的大括号
-                String paramCoverted = convertParam(listPatternStr, param);
-                String[] bufferKeyAndValue = getBufferKeyAndValue(paramCoverted);
+                String paramCovered = convertParam(listPatternStr, param);
+                String[] bufferKeyAndValue = getBufferKeyAndValue(paramCovered);
                 //从缓存中获取数据
                 String str = BufferManager.getBufferByKey(bufferKeyAndValue[0]);
                 List<Object> objList = getMapValFromStr(str, bufferKeyAndValue[1]);
-                if (null == objList || objList.isEmpty()) {
+                if (objList.isEmpty()) {
                     System.out.println(String.format("No matiched value for key \"%s\" Json string \"%s\" .", bufferKeyAndValue[1], str));
                 }
                 else {
@@ -457,15 +764,17 @@ public class ParamUtil {
     public static Map<String, List<String>> parseVerifyParam(String val)
     {
         Map<String, List<String>> map = new HashMap<>();
-        val = val.replaceAll("\\s*", "");
-        //获取字符串中所有参数
-        String[] keyArray = val.split("\\}\\,");
-        if (!"".equals(keyArray[0])) {
-            for (String key : keyArray) {
-                String[] mapKeyArray = key.split("\\:\\{");
-                String[] mapItemArray = mapKeyArray[1].replace("}", "").split("\\,");
-                ArrayList<String> arrayList = new ArrayList<>(Arrays.asList(mapItemArray));
-                map.put(mapKeyArray[0], arrayList);
+        if (null != val) {
+            val = val.replaceAll("\\s*", "");
+            //获取字符串中所有参数
+            String[] keyArray = val.split("\\}\\,");
+            if (!"".equals(keyArray[0])) {
+                for (String key : keyArray) {
+                    String[] mapKeyArray = key.split("\\:\\{");
+                    String[] mapItemArray = mapKeyArray[1].replace("}", "").split("\\,");
+                    ArrayList<String> arrayList = new ArrayList<>(Arrays.asList(mapItemArray));
+                    map.put(mapKeyArray[0], arrayList);
+                }
             }
         }
         return map;
@@ -490,7 +799,7 @@ public class ParamUtil {
         return targetStr;
     }
 
-    public static Object getParameType(String parame, String parameType) throws Exception {
+    public static Object getParameterType(String parame, String parameType) throws Exception {
         String patten = "list<";
         Object sourceParame;
         Class<?> paramTypeClazz;

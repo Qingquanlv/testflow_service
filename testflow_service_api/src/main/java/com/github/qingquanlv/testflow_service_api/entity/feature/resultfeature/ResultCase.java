@@ -2,7 +2,6 @@ package com.github.qingquanlv.testflow_service_api.entity.feature.resultfeature;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/4/14 20:52
  */
 public class ResultCase {
 

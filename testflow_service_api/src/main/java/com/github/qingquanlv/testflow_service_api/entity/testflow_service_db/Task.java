@@ -10,7 +10,6 @@ import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/14 下午2:15
  */
 @Data
 @Builder
@@ -23,10 +22,13 @@ public class Task {
         private Long jobId;
 
         @TableField(value = "parameter_name")
-        private String parameter_name;
+        private String parameterName;
 
         @TableField(value = "parameter_value_index")
-        private String parameter_value_index;
+        private String parameterValueIndex;
+
+        @TableField(value = "feature_id")
+        private Long featureId;
 
         private Timestamp starttime;
 

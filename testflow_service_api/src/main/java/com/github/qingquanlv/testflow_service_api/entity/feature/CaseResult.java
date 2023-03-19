@@ -1,12 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.entity.feature;
 
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
-
-import java.util.List;
-
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/10 18:59
  * @Version 1.0
  */
 public class CaseResult {

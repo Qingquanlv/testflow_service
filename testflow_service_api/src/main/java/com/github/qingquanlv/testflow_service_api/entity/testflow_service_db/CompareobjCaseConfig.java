@@ -10,7 +10,6 @@ import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/11 下午8:26
  */
 @Data
 @Builder
@@ -32,6 +31,8 @@ public class CompareobjCaseConfig {
         private String pkMap;
 
         private String noCompareItemMap;
+
+        private String thresholdMap;
 
         private Timestamp datachangedLasttime;
 

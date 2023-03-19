@@ -14,21 +14,21 @@
             <!-- 1.2.配置数据源，即连接池方式:JNDI/POOLED/UNPOOLED -->
             <dataSource type="POOLED">
                 <property name="driver" value="com.mysql.jdbc.Driver"/>
-                <property name="url" value="jdbc:mysql://127.0.0.1:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>
+<!--                <property name="url" value="jdbc:mysql://127.0.0.1:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>-->
+                <property name="url" value="jdbc:mysql://172.17.0.2:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>
                 <property name="username" value="root"/>
                 <property name="password" value="123"/>
             </dataSource>
         </environment>
-        <environment id="web">
+        <environment id="tidb">
             <!-- 1.1.配置事务管理方式：JDBC：将事务交给JDBC管理（推荐） -->
             <transactionManager type="JDBC"></transactionManager>
             <!-- 1.2.配置数据源，即连接池方式:JNDI/POOLED/UNPOOLED -->
             <dataSource type="POOLED">
                 <property name="driver" value="com.mysql.jdbc.Driver"/>
-                <property name="url" value="jdbc:mysql://120.77.254.161:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>
-<!--                <property name="url" value="jdbc:mysql://127.0.0.1:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>-->
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/testflow_service?characterEncoding=utf-8&amp;serverTimezone=UTC"/>
                 <property name="username" value="root"/>
-                <property name="password" value="QQQQWord1."/>
+                <property name="password" value="123"/>
             </dataSource>
         </environment>
     </environments>

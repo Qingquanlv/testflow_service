@@ -5,21 +5,24 @@ import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJob
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.exexjob.ExecJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.updatejob.UpdateJobResponse;
+import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Task;
 import com.github.qingquanlv.testflow_service_api.service.impl.ScheduleJobImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.CollectionUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/6/6 10:40
  * @Version 1.0
  */
 @RestController
@@ -29,34 +32,29 @@ public class Job {
     @Autowired
     private ScheduleJobImpl jobService;
 
+    @PostMapping("/queryAll")
+    public QueryAllJobResponse queryAllJob(@RequestBody QueryAllJobRequest request){
+        return jobService.queryAllJob(request);
+    }
+
     @RequestMapping("/create")
     public CreateJobResponse createJob(@RequestBody CreateJobRequest request){
-        CreateJobResponse rsp =  jobService.createJob(request);
-        return rsp;
+        return jobService.createJob(request);
     }
 
     @RequestMapping("/delete")
     public DeleteJobResponse deleteJob(@RequestParam(name = "jobId") Long taskId){
-        DeleteJobResponse rsp =  jobService.deleteJob(taskId);
-        return rsp;
+        return jobService.deleteJob(taskId);
     }
 
     @RequestMapping("/update")
-    public UpdateJobResponse updateJob(@RequestBody UpdateJobRequest request){
-        UpdateJobResponse rsp =  jobService.updateJob(request);
-        return rsp;
-    }
-
-    @RequestMapping("/queryAll")
-    public QueryAllJobResponse queryAllJob(){
-        QueryAllJobResponse rsp =  jobService.queryAllJob();
-        return rsp;
+    public UpdateJobResponse updateJob(@RequestBody @Validated UpdateJobRequest request){
+        return jobService.updateJob(request);
     }
 
     @RequestMapping("/updateStatus")
     public SetStatusResponse setStatus(@RequestBody SetStatusRequest request){
-        SetStatusResponse rsp = jobService.updateStatus(request);
-        return rsp;
+        return jobService.updateStatus(request);
     }
 
     @RequestMapping("/execute")
@@ -65,7 +63,24 @@ public class Job {
         Status status = new Status();
         status.setSuccess(true);
         rsp.setStatus(status);
-        jobService.execJob(taskId);
+        return rsp;
+    }
+
+    @RequestMapping("/batchExecute")
+    public ExecJobResponse executeJobList(
+            @RequestParam(name = "jobIds")
+            @NotNull(message = "please select at least one job id")
+                    List<Long> taskIds){
+        ExecJobResponse rsp = new ExecJobResponse();
+        Status status = new Status();
+        status.setSuccess(true);
+        rsp.setStatus(status);
+        List<Task> tasks = jobService.pendingJob(taskIds);
+        if (!CollectionUtils.isEmpty(tasks)) {
+            for (Task task : tasks) {
+                jobService.execJob(task);
+            }
+        }
         return rsp;
     }
 }

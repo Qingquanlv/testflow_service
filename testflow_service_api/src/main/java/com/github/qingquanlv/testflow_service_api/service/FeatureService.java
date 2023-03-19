@@ -5,13 +5,13 @@ import com.github.qingquanlv.testflow_service_api.entity.feature_v2.execfeature.
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.createfeature.CreateFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.deletefeature.DeleteFeatureResponse;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureRequest;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryallfeaure.QueryAllFeatureResponse;
 import com.github.qingquanlv.testflow_service_api.entity.feature_v2.queryfeature.QueryFeatureResponse;
 
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/1/2 12:20
  * @Version 1.0
  */
 public interface FeatureService {
@@ -44,7 +44,7 @@ public interface FeatureService {
      *
      * @return
      */
-    QueryAllFeatureResponse getFeatureAll();
+    QueryAllFeatureResponse queryFeatureAll(QueryAllFeatureRequest request);
 
     /**
      * 删除feature

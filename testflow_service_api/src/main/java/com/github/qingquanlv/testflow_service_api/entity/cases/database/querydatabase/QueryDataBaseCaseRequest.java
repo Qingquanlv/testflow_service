@@ -2,7 +2,6 @@ package com.github.qingquanlv.testflow_service_api.entity.cases.database.queryda
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/31 22:55
  * @Version 1.0
  */
 public class QueryDataBaseCaseRequest {

@@ -2,14 +2,12 @@ package com.github.qingquanlv.testflow_service_biz.stepdefinations;
 
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.serviceaccess.HttpClientUtil;
+import com.github.qingquanlv.testflow_service_biz.utilities.FastJsonUtil;
 import com.github.qingquanlv.testflow_service_biz.utilities.ParamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -41,7 +39,7 @@ public class Request {
      *
      * @param requestStr : 请求body
      * @param config : 请求配置项
-     * @param headerMap : 请求头
+     * @param header : 请求头
      * @param requestType : 请求类型 post/get
      * @param contentType : 请求body类型 xml/json
      * @param url : 请求url
@@ -49,12 +47,21 @@ public class Request {
      * @throws Exception
      *
      */
-    public String sendRequest(String caseName, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) throws Exception {
+    public String sendRequest(String caseName, String requestStr, String config, String header, String requestType, String contentType, String url) throws Exception {
         String requestObject;
 
         requestStr = null == requestStr ? "" : ParamUtil.parseParam(requestStr);
         logger.info(String.format("%s Send request: %s", new Date(), requestStr));
-        url = ParamUtil.parseParam(url);
+        //parse parameter
+        url = null == url ? "" : ParamUtil.parseParam(url);
+        header = null == header ? "" : ParamUtil.parseParam(header);
+        config = null == config ? "" : ParamUtil.parseParam(config);
+        //parse config
+        url = ParamUtil.parseConfig("request", url);
+        header = ParamUtil.parseConfig("request", header);
+        config = ParamUtil.parseConfig("request", config);
+        HashMap<String, String> headerMap = FastJsonUtil.toMap(header);
+        HashMap<String, String> configMap = FastJsonUtil.toMap(config);
         logger.info(String.format("%s Url: %s", new Date(), url));
         //request报文类型
         if (JSON.equals(contentType)) {
@@ -67,29 +74,29 @@ public class Request {
                 String.format("url:%s, requestBody:%s, headers:%s, configs:%s, contentType:%s",
                         url, requestStr, headerMap, config, contentType));
         //requestType类型
-        if (POST.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpPost(url, requestStr, headerMap, config, contentType);
+        if (null == requestType || "".equals(requestType) ||GET.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpGet(url, headerMap, configMap);
         }
-        else if (PATCH.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpPatch(url, requestStr, headerMap, config, contentType);
+        else if (POST.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpPost(url, requestStr, headerMap, configMap, contentType);
         }
-        else if (GET.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpGet(url, headerMap, config);
+        else if (PATCH.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpPatch(url, requestStr, headerMap, configMap, contentType);
         }
-        else if (HEAD.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpHead(url, headerMap, config);
+        else if (HEAD.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpHead(url, headerMap, configMap);
         }
-        else if (PUT.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpPutJson(url, requestStr, headerMap, config, contentType);
+        else if (PUT.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpPutJson(url, requestStr, headerMap, configMap, contentType);
         }
-        else if (DELETE.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpDelete(url, headerMap, config);
+        else if (DELETE.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpDelete(url, requestStr, headerMap, configMap, contentType);
         }
-        else if (OPTIONS.equals(requestType)) {
-            requestObject = HttpClientUtil.sendHttpOptions(url, headerMap, config);
+        else if (OPTIONS.equals(requestType.toLowerCase())) {
+            requestObject = HttpClientUtil.sendHttpOptions(url, headerMap, configMap);
         }
         else {
-            requestObject = HttpClientUtil.sendHttpTrace(url, headerMap, config);
+            requestObject = HttpClientUtil.sendHttpTrace(url, headerMap, configMap);
         }
         logger.info(String.format("%s Get responce: %s", new Date(), requestObject));
         return ParamUtil.parseJsonDate(requestObject);

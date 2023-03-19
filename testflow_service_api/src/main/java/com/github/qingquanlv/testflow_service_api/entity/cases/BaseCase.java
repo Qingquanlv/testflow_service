@@ -4,7 +4,6 @@ import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/11/29 10:57
  * @Version 1.0
  */
 public abstract class BaseCase {

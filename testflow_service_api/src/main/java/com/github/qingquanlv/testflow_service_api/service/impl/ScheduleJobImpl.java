@@ -1,12 +1,16 @@
 package com.github.qingquanlv.testflow_service_api.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.qingquanlv.testflow_service_api.common.Utils;
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.CaseInfo;
+import com.github.qingquanlv.testflow_service_api.entity.feature_v2.FeatureTaskResult;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.createjob.CreateJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.deletejob.DeleteJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.JobDetails;
+import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.queryalljob.QueryAllJobResponse;
 import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusRequest;
 import com.github.qingquanlv.testflow_service_api.entity.job.setstatus.SetStatusResponse;
@@ -27,6 +31,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -34,7 +39,6 @@ import java.util.stream.Collectors;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/6/6 21:09
  * @Version 1.0
  */
 
@@ -60,7 +64,7 @@ public class ScheduleJobImpl implements IScheduleJobService {
     private FeatureServiceImpl featureService;
 
     @Autowired
-    ParameterMapper parameterMapper;
+    ParameterDetailsMapper parameterDetailsMapper;
 
     @Autowired
     CazeMapper caseMapper;
@@ -71,16 +75,77 @@ public class ScheduleJobImpl implements IScheduleJobService {
     @Autowired
     TaskMapper taskMapper;
 
+    @Autowired
+    ParameterIndexStepResultMapper parameterIndexStepResultMapper;
+
+    /**
+     * 获取所有Job信息
+     * @param request request
+     * @return response
+     */
+    @Override
+    public QueryAllJobResponse queryAllJob(QueryAllJobRequest request) {
+        Status status = new Status();
+        status.setSuccess(true);
+        String filter
+            = null == request.getFilter() ? "" : request.getFilter();
+        long pageNum
+            = null == request.getPageNum() ? 1L : request.getPageNum();
+        long pageSize
+            = null == request.getPageSize() ? 10L : request.getPageSize();
+        //query job
+        Page<Job> jobs
+            = jobMapper.selectPage(
+            new Page<Job>(pageNum, pageSize),
+            Wrappers.<Job>lambdaQuery()
+                .like(Job::getName, filter)
+                .orderByDesc(Job::getId));
+        //query all feature
+        List<FeatureTab> features = featureMapper.selectList(Wrappers.emptyWrapper());
+        //query all job config
+        List<JobConfig> jobConfigs = jobConfigMapper.selectList(Wrappers.emptyWrapper());
+        List<JobDetails> jobDetailsList = new ArrayList<>();
+        for (Job item : jobs.getRecords()) {
+            FeatureTab feature = features.stream()
+                .filter(i->item.getFeatureId().equals(i.getFeature_id()))
+                .findFirst().orElse(null);
+            JobConfig jobConfig = jobConfigs.stream()
+                .filter(i->item.getId().equals(i.getJobId()))
+                .findFirst().orElse(null);
+            JobDetails jobDetails
+                = JobDetails.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .featureId(item.getFeatureId())
+                .featureName(null == feature ? "" : feature.getFeature_name())
+                .paramName(item.getParam_name())
+                .paramIndex(item.getParamIndexId())
+                .cron(null == jobConfig ? "" : jobConfig.getCron())
+                .status(null == jobConfig ? 0 : jobConfig.getStatus())
+                .dataChangedLastTime(item.getDatachangedLasttime())
+                .description(null == jobConfig ? "" : jobConfig.getDescription()
+                ).build();
+            jobDetailsList.add(jobDetails);
+        }
+        return QueryAllJobResponse.builder()
+            .jobDetails(jobDetailsList)
+            .total(jobs.getTotal())
+            .status(status)
+            .build();
+    }
+
+
     /**
      * 创建Job
      *
-     * @param request
-     * @return
+     * @param request request
+     * @return response
      */
     @Override
     public CreateJobResponse createJob(CreateJobRequest request) {
         Status status = new Status();
         status.setSuccess(true);
+
         CreateJobResponse createJobResponse = new CreateJobResponse();
         Job job
                 = Job.builder()
@@ -168,52 +233,6 @@ public class ScheduleJobImpl implements IScheduleJobService {
     }
 
     /**
-     * 获取所有Job信息
-     *
-     * @return
-     */
-    @Override
-    public QueryAllJobResponse queryAllJob() {
-        Status status = new Status();
-        status.setSuccess(true);
-        //query all feature
-        List<Feature> features = featureMapper.selectList(Wrappers.emptyWrapper());
-        //query all job
-        List<Job> jobs = jobMapper.selectList(Wrappers.emptyWrapper());
-        //query all job config
-        List<JobConfig> jobConfigs = jobConfigMapper.selectList(Wrappers.emptyWrapper());
-        List<JobDetails> jobDetailsList = new ArrayList<>();
-        for (Job item : jobs) {
-            Feature feature = features.stream()
-                    .filter(i->item.getFeatureId().equals(i.getFeature_id()))
-                    .findFirst().orElse(null);
-            JobConfig jobConfig = jobConfigs.stream()
-                    .filter(i->item.getId().equals(i.getJobId()))
-                    .findFirst().orElse(null);
-            JobDetails jobDetails
-                    = JobDetails.builder()
-                    .id(item.getId())
-                    .name(item.getName())
-                    .featureId(item.getFeatureId())
-                    .featureName(null == feature ? "" : feature.getFeature_name())
-                    .paramName(item.getParam_name())
-                    .paramIndex(item.getParamIndexId())
-                    .cron(null == jobConfig ? "" : jobConfig.getCron())
-                    .status(null == jobConfig ? 0 : jobConfig.getStatus())
-                    .dataChangedLastTime(item.getDatachangedLasttime())
-                    .description(null == jobConfig ? "" : jobConfig.getDescription()
-                    ).build();
-            jobDetailsList.add(jobDetails);
-        }
-        QueryAllJobResponse rsp
-                = QueryAllJobResponse.builder()
-                .jobDetails(jobDetailsList)
-                .status(status)
-                .build();
-        return rsp;
-    }
-
-    /**
      * 更新任务Status
      *
      * @param request
@@ -276,85 +295,127 @@ public class ScheduleJobImpl implements IScheduleJobService {
         return rsp;
     }
 
+    @Override
+    public List<Task> pendingJob(List<Long> jobIds) {
+        List<Task> tasks = new ArrayList<>();
+        List<Job> jobs = jobMapper.selectList(
+                Wrappers.<Job>lambdaQuery()
+                        .in(Job::getId, jobIds));
+        for (Long jobId : jobIds) {
+            Job job
+                    = jobs.stream()
+                    .filter(item->item.getId()==jobId)
+                    .findFirst().orElse(null);
+            Task task
+                    = Task.builder()
+                    .jobId(jobId)
+                    .status(4)
+                    .parameterName(job.getParam_name())
+                    .featureId(job.getFeatureId())
+                    .parameterValueIndex(job.getParamIndexId())
+                    .build();
+            taskMapper.insert(task);
+            tasks.add(task);
+        }
+        return tasks;
+    }
 
     /**
      * 手动异步执行Job
      *
-     * @param jobId
+     * @param task
      */
     @Async("taskExecutor")
     @Override
-    public void execJob(Long jobId) {
+    public void execJob(Task task) {
         Integer taskStatus = 1;
-        Job job = jobMapper.selectOne(
-                Wrappers.<Job>lambdaQuery()
-                        .eq(Job::getId, jobId));
         //ParamIndex 格式转为 list<Long>
         List<Long> index
-                = Utils.toListLong(job.getParamIndexId());
+                = Utils.toListLong(task.getParameterValueIndex());
         List<Caze> cazes
                 = caseMapper.selectList(
                 Wrappers.<Caze>lambdaQuery()
                         .eq(Caze::getFeatureId,
-                                job.getFeatureId()));
+                                task.getFeatureId()));
         //过滤获取Parameter中存在的Index
-        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> parameters
-                = parameterMapper.selectList(
-                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter>lambdaQuery()
-                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterName, job.getParam_name())
-                                .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex, index));
+        List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab> parameters
+                = CollectionUtils.isEmpty(index) ?
+                parameterDetailsMapper.selectList(
+                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab>lambdaQuery()
+                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab::getParameterName, task.getParameterName())) :
+                parameterDetailsMapper.selectList(
+                        Wrappers.<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab>lambdaQuery()
+                                .eq(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab::getParameterName, task.getParameterName())
+                                .in(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab::getParameterValueIndex, index));
         Set<Long> parameterIndex
                 = parameters.stream()
-                .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter::getParameterValueIndex)
+                .map(com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab::getParameterValueIndex)
                 .collect(Collectors.toSet());
         //根据Index遍历执行Case
-        Timestamp taskStartTime = new Timestamp(System.currentTimeMillis());
-        //插入task
-        Task task
-                = Task.builder()
-                .jobId(jobId)
-                .parameter_name(job.getParam_name())
-                .parameter_value_index(job.getParamIndexId())
-                .starttime(taskStartTime)
-                .build();
-        taskMapper.insert(task);
+        Timestamp taskStartTime = new Timestamp(System.currentTimeMillis() + 60 * 60 * 8 * 1000);
+        //update task
+        if (CollectionUtils.isEmpty(parameterIndex)) {
+            task.setStatus(0);
+        }
+        else {
+            task.setStatus(2);
+        }
+        task.setStarttime(taskStartTime);
+        taskMapper.updateById(task);
         for (Long i : parameterIndex) {
             //构建参数
             List<Parameter> parameterList = new ArrayList<>();
             Map<String, String> pMap = new HashMap<>();
-            List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter> plist =
+            List<com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab> plist =
                     parameters
                             .stream()
                             .filter(item->i.equals(item.getParameterValueIndex()))
                             .collect(Collectors.toList());
-            for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Parameter item : plist) {
+            for (com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.ParameterDetailsTab item : plist) {
                 Parameter parameter = new Parameter();
                 parameter.setParameter_value(item.getParameterValue());
                 parameter.setParameter_key(item.getParameterKey());
                 pMap.put(item.getParameterKey(), item.getParameterValue());
                 parameterList.add(parameter);
             }
-            Timestamp startTime = new Timestamp(System.currentTimeMillis());
-            //执行feature
-            TaskResult taskResult
-                    = featureService.execFeature(
-                    parameterList, cazes);
+            Timestamp startTime = new Timestamp(System.currentTimeMillis() + 60 * 60 * 8 * 1000);
+            FeatureTaskResult taskResult;
+            try {
+                //执行feature
+                taskResult
+                        = featureService.execFeature(
+                        parameterList, cazes);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                taskResult
+                        = FeatureTaskResult.builder()
+                        .status(3).build();
+            }
             Timestamp endTime
-                    = new Timestamp(System.currentTimeMillis());
+                    = new Timestamp(System.currentTimeMillis() + 60 * 60 * 8 * 1000);
             taskStatus
                     = taskStatus
-                    & (null == task.getStatus()
-                    ? 0
-                    : task.getStatus());
-            taskResult.setTaskId(task.getId());
-            taskResult.setParameter_name(job.getParam_name());
-            taskResult.setParameter_value_index(i);
-            taskResult.setParameter_value(FastJsonUtil.toJson(pMap));
-            taskResult.setStarttime(startTime);
-            taskResult.setEndtime(endTime);
-            taskResultMapper.insert(taskResult);
+                    & (null == taskResult.getStatus() ? 0
+                    : taskResult.getStatus());
+            TaskResult result = TaskResult.builder()
+                    .taskId(task.getId())
+                    .parameter_name(task.getParameterName())
+                    .parameter_value_index(i)
+                    .parameter_value(FastJsonUtil.toJson(pMap))
+                    .status(taskResult.getStatus())
+                    .starttime(startTime)
+                    .endtime(endTime).build();
+            taskResultMapper.insert(result);
+            List<CaseInfo> caseInfos
+                    = FastJsonUtil.toListBean(
+                    taskResult.getLogs(), CaseInfo.class);
+            List<ParameterIndexStepResult> caseStepInfos
+                    = setCaseStepResult(result.getId(), caseInfos);
+            parameterIndexStepResultMapper.saveBatchByNative(caseStepInfos);
+
         }
-        Timestamp taskEndTime = new Timestamp(System.currentTimeMillis());
+        Timestamp taskEndTime = new Timestamp(System.currentTimeMillis() + 60 * 60 * 8 * 1000);
         task.setEndtime(taskEndTime);
         task.setStatus(taskStatus);
         taskMapper.update(
@@ -494,5 +555,25 @@ public class ScheduleJobImpl implements IScheduleJobService {
                 .withSchedule(cronScheduleBuilder)
                 .build();
         return cronTrigger;
+    }
+
+    // 组装test log
+    private List<ParameterIndexStepResult> setCaseStepResult(Integer taskResultId, List<CaseInfo> caseInfos) {
+        int i = 0;
+        List<ParameterIndexStepResult> results = new ArrayList<>();
+        for (CaseInfo caseInfo : caseInfos) {
+            ParameterIndexStepResult result =
+                    ParameterIndexStepResult.builder()
+                            .taskResultId(taskResultId)
+                            .resultIndexId(i)
+                            .clazz(caseInfo.getClazz())
+                            .config(caseInfo.getConfig())
+                            .label(caseInfo.getLabel())
+                            .data(caseInfo.getData())
+                            .status(caseInfo.getStatus()).build();
+            results.add(result);
+            i++;
+        }
+        return results;
     }
 }

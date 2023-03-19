@@ -8,6 +8,9 @@ class TestflowServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
+		Object a = 1111;
+		Double b = Double.valueOf(a.toString());
+		System.out.println(b);
 	}
 
 }

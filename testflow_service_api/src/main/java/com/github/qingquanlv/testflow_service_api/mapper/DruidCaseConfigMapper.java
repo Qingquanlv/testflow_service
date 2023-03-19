@@ -5,7 +5,6 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Dru
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/11 下午8:44
  */
 public interface DruidCaseConfigMapper extends BaseMapper<DruidCaseConfig> {
 }

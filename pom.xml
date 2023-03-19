@@ -19,7 +19,8 @@
 	<modules>
 		<module>testflow_service_api</module>
 		<module>testflow_service_biz</module>
-	</modules>
+        <module>testops_service_biz</module>
+    </modules>
 
 	<build>
 		<plugins>
@@ -29,7 +30,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<skipTests>true</skipTests>
+					<skipTests>true</skipTests> 
 				</configuration>
 			</plugin>
 		</plugins>

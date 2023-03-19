@@ -30,7 +30,6 @@ import java.util.HashMap;
 /**
  *
  * @author qq.lv
- * @date 2019/8/9
  */
 public class HttpClientImpl {
     private static Logger logger = LoggerFactory.getLogger(HttpClientImpl.class);
@@ -138,13 +137,17 @@ public class HttpClientImpl {
             // 得到响应类型
             //logger.info(String.format("Get responce ContentType: %s", ContentType.getOrDefault(response.getEntity()).getMimeType()));
             // 判断响应状态
-            if (response.getStatusLine().getStatusCode() >= 300) {
-                throw new Exception(
-                        "HTTP Request is not success, Response code is " + response.getStatusLine().getStatusCode());
-            }
-            if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
+//            if (response.getStatusLine().getStatusCode() >= 300) {
+//                throw new Exception(
+//                        "HTTP Request is not success, Response code is " + response.getStatusLine().getStatusCode());
+//            }
+            if (HttpStatus.SC_INTERNAL_SERVER_ERROR > response.getStatusLine().getStatusCode()) {
                 responseContent = EntityUtils.toString(entity, CHARSET_UTF_8);
                 EntityUtils.consume(entity);
+            }
+            else {
+                responseContent
+                        = "HTTP Request is not success, Response code is " + response.getStatusLine().getStatusCode();
             }
         } catch (Exception e) {
             e.printStackTrace();

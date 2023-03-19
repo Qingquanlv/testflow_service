@@ -3,12 +3,8 @@ package com.github.qingquanlv.testflow_service_biz;
 import com.github.qingquanlv.testflow_service_biz.common.BufferManager;
 import com.github.qingquanlv.testflow_service_biz.common.Constants;
 import com.github.qingquanlv.testflow_service_biz.common.LogHelper;
-import com.github.qingquanlv.testflow_service_biz.stepdefinations.Database;
-import com.github.qingquanlv.testflow_service_biz.stepdefinations.Parser;
-import com.github.qingquanlv.testflow_service_biz.stepdefinations.Request;
-import com.github.qingquanlv.testflow_service_biz.stepdefinations.Verify;
+import com.github.qingquanlv.testflow_service_biz.stepdefinations.*;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -20,11 +16,15 @@ public class TestFlowManager {
 
     private String pattern;
 
+    public String getPattern() {
+        return pattern;
+    }
+
     /**
      * 私有化构造方法
      */
     public TestFlowManager(){
-        BufferManager.initBufferMap();
+        //BufferManager.initBufferMap();
         LogHelper.initLog();
     }
 
@@ -42,7 +42,7 @@ public class TestFlowManager {
      *
      */
     public void deposed(){
-        BufferManager.deposeBufferMap(pattern);
+        BufferManager.deposeBufferMap(this.pattern);
         LogHelper.deposeLog();
     }
 
@@ -58,21 +58,22 @@ public class TestFlowManager {
      * @param url : 请求url
      *
      */
-    public String sendRequest(String caseName, String requestStr, HashMap<String, String> config, HashMap<String, String> headerMap, String requestType, String contentType, String url) {
-        String str;
+    public String sendRequest(String caseName, String requestStr, String config, String headerMap, String requestType, String contentType, String url) {
+        String str = "";
         Request request = new Request();
-        BufferManager.addClazzByKey(caseName, Constants.REQUEST);
         try {
             LogHelper.stepExecLog("sendRequest", requestStr, url, caseName);
             str = request.sendRequest(caseName, requestStr, config, headerMap, requestType, contentType, url);
             BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
         }
         catch (Exception ex) {
-            BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             str = String.format("Send request failed: %s", ex);
+            BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
         }
-        BufferManager.addBufferByKey(caseName, str);
-        LogHelper.stepAfterLog(caseName, str);
+        finally {
+            BufferManager.addBufferByKey(caseName, str);
+            LogHelper.stepAfterLog(caseName, str);
+        }
         return str;
     }
 
@@ -94,9 +95,8 @@ public class TestFlowManager {
             BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
-            str = String.format("Parse object failed");
+            str = String.format("Parse object failed" + ex);
         }
         BufferManager.addBufferByKey(caseName, str);
         LogHelper.stepAfterLog(caseName, str);
@@ -120,7 +120,6 @@ public class TestFlowManager {
             BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             str = String.format("Query database failed: " + ex);
         }
@@ -146,7 +145,6 @@ public class TestFlowManager {
             BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             str = String.format("Query database failed: " + ex);
         }
@@ -172,7 +170,6 @@ public class TestFlowManager {
             BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             str = String.format("Query database failed: " + ex);
         }
@@ -196,7 +193,6 @@ public class TestFlowManager {
             errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim());
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             errorMsg = String.format("Verify object failed: " + ex);
         }
@@ -218,17 +214,15 @@ public class TestFlowManager {
      * @param atlObj : 实体中不对比的字段
      *
      */
-    public String verify(String caseName, String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr) {
+    public String verify(String caseName, String expObj, String atlObj, String pkMapStr, String noCompareItemMapStr, String thresholdStr) {
         String errorMsg;
         Verify verify = new Verify();
         BufferManager.addClazzByKey(caseName, Constants.COMPARE_OBJ);
         try {
-            LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr);
-            errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim(), pkMapStr, noCompareItemMapStr);
-            //deposed();
+            LogHelper.stepExecLog("verify", expObj, atlObj, pkMapStr, noCompareItemMapStr, thresholdStr);
+            errorMsg = verify.verify(caseName, expObj.trim(), atlObj.trim(), pkMapStr, noCompareItemMapStr, thresholdStr);
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             errorMsg = String.format("Verify object failed: " + ex);
         }
@@ -256,10 +250,8 @@ public class TestFlowManager {
         try {
             LogHelper.stepExecLog("verify", atlObj, JsonFilter, expValue);
             errorMsg = verify.verify(caseName, atlObj.trim(), JsonFilter.trim(), expValue.trim());
-            //deposed();
         }
         catch (Exception ex) {
-            //deposed();
             BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
             errorMsg = String.format("Verify object failed: " + ex);
         }
@@ -271,6 +263,76 @@ public class TestFlowManager {
         }
         BufferManager.addBufferByKey(caseName, errorMsg);
         return errorMsg;
+    }
+
+    /**
+     * IF Condition
+     *
+     * @param caseName
+     * @param path
+     * @param operator
+     * @param value
+     * @param trueCaseName
+     * @param falseCaseName
+     * @return
+     */
+    public String ifCondition(String caseName, String path, String operator, String value, String trueCaseName, String falseCaseName) {
+        String str = "";
+        Boolean ret = false;
+        Condition condition = new Condition();
+        BufferManager.addClazzByKey(caseName, Constants.CONDITION_IF);
+        try {
+            LogHelper.stepExecLog("ifCondition", path, operator, value);
+            ret = condition.ifCondition(caseName, path, operator.trim(), value);
+            BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
+        }
+        catch (Exception ex) {
+            str = String.format("IF condition judgement failed: %s", ex);
+            BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
+        }
+        finally {
+            BufferManager.addBufferByKey(caseName, String.valueOf(ret ? trueCaseName : falseCaseName));
+            LogHelper.stepAfterLog(caseName, str);
+        }
+        return String.valueOf(ret ? trueCaseName : falseCaseName);
+    }
+
+    /**
+     * For Condition
+     *
+     * @param caseName
+     * @param path
+     * @param operator
+     * @param value
+     * @param maxLoop
+     * @param waitTime
+     * @return
+     */
+    public String forCondition(String caseName, String path, String operator, String value, Long maxLoop, Long waitTime) {
+        Boolean ret;
+        String str = Constants.STATUS_BREAK;
+        Condition condition = new Condition();
+        Long currentLoop = 1L;
+        BufferManager.addClazzByKey(caseName, Constants.CONDITION_FOR);
+        if (null != BufferManager.getBufferByKey(String.format("%s_currentLoop", caseName))) {
+            currentLoop = Long.parseLong(BufferManager.getBufferByKey(String.format("%s_currentLoop", caseName)));
+        }
+        try {
+            if (currentLoop < maxLoop) {
+                LogHelper.stepExecLog("forCondition", path, operator, value);
+                ret = condition.forCondition(caseName, path, operator.trim(), value, waitTime);
+                str = ret ? Constants.STATUS_BREAK : Constants.STATUS_LOOP;
+                BufferManager.addStatusByKey(caseName, Constants.STATUS_PASS);
+            }
+        } catch (Exception ex) {
+            str = String.format("For condition judgement failed: %s", ex);
+            BufferManager.addStatusByKey(caseName, Constants.STATUS_FAIL);
+        } finally {
+            BufferManager.addBufferByKey(caseName, str);
+            LogHelper.stepAfterLog(caseName, str);
+            BufferManager.addBufferByKey(String.format("%s_currentLoop", caseName), String.valueOf(currentLoop + 1));
+        }
+        return str;
     }
 
     /**
@@ -286,7 +348,6 @@ public class TestFlowManager {
             BufferManager.appendBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
-            //deposed();
             throw new AssertionError(String.format("append Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
         }
         return this;
@@ -305,7 +366,6 @@ public class TestFlowManager {
             BufferManager.addBufferByKey(bufferKey, bufferVal);
         }
         catch (Exception ex) {
-            //deposed();
             throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey, bufferVal, ex));
         }
         return this;
@@ -324,7 +384,6 @@ public class TestFlowManager {
             str = BufferManager.getBufferByKey(bufferKey);
         }
         catch (Exception ex) {
-            //deposed();
             throw new AssertionError(String.format("add Buffer key \"%s\" value \"%s\" failed: %s", bufferKey));
         }
         return str;

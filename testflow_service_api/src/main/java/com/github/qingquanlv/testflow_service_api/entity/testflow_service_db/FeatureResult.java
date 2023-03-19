@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/4/8 08:49
  */
 public class FeatureResult {
 

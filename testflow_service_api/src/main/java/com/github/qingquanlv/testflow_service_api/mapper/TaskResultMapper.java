@@ -5,7 +5,6 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Tas
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/17 14:50
  */
 public interface TaskResultMapper extends BaseMapper<TaskResult> {
 

@@ -1,53 +1,38 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter;
 
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/10 12:25
  * @Version 1.0
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UpdateParameterRequest {
 
     /**
      * 请求唯一标识
      */
     private String requestId;
+    private Long parameterId;
 
     /**
      * parameter_name
      */
-    private String parameter_name;
+    @NotBlank(message = "parameter name不能为null")
+    private String parameterName;
 
     /**
      * parameters
      */
     private List<HashMap<String, String>> parameters;
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getParameter_name() {
-        return parameter_name;
-    }
-
-    public void setParameter_name(String parameter_name) {
-        this.parameter_name = parameter_name;
-    }
-
-    public List<HashMap<String, String>> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<HashMap<String, String>> parameters) {
-        this.parameters = parameters;
-    }
 }

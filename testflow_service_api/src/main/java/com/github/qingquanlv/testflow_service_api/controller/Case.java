@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/10 15:55
  * @Version 1.0
  */
 @RestController
@@ -25,5 +24,4 @@ public class Case {
         ExecCaseResponse rsp = caseService.execCase(request);
         return rsp.getInfo().getData();
     }
-
 }

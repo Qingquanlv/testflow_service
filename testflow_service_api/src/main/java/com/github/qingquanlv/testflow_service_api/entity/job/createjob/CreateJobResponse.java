@@ -1,13 +1,16 @@
 package com.github.qingquanlv.testflow_service_api.entity.job.createjob;
 
 import com.github.qingquanlv.testflow_service_api.entity.Status;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/6/17 15:23
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class CreateJobResponse {
         //status
         private Status status;

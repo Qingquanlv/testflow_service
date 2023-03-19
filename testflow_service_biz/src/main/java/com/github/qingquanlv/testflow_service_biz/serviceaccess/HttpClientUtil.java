@@ -68,11 +68,21 @@ public class HttpClientUtil {
      *
      * @param httpUrl    地址
      */
-    public static String sendHttpDelete(String httpUrl, HashMap<String, String> headers, HashMap<String, String> config) {
+    public static String sendHttpDelete(String httpUrl, String paramsJson, HashMap<String, String> headers, HashMap<String, String> config, String contentType) {
         // 创建httpPost
-        HttpDelete httpDelete = new HttpDelete(httpUrl);
-        addHeaders(httpDelete, headers);
-        buildRequestConfig(config);
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(httpUrl);
+        try {
+            // 设置参数
+            if (paramsJson != null && paramsJson.trim().length() > 0) {
+                StringEntity stringEntity = new StringEntity(paramsJson, "UTF-8");
+                stringEntity.setContentType(contentType);
+                addHeaders(httpDelete, headers);
+                buildRequestConfig(config);
+                httpDelete.setEntity(stringEntity);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String str = HttpClientImpl.sendHttp(httpDelete);
         deposeRequestConfig();
         return str;

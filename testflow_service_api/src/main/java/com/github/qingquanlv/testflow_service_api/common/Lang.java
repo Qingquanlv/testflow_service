@@ -5,6 +5,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
+/**
+ * @Author: qingquan.lv
+ */
 public class Lang {
 
     public static String getErrorCode(Integer key) {

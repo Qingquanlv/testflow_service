@@ -2,7 +2,6 @@ package com.github.qingquanlv.testflow_service_api.entity.cases.database;
 
 /**
  * @Author Qingquan Lv
- * @Date 2020/12/9 7:50
  * @Version 1.0
  */
 public class StepBuffer {

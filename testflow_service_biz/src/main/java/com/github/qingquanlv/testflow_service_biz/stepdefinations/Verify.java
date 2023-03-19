@@ -54,18 +54,20 @@ public class Verify {
      * 对比实体
      *
      */
-    public String verify(String caseName, String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr) throws Exception {
+    public String verify(String caseName, String expStr, String atlStr, String pkMapStr, String noCompareItemMapStr, String thresholdStr) throws Exception {
         String exp = BufferManager.getBufferByKey(expStr);
         String atl = BufferManager.getBufferByKey(atlStr);
         BufferManager.addConfigByKey(caseName,
-                String.format("expKey:%s，expValue:%s, expKey:%s, atlValue:%s, primaryKey:%s, noCompareItem:%s" ,
-                        expStr, exp, atlStr, atl, pkMapStr, noCompareItemMapStr));
+                String.format("{\"expKey\":\"%s\", \"expValue\":%s, \"atlKey\":\"%s\", \"atlValue\":%s, \"primaryKey\":\"%s\", \"noCompareItem\":\"%s\", \"threshold\":\"%s\"}" ,
+                        expStr, exp, atlStr, atl, pkMapStr, noCompareItemMapStr, thresholdStr));
         //primary key map
         Map<String, List<String>> pkMap = ParamUtil.parseVerifyParam(pkMapStr);
         //no compare map
         Map<String, List<String>> noCompareItemMap = ParamUtil.parseVerifyParam(noCompareItemMapStr);
+        //threshold map
+        Map<String, List<String>> thresholdMap = ParamUtil.parseVerifyParam(thresholdStr);
         VerifyUtil compareUtil = new VerifyUtil();
-        return compareUtil.compareObj(exp, atl, pkMap, noCompareItemMap);
+        return compareUtil.compareObj(exp, atl, pkMap, noCompareItemMap, thresholdMap);
     }
 }
 

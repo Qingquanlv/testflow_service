@@ -6,7 +6,6 @@ import java.util.Properties;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/1/19 22:05
  * @Version 1.0
  */
 public class PropertiesUtil {

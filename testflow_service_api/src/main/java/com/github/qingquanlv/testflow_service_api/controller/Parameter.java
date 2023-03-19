@@ -1,8 +1,7 @@
 package com.github.qingquanlv.testflow_service_api.controller;
 
-import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterRequest;
-import com.github.qingquanlv.testflow_service_api.entity.parameter.createparameter.CreateParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.deleteparameter.DeleteParameterResponse;
+import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterRequest;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter.QueryAllParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.queryparameter.QueryParameterResponse;
 import com.github.qingquanlv.testflow_service_api.entity.parameter.updateparameter.UpdateParameterRequest;
@@ -16,7 +15,6 @@ import javax.validation.constraints.NotNull;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/2/3 6:47
  * @Version 1.0
  */
 @RestController
@@ -26,36 +24,39 @@ public class Parameter {
     @Autowired
     private ParameterServiceImpl parameterService;
 
-    @PostMapping(path = "/create")
-    public CreateParameterResponse createParameter(@RequestBody @Validated CreateParameterRequest request) {
-        CreateParameterResponse rsp =  parameterService.createParameter(request);
-        return rsp;
-    }
-
-    @RequestMapping("/queryall")
-    public QueryAllParameterResponse getParameterAll(){
-        QueryAllParameterResponse rsp =  parameterService.getParameterAll();
+    @PostMapping("/queryall")
+    public QueryAllParameterResponse getParameterAll(
+            @RequestBody QueryAllParameterRequest request){
+        QueryAllParameterResponse rsp
+                =  parameterService.getParameterAll(request);
         return rsp;
     }
 
     @GetMapping("/query")
     public QueryParameterResponse getParameter(
-            @RequestParam(value = "name", required = true)
-            @NotNull(message = "parameter name cannot be null")
-                    String name){
-        QueryParameterResponse rsp =  parameterService.getParameter(name);
+            @RequestParam(value = "id", required = true)
+            @NotNull(message = "parameter id cannot be null")
+                    Long id){
+        QueryParameterResponse rsp
+                =  parameterService.getParameter(id);
         return rsp;
     }
 
     @RequestMapping("/update")
-    public UpdateParameterResponse updateParameter(@RequestBody UpdateParameterRequest request){
-        UpdateParameterResponse rsp =  parameterService.updateParameter(request);
+    public UpdateParameterResponse updateParameter(
+            @RequestBody @Validated UpdateParameterRequest request){
+        UpdateParameterResponse rsp
+                = parameterService.updateParameter(request);
         return rsp;
     }
 
     @RequestMapping("/delete")
-    public DeleteParameterResponse deleteParameter(@RequestParam(value = "name")String name){
-        DeleteParameterResponse rsp =  parameterService.deleteParameter(name);
+    public DeleteParameterResponse deleteParameter(
+            @RequestParam(value = "id", required = true)
+            @NotNull(message = "parameter id cannot be null")
+                    Long id){
+        DeleteParameterResponse rsp
+                = parameterService.deleteParameter(id);
         return rsp;
     }
 }

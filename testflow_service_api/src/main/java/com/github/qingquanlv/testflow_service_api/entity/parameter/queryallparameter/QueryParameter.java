@@ -1,42 +1,23 @@
 package com.github.qingquanlv.testflow_service_api.entity.parameter.queryallparameter;
 
-import com.github.qingquanlv.testflow_service_api.entity.parameter.Parameter;
-
-import java.util.HashMap;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @Author Qingquan Lv
- * @Date 2021/3/7 10:50
  * @Version 1.0
  */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class QueryParameter {
 
     /**
      * parameter_name
      */
+    private Long id;
     private String parameter_name;
-
-    /**
-     * parameters
-     */
-    private List<HashMap<String, String>> parameters;
-
-
-    public String getParameter_name() {
-        return parameter_name;
-    }
-
-    public void setParameter_name(String parameter_name) {
-        this.parameter_name = parameter_name;
-    }
-
-
-    public List<HashMap<String, String>> getParameters() {
-        return parameters;
-    }
-
-    public void setParameters(List<HashMap<String, String>> parameters) {
-        this.parameters = parameters;
-    }
 }

@@ -5,7 +5,6 @@ import com.github.qingquanlv.testflow_service_api.entity.testflow_service_db.Job
 
 /**
  * @Author: qingquan.lv
- * @Date: 2021/8/7 下午5:49
  */
 
 public interface JobConfigMapper extends BaseMapper<JobConfig> {
