@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.qingquanlv.testflow_service_api.mapper.ParameterDetailsMapper">
+    <insert id="saveBatchByNative" parameterType="java.util.List" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        INSERT INTO `testflow_service`.`parameter_details_tab` (`appid`, `parameter_id`, `parameter_name`, `parameter_value_index`, `parameter_key`, `parameter_value`) VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.appid},#{item.parameterId},#{item.parameterName},#{item.parameterValueIndex},#{item.parameterKey},#{item.parameterValue})
+        </foreach>
+    </insert>
+</mapper>
